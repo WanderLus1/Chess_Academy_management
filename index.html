@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="htmlTitle">Chess Academy Portal</title>
+    
+    <!-- Standard Chess Engine for FIDE Rules and Move Verification -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #121417;
+            --bg-card: #1c1f24;
+            --bg-card-hover: #262a30;
+            --border: #323740;
+            --text-primary: #cbd5e1;
+            --text-bright: #ffffff;
+            --text-muted: #838e9e;
+
+            /* Yellowish-Orange Accent */
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --accent-glow: rgba(245, 158, 11, 0.25);
+            --accent-light: #fbbf24;
+
+            --success: #22c55e;
+            --danger: #ef4444;
+
+            /* Lichess Standard Wood Palette */
+            --sq-light: #f0d9b5;
+            --sq-dark: #b58863;
+            --sq-highlight: rgba(245, 158, 11, 0.65);
+            --sq-selected: rgba(34, 197, 94, 0.6);
+            --sq-dragover: rgba(59, 130, 246, 0.5);
+            --sq-tint-red: rgba(239, 68, 68, 0.65);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header.app-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1380px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            cursor: pointer;
+        }
+
+        .brand-logo-img {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .brand-logo-icon {
+            color: var(--accent);
+            font-size: 2.2rem;
+            line-height: 1;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 0.45rem 0.85rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-bright);
+            background: var(--bg-card-hover);
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent);
+            color: #000000;
+        }
+
+        .auth-widget {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #14161a;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.825rem;
+        }
+
+        .badge-role {
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .badge-role.coach { background: var(--accent-glow); color: var(--accent-light); border: 1px solid var(--accent); }
+        .badge-role.student { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.82);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.75rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+        }
+
+        .auth-switch-tab {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            background: #121417;
+            padding: 0.25rem;
+            border-radius: 6px;
+        }
+
+        .auth-switch-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.45rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .auth-switch-btn.active {
+            background: var(--bg-card);
+            color: var(--text-bright);
+        }
+
+        main.container {
+            max-width: 1380px;
+            margin: 1.25rem auto;
+            padding: 0 1rem;
+            flex: 1;
+            width: 100%;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .alert-banner {
+            padding: 0.8rem 1.25rem;
+            border-radius: 6px;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .alert-banner.warning {
+            background-color: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent-light);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .card-header h2, .card-header h3 {
+            color: var(--text-bright);
+            font-size: 1.15rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.9rem;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            font-size: 0.85rem;
+            transition: 0.15s;
+        }
+
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary { background: #2a2f38; color: var(--text-bright); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #353b47; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group { margin-bottom: 0.75rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.55rem;
+            background: #121417;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-bright);
+            font-size: 0.875rem;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-paid { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+        .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--accent-light); }
+        .badge-overdue { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.7rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            background: #17191d;
+        }
+
+        /* Classroom Grid & Lichess Board */
+        .classroom-grid {
+            display: grid;
+            grid-template-columns: auto 400px 240px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1250px) {
+            .classroom-grid { grid-template-columns: auto 1fr; }
+            .attendance-panel { grid-column: span 2; }
+        }
+
+        @media (max-width: 850px) {
+            .classroom-grid { grid-template-columns: 1fr; }
+            .attendance-panel { grid-column: span 1; }
+        }
+
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #chessboard-wrapper {
+            position: relative;
+            background: #25282e;
+            padding: 8px;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+            width: fit-content;
+        }
+
+        #chessboard {
+            width: 560px;
+            height: 560px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            user-select: none;
+            position: relative;
+        }
+
+        #arrowOverlay {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 560px;
+            height: 560px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @media (max-width: 600px) {
+            #chessboard { width: 340px; height: 340px; }
+            #arrowOverlay { width: 340px; height: 340px; }
+        }
+
+        .square {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .square.light { background-color: var(--sq-light); }
+        .square.dark { background-color: var(--sq-dark); }
+        .square.selected { background-color: var(--sq-selected) !important; }
+        .square.last-move { background-color: var(--sq-highlight) !important; }
+        .square.dragover { background-color: var(--sq-dragover) !important; }
+        .square.tint-red { background-color: var(--sq-tint-red) !important; }
+
+        .coord-rank {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .coord-file {
+            position: absolute;
+            bottom: 2px;
+            right: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .square.light .coord-rank, .square.light .coord-file { color: var(--sq-dark); }
+        .square.dark .coord-rank, .square.dark .coord-file { color: var(--sq-light); }
+
+        .piece-img {
+            width: 94%;
+            height: 94%;
+            pointer-events: auto;
+            cursor: grab;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.35));
+        }
+
+        .piece-img:active { cursor: grabbing; }
+
+        .board-controls {
+            margin-top: 0.75rem;
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .nav-btn-group {
+            display: flex;
+            gap: 0.25rem;
+            background: #17191d;
+            padding: 0.25rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .pgn-box {
+            background: #121417;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.65rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.8rem;
+            height: 110px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #dcdad5;
+        }
+
+        .tree-container {
+            width: 100%;
+            height: 280px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #121417;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+
+        .node-move {
+            cursor: pointer;
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+            display: inline-block;
+            color: var(--text-primary);
+        }
+
+        .node-move:hover {
+            background: #262a30;
+            color: var(--text-bright);
+        }
+
+        .node-move.active-step {
+            background: var(--accent);
+            color: #000000 !important;
+            font-weight: 700;
+        }
+
+        .variation-branch {
+            display: block;
+            margin: 0.3rem 0 0.3rem 0.85rem;
+            padding: 0.25rem 0.6rem;
+            border-left: 2px solid var(--accent);
+            background: rgba(245, 158, 11, 0.04);
+            border-radius: 0 4px 4px 0;
+            font-size: 0.825rem;
+            color: #94a3b8;
+        }
+
+        #branchSelectorBar {
+            display: none;
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1c1f24;
+            border: 2px solid var(--accent);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+            border-radius: 8px;
+            padding: 0.5rem 0.8rem;
+            z-index: 50;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .attendance-list {
+            list-style: none;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            max-height: 440px;
+            overflow-y: auto;
+        }
+
+        .attendance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45rem 0.6rem;
+            border-radius: 4px;
+            background: #14161a;
+            border: 1px solid var(--border);
+        }
+
+        .attendance-item.present { border-left: 3px solid var(--success); }
+        .attendance-item.absent { border-left: 3px solid var(--danger); opacity: 0.85; }
+
+        .list-item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 1.5rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-content">
+            <div class="brand-title" onclick="switchTab('dashboard')">
+                <span id="brandLogoContainer">
+                    <span id="brandLogoIcon" class="brand-logo-icon">♞</span>
+                </span>
+                <span id="brandName">Grandmaster's Edge Academy</span>
+            </div>
+
+            <nav class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+                <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
+                <button class="tab-btn" onclick="switchTab('classes')">Classes</button>
+                <button class="tab-btn" onclick="switchTab('materials')">Materials</button>
+                <button class="tab-btn coach-only" onclick="switchTab('students')">Students</button>
+                <button class="tab-btn" onclick="switchTab('about')">About</button>
+            </nav>
+
+            <div class="auth-widget">
+                <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Coach</span>
+                <span id="userRoleBadge" class="badge-role coach">Coach</span>
+                <button class="btn btn-secondary btn-sm" onclick="openAuthModal()">Switch / Log In</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <div id="feeAlertBanner" class="alert-banner warning" style="display: none;">
+            <div>
+                <strong>Tuition Alert:</strong> 
+                <span id="feeAlertMessage">Tuition payment is due.</span>
+            </div>
+            <span class="badge badge-warning">Action Required</span>
+        </div>
+
+        <!-- 1. DASHBOARD TAB -->
+        <section id="tab-dashboard" class="tab-panel active">
+            <div class="card-header">
+                <div>
+                    <h2 id="dashGreeting">Academy Dashboard</h2>
+                    <p class="text-muted" id="dashSub">Welcome to your academy workspace.</p>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Upcoming Class</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="switchTab('classes')">All Classes</button>
+                    </div>
+                    <div id="nextClassWidget"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Academy Status</h3>
+                    </div>
+                    <div id="statusWidget"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Curated Study Materials</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="switchTab('materials')">View Library</button>
+                </div>
+                <div id="recentMaterialsWidget"></div>
+            </div>
+        </section>
+
+        <!-- 2. CLASSROOM TAB -->
+        <section id="tab-classroom" class="tab-panel">
+            <div class="card-header">
+                <div>
+                    <h2>Live Classroom Board</h2>
+                    <p class="text-muted" id="boardPermissionStatus">Full variation tree powered by chess.js engine. Alternate moves branch automatically.</p>
+                </div>
+                <div id="turnIndicator" class="badge" style="background:#17191d; border: 1px solid var(--border); color:#fff; font-size: 0.85rem;">Turn: White</div>
+            </div>
+
+            <div class="classroom-grid">
+                <div class="board-container">
+                    <div id="chessboard-wrapper" oncontextmenu="return false;">
+                        <div id="chessboard"></div>
+                        
+                        <svg id="arrowOverlay">
+                            <defs>
+                                <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                                    <path d="M 0,0 L 6,3 L 0,6 z" fill="rgba(239, 68, 68, 0.85)" />
+                                </marker>
+                            </defs>
+                            <g id="arrowGroup"></g>
+                        </svg>
+
+                        <div id="branchSelectorBar">
+                            <span style="font-size: 0.8rem; color: var(--accent); font-weight: 600;">Choose Line:</span>
+                            <div id="branchOptionsContainer" style="display: flex; gap: 0.4rem;"></div>
+                        </div>
+                    </div>
+
+                    <div class="board-controls">
+                        <div class="nav-btn-group">
+                            <button id="btnNavStart" class="btn btn-secondary btn-sm" onclick="stepMove('start')" title="First Move (Home)">|&lt;</button>
+                            <button id="btnNavPrev" class="btn btn-secondary btn-sm" onclick="stepMove('prev')" title="Previous Move (Left Arrow)">&lt;</button>
+                            <button id="btnNavNext" class="btn btn-secondary btn-sm" onclick="stepMove('next')" title="Next Move (Right Arrow)">&gt;</button>
+                            <button id="btnNavEnd" class="btn btn-secondary btn-sm" onclick="stepMove('end')" title="Current Line End (End)">&gt;|</button>
+                        </div>
+                        <button id="btnFlipBoard" class="btn btn-secondary btn-sm" onclick="flipBoard()">Flip</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="openPgnImportModal()">Import PGN</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="promoteCurrentLine()" title="Promote this sideline to the main game">Promote Line</button>
+                        <button class="btn btn-danger btn-sm coach-only" onclick="deleteCurrentBranch()" title="Deletes this sideline or moves after position">Delete Line</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="resetBoard()">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Move Tree & PGN -->
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="card" style="margin-bottom: 0;">
+                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+                            <h3>Notation &amp; Variations</h3>
+                            <span id="stepCounter" class="text-muted" style="font-size: 0.8rem;">Game Tree</span>
+                        </div>
+                        <div id="moveHistoryTree" class="tree-container"></div>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 0;">
+                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+                            <h3>PGN Game</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="copyPGN()">Copy PGN</button>
+                        </div>
+                        <div id="pgnBox" class="pgn-box"></div>
+                    </div>
+                </div>
+
+                <!-- Attendance -->
+                <div class="card attendance-panel" style="margin-bottom: 0;">
+                    <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+                        <h3>Class Attendance</h3>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.75rem; margin-bottom: 0.75rem;">
+                        Live attendance for current session.
+                    </p>
+                    <ul id="attendanceList" class="attendance-list"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CLASSES TAB -->
+        <section id="tab-classes" class="tab-panel">
+            <div class="card-header">
+                <h2>Scheduled Classes</h2>
+                <span class="text-muted" style="font-size: 0.8rem;">Classes auto-archive 4 hours after start time</span>
+            </div>
+
+            <div class="card coach-only">
+                <h3 style="margin-bottom: 0.75rem;">Schedule a New Class</h3>
+                <form onsubmit="handleCreateClass(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Topic / Title</label>
+                            <input type="text" id="classTopic" placeholder="e.g., Tactical Calculation Drill" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Coach Name</label>
+                            <input type="text" id="classCoach" value="Coach" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="classDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input type="time" id="classTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Google Meet Link</label>
+                            <input type="url" id="classMeetLink" placeholder="https://meet.google.com/..." required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Publish Class</button>
+                </form>
+            </div>
+
+            <div id="classListContainer"></div>
+        </section>
+
+        <!-- 4. MATERIALS TAB -->
+        <section id="tab-materials" class="tab-panel">
+            <div class="card-header">
+                <h2>Curated Resources &amp; Studies</h2>
+            </div>
+
+            <div class="card coach-only">
+                <h3 style="margin-bottom: 0.75rem;">Add Study Material</h3>
+                <form onsubmit="handleCreateMaterial(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Resource Title</label>
+                            <input type="text" id="matTitle" placeholder="e.g., Rook Endgames Guide" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="matCategory">
+                                <option value="Lichess Study">Lichess Study</option>
+                                <option value="Google Drive">Google Drive Sheet / Doc</option>
+                                <option value="Video Lecture">Video Lecture</option>
+                                <option value="Puzzle Set">Puzzle Set</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>External URL</label>
+                        <input type="url" id="matUrl" placeholder="https://lichess.org/study/... or Drive link" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="matDesc" placeholder="Brief note or instructions for the student..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Resource</button>
+                </form>
+            </div>
+
+            <div id="materialsListContainer"></div>
+        </section>
+
+        <!-- 5. STUDENTS TAB -->
+        <section id="tab-students" class="tab-panel">
+            <div class="card-header">
+                <h2>Student Directory &amp; Tuition Tracking</h2>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 0.75rem;">Enroll New Student</h3>
+                <form onsubmit="handleCreateStudent(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Student Name</label>
+                            <input type="text" id="studName" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Student ID</label>
+                            <input type="text" id="studId" placeholder="e.g., CA-101" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="studEmail" placeholder="student@example.com" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Rating</label>
+                            <input type="number" id="studRating" value="1200" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fee Status</label>
+                            <select id="studFeeStatus">
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fee Due Date</label>
+                            <input type="date" id="studFeeDueDate">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Student</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Rating</th>
+                            <th>Fee Status</th>
+                            <th>Due Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 6. ABOUT TAB -->
+        <section id="tab-about" class="tab-panel">
+            <div class="card coach-only" style="border: 1px solid var(--accent);">
+                <div class="card-header">
+                    <h3 style="color: var(--accent);">⚙️ Academy Branding &amp; Settings (Admin)</h3>
+                </div>
+                <form onsubmit="handleSaveAcademySettings(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Academy Name</label>
+                            <input type="text" id="cfgAcademyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload Logo Image (PNG / JPG / SVG)</label>
+                            <input type="file" id="cfgLogoFileInput" accept="image/*" onchange="handleLogoUpload(event)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Academy Mission / Bio</label>
+                        <textarea id="cfgAcademyBio" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Head Coach Title &amp; Credentials</label>
+                            <input type="text" id="cfgCoachBio">
+                        </div>
+                        <div class="form-group">
+                            <label>Update Admin Passcode</label>
+                            <input type="password" id="cfgAdminPasscode" placeholder="Leave empty to keep current">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Academy Profile</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 id="aboutAcademyName">Grandmaster's Edge Chess Academy</h2>
+                </div>
+                <p id="aboutAcademyBio" style="margin-bottom: 1.25rem; color: #cbd5e1; font-size: 0.95rem;">
+                    Dedicated private chess training academy. Structured openings, dynamic middlegames, and endgame technique.
+                </p>
+                <div class="grid-2">
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Head Coach Credentials</h4>
+                        <p id="aboutCoachBio" style="color: var(--text-muted); font-size: 0.9rem;">
+                            FIDE Certified Coach &amp; Master.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Academy Training Pillars</h4>
+                        <ul style="list-style: square; padding-left: 1.25rem; color: var(--text-muted); font-size: 0.9rem;">
+                            <li>Live interactive analysis with strict legal move validation</li>
+                            <li>Integrated Google Meet coaching sessions</li>
+                            <li>Full variation tree and non-destructive sidelines</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- AUTH MODAL -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Academy Sign-In</h3>
+            <p class="text-muted" style="font-size: 0.825rem;">Switch identity or enter credentials.</p>
+
+            <div class="auth-switch-tab">
+                <button type="button" class="auth-switch-btn active" id="btnAuthStudentTab" onclick="setAuthModalMode('student')">Student</button>
+                <button type="button" class="auth-switch-btn" id="btnAuthCoachTab" onclick="setAuthModalMode('coach')">Coach / Admin</button>
+            </div>
+
+            <form id="studentAuthForm" onsubmit="handleStudentLogin(event)">
+                <div class="form-group">
+                    <label>Select Your Student Profile</label>
+                    <select id="authStudentSelect"></select>
+                </div>
+                <div id="noStudentMsg" style="display:none; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem;">
+                    No students registered yet. Ask coach to add your account.
+                </div>
+                <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Access Student Portal</button>
+            </form>
+
+            <form id="coachAuthForm" onsubmit="handleCoachLogin(event)" style="display: none;">
+                <div class="form-group">
+                    <label>Admin Passcode</label>
+                    <input type="password" id="coachPasswordInput" required autocomplete="current-password">
+                </div>
+                <div id="coachAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid Passcode.</div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Unlock Coach Workspace</button>
+            </form>
+
+            <button type="button" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem;" onclick="closeAuthModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- PGN IMPORT MODAL -->
+    <div id="pgnImportModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 540px;">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Import PGN Game with Sidelines</h3>
+            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">
+                Paste PGN containing nested variations in parentheses. Powered by Chess.js.
+            </p>
+            <div id="pgnImportError" style="display: none; padding: 0.5rem; border-radius: 4px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.75rem;">
+                Invalid PGN: Could not parse moves.
+            </div>
+            <textarea id="pgnInputArea" rows="9" style="width: 100%; background: #121417; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; color: #fff; font-family: monospace; font-size: 0.825rem;" placeholder='Paste PGN here...'></textarea>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="handleLoadPgn()">Load PGN onto Board</button>
+                <button class="btn btn-secondary" onclick="closePgnImportModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ENGINE -->
+    <script>
+        /* -------------------------------------------------------------
+           1. PIECE URL GENERATOR
+        ------------------------------------------------------------- */
+        function getLichessPieceUrl(piece) {
+            const isWhite = piece === piece.toUpperCase();
+            const colorPrefix = isWhite ? 'w' : 'b';
+            const pieceLetter = piece.toUpperCase();
+            return `https://lichess1.org/assets/piece/cburnett/${colorPrefix}${pieceLetter}.svg`;
+        }
+
+        /* -------------------------------------------------------------
+           2. CONFIGURATION & STATE
+        ------------------------------------------------------------- */
+        const DEFAULT_CONFIG = {
+            name: "Grandmaster's Edge Academy",
+            logoImg: "",
+            bio: "Dedicated private chess training academy. Structured openings, dynamic middlegames, and endgame technique.",
+            coachBio: "Coach Anand (FM) — Specialist in tactical calculation & master preparation.",
+            adminPasscode: "coach123"
+        };
+
+        let academyConfig = JSON.parse(localStorage.getItem("ca_config")) || DEFAULT_CONFIG;
+        let students = JSON.parse(localStorage.getItem("ca_students")) || [];
+        let classes = JSON.parse(localStorage.getItem("ca_classes")) || [];
+        let materials = JSON.parse(localStorage.getItem("ca_materials")) || [];
+
+        let currentUserRole = localStorage.getItem("ca_role") || "coach";
+        let activeStudentId = localStorage.getItem("ca_active_student_id") || (students[0]?.id || "");
+        let attendedStudentIds = new Set();
+
+        let tintedSquares = new Set();
+        let drawnArrows = [];
+        let rightClickDragStart = null;
+
+        /* -------------------------------------------------------------
+           3. AUTO-EXPIRY ENGINE (4 HOURS)
+        ------------------------------------------------------------- */
+        function checkAndCleanExpiredClasses() {
+            const now = new Date().getTime();
+            const fourHoursMs = 4 * 60 * 60 * 1000;
+            const originalLength = classes.length;
+
+            classes = classes.filter(c => {
+                const classTime = new Date(`${c.date}T${c.time}`).getTime();
+                if (isNaN(classTime)) return true;
+                return (now - classTime) < fourHoursMs;
+            });
+
+            if (classes.length !== originalLength) {
+                saveData();
+            }
+        }
+
+        /* -------------------------------------------------------------
+           4. DATA PERSISTENCE & HELPERS
+        ------------------------------------------------------------- */
+        function saveData() {
+            localStorage.setItem("ca_config", JSON.stringify(academyConfig));
+            localStorage.setItem("ca_students", JSON.stringify(students));
+            localStorage.setItem("ca_classes", JSON.stringify(classes));
+            localStorage.setItem("ca_materials", JSON.stringify(materials));
+            localStorage.setItem("ca_role", currentUserRole);
+            localStorage.setItem("ca_active_student_id", activeStudentId);
+        }
+
+        function getActiveStudent() {
+            return students.find(s => s.id === activeStudentId) || null;
+        }
+
+        /* -------------------------------------------------------------
+           5. BRANDING & LOGO
+        ------------------------------------------------------------- */
+        function applyBranding() {
+            document.getElementById("htmlTitle").textContent = academyConfig.name;
+            document.getElementById("brandName").textContent = academyConfig.name;
+            document.getElementById("aboutAcademyName").textContent = academyConfig.name;
+            document.getElementById("aboutAcademyBio").textContent = academyConfig.bio;
+            document.getElementById("aboutCoachBio").textContent = academyConfig.coachBio;
+
+            const logoContainer = document.getElementById("brandLogoContainer");
+            if (academyConfig.logoImg) {
+                logoContainer.innerHTML = `<img src="${academyConfig.logoImg}" alt="Logo" class="brand-logo-img">`;
+            } else {
+                logoContainer.innerHTML = `<span id="brandLogoIcon" class="brand-logo-icon">♞</span>`;
+            }
+
+            document.getElementById("cfgAcademyName").value = academyConfig.name;
+            document.getElementById("cfgAcademyBio").value = academyConfig.bio;
+            document.getElementById("cfgCoachBio").value = academyConfig.coachBio;
+        }
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                academyConfig.logoImg = event.target.result;
+                saveData();
+                applyBranding();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleSaveAcademySettings(e) {
+            e.preventDefault();
+            academyConfig.name = document.getElementById("cfgAcademyName").value.trim();
+            academyConfig.bio = document.getElementById("cfgAcademyBio").value.trim();
+            academyConfig.coachBio = document.getElementById("cfgCoachBio").value.trim();
+
+            const newPass = document.getElementById("cfgAdminPasscode").value.trim();
+            if (newPass) {
+                academyConfig.adminPasscode = newPass;
+                alert("Settings and Admin Passcode updated.");
+            } else {
+                alert("Academy branding updated.");
+            }
+
+            saveData();
+            applyBranding();
+            renderAll();
+        }
+
+        /* -------------------------------------------------------------
+           6. AUTHENTICATION MODAL LOGIC
+        ------------------------------------------------------------- */
+        function openAuthModal() {
+            populateStudentAuthDropdown();
+            document.getElementById("authModal").classList.add("active");
+            document.getElementById("coachAuthError").style.display = "none";
+            document.getElementById("coachPasswordInput").value = "";
+        }
+
+        function closeAuthModal() {
+            document.getElementById("authModal").classList.remove("active");
+        }
+
+        function setAuthModalMode(mode) {
+            const studentBtn = document.getElementById("btnAuthStudentTab");
+            const coachBtn = document.getElementById("btnAuthCoachTab");
+            const studentForm = document.getElementById("studentAuthForm");
+            const coachForm = document.getElementById("coachAuthForm");
+
+            if (mode === 'student') {
+                studentBtn.classList.add("active");
+                coachBtn.classList.remove("active");
+                studentForm.style.display = "block";
+                coachForm.style.display = "none";
+            } else {
+                coachBtn.classList.add("active");
+                studentBtn.classList.remove("active");
+                coachForm.style.display = "block";
+                studentForm.style.display = "none";
+                document.getElementById("coachPasswordInput").focus();
+            }
+        }
+
+        function populateStudentAuthDropdown() {
+            const select = document.getElementById("authStudentSelect");
+            const noStud = document.getElementById("noStudentMsg");
+            const submitBtn = document.getElementById("btnStudentSubmit");
+
+            if (students.length === 0) {
+                select.style.display = "none";
+                noStud.style.display = "block";
+                submitBtn.disabled = true;
+            } else {
+                select.style.display = "block";
+                noStud.style.display = "none";
+                submitBtn.disabled = false;
+                select.innerHTML = students.map(s => `
+                    <option value="${s.id}" ${s.id === activeStudentId ? 'selected' : ''}>
+                        ${s.name} (${s.id}) - Rating: ${s.rating}
+                    </option>
+                `).join("");
+            }
+        }
+
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const selectedId = document.getElementById("authStudentSelect").value;
+            if (!selectedId) return;
+
+            currentUserRole = "student";
+            activeStudentId = selectedId;
+            saveData();
+            closeAuthModal();
+            applyRoleUI();
+            renderAll();
+        }
+
+        function handleCoachLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById("coachPasswordInput").value;
+            const errorLabel = document.getElementById("coachAuthError");
+
+            if (password === academyConfig.adminPasscode) {
+                currentUserRole = "coach";
+                saveData();
+                closeAuthModal();
+                applyRoleUI();
+                renderAll();
+            } else {
+                errorLabel.style.display = "block";
+                errorLabel.textContent = "Incorrect admin passcode.";
+            }
+        }
+
+        function applyRoleUI() {
+            const nameLabel = document.getElementById("userDisplayName");
+            const roleBadge = document.getElementById("userRoleBadge");
+            const coachOnlyElements = document.querySelectorAll(".coach-only");
+            const permStatus = document.getElementById("boardPermissionStatus");
+
+            const navBtns = [
+                document.getElementById("btnNavStart"),
+                document.getElementById("btnNavPrev"),
+                document.getElementById("btnNavNext"),
+                document.getElementById("btnNavEnd"),
+                document.getElementById("btnFlipBoard")
+            ];
+
+            if (currentUserRole === "coach") {
+                nameLabel.textContent = "Coach / Admin";
+                roleBadge.textContent = "Coach";
+                roleBadge.className = "badge-role coach";
+                coachOnlyElements.forEach(el => el.style.display = "");
+                permStatus.textContent = "Coach controls board. Playing alternate moves creates a sideline branch automatically.";
+                navBtns.forEach(btn => { if (btn) btn.disabled = false; });
+            } else {
+                const s = getActiveStudent();
+                nameLabel.textContent = s ? s.name : "Student";
+                roleBadge.textContent = "Student";
+                roleBadge.className = "badge-role student";
+                coachOnlyElements.forEach(el => el.style.display = "none");
+                permStatus.textContent = "Spectator mode (Locked). Only coach can move pieces or choose variations.";
+                navBtns.forEach(btn => { if (btn) btn.disabled = true; });
+            }
+
+            if (currentUserRole === "student") {
+                const activeTab = document.querySelector(".tab-btn.active");
+                if (activeTab && activeTab.textContent.trim() === "Students") {
+                    switchTab("dashboard");
+                }
+            }
+        }
+
+        /* -------------------------------------------------------------
+           7. ATTENDANCE TRACKER
+        ------------------------------------------------------------- */
+        function recordStudentAttendance(studentId) {
+            if (studentId) {
+                attendedStudentIds.add(studentId);
+                renderAttendancePanel();
+            }
+        }
+
+        function handleClassJoinClick(meetUrl) {
+            if (currentUserRole === "student") {
+                const s = getActiveStudent();
+                if (s) recordStudentAttendance(s.id);
+            }
+            window.open(meetUrl, "_blank");
+        }
+
+        function renderAttendancePanel() {
+            const list = document.getElementById("attendanceList");
+            if (students.length === 0) {
+                list.innerHTML = `<li class="empty-state">No students enrolled.</li>`;
+                return;
+            }
+
+            list.innerHTML = students.map(s => {
+                const isPresent = attendedStudentIds.has(s.id);
+                return `
+                    <li class="attendance-item ${isPresent ? 'present' : 'absent'}">
+                        <div>
+                            <strong>${s.name}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${s.id}</div>
+                        </div>
+                        <span class="badge ${isPresent ? 'badge-paid' : 'badge-overdue'}">
+                            ${isPresent ? 'Joined' : 'Not Joined'}
+                        </span>
+                    </li>
+                `;
+            }).join("");
+        }
+
+        /* -------------------------------------------------------------
+           8. DASHBOARD, CLASSES, STUDENTS & MATERIALS
+        ------------------------------------------------------------- */
+        function switchTab(tabId) {
+            document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+            document.querySelectorAll(".nav-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.add("active");
+
+            const buttons = Array.from(document.querySelectorAll(".nav-tabs .tab-btn"));
+            const match = buttons.find(b => b.getAttribute("onclick")?.includes(tabId));
+            if (match) match.classList.add("active");
+        }
+
+        function renderAll() {
+            checkAndCleanExpiredClasses();
+            renderDashboard();
+            renderClasses();
+            renderMaterials();
+            renderStudentsTable();
+            renderChessboard();
+            renderAttendancePanel();
+        }
+
+        function renderDashboard() {
+            const greeting = document.getElementById("dashGreeting");
+            const sub = document.getElementById("dashSub");
+            const alertBanner = document.getElementById("feeAlertBanner");
+            const alertMsg = document.getElementById("feeAlertMessage");
+
+            if (currentUserRole === "student") {
+                const s = getActiveStudent();
+                if (s) {
+                    greeting.textContent = `Welcome, ${s.name}!`;
+                    sub.textContent = `Student ID: ${s.id} • Rating: ${s.rating}`;
+                    if (s.feeStatus !== "paid") {
+                        alertBanner.style.display = "flex";
+                        alertMsg.textContent = `Tuition status is ${s.feeStatus.toUpperCase()}. Due: ${s.feeDueDate || "Immediate"}.`;
+                    } else {
+                        alertBanner.style.display = "none";
+                    }
+                } else {
+                    greeting.textContent = "Welcome to the Academy!";
+                    sub.textContent = "Please select your profile.";
+                    alertBanner.style.display = "none";
+                }
+            } else {
+                greeting.textContent = "Coach / Admin Workspace";
+                sub.textContent = "Academy operations, scheduling and classroom management.";
+                const overdue = students.filter(s => s.feeStatus === "overdue").length;
+                if (overdue > 0) {
+                    alertBanner.style.display = "flex";
+                    alertMsg.textContent = `${overdue} student(s) have OVERDUE tuition fees.`;
+                } else {
+                    alertBanner.style.display = "none";
+                }
+            }
+
+            const nextClassWidget = document.getElementById("nextClassWidget");
+            if (classes.length > 0) {
+                const c = classes[0];
+                nextClassWidget.innerHTML = `
+                    <div style="margin-bottom: 0.75rem;">
+                        <h4 style="font-size: 1.05rem; color: var(--accent);">${c.topic}</h4>
+                        <p class="text-muted" style="font-size: 0.85rem;">Date: ${c.date} at ${c.time} • Coach: ${c.coach}</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>
+                `;
+            } else {
+                nextClassWidget.innerHTML = `<p class="empty-state">No scheduled classes right now.</p>`;
+            }
+
+            const statusWidget = document.getElementById("statusWidget");
+            if (currentUserRole === "student") {
+                const s = getActiveStudent();
+                statusWidget.innerHTML = `
+                    <div style="display: flex; gap: 1.5rem;">
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Rating</span>
+                            <h3 style="font-size: 1.5rem; color: var(--accent);">${s ? s.rating : '—'}</h3>
+                        </div>
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Tuition</span>
+                            <div><span class="badge badge-${s ? s.feeStatus : 'paid'}">${s ? s.feeStatus.toUpperCase() : 'OK'}</span></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusWidget.innerHTML = `
+                    <div style="display: flex; gap: 1.5rem;">
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Enrolled</span>
+                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${students.length}</h3>
+                        </div>
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Classes</span>
+                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${classes.length}</h3>
+                        </div>
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Materials</span>
+                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${materials.length}</h3>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const recentMat = document.getElementById("recentMaterialsWidget");
+            if (materials.length > 0) {
+                recentMat.innerHTML = materials.slice(0, 3).map(m => `
+                    <div class="list-item-card">
+                        <div>
+                            <strong style="color: var(--text-bright);">${m.title}</strong>
+                            <span class="badge badge-paid" style="margin-left: 0.5rem;">${m.category}</span>
+                            <p class="text-muted" style="font-size: 0.8rem;">${m.description}</p>
+                        </div>
+                        <a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Open</a>
+                    </div>
+                `).join("");
+            } else {
+                recentMat.innerHTML = `<p class="empty-state">No materials published yet.</p>`;
+            }
+        }
+
+        function renderClasses() {
+            const container = document.getElementById("classListContainer");
+            if (classes.length === 0) {
+                container.innerHTML = `<p class="empty-state card">No active classes scheduled.</p>`;
+                return;
+            }
+
+            container.innerHTML = classes.map(c => `
+                <div class="list-item-card">
+                    <div>
+                        <h4 style="font-size: 1.05rem; color: var(--text-bright); margin-bottom: 0.25rem;">${c.topic}</h4>
+                        <p class="text-muted" style="font-size: 0.85rem;">📅 ${c.date} at ${c.time} | 👨‍🏫 ${c.coach}</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>
+                        ${currentUserRole === 'coach' ? `<button class="btn btn-danger btn-sm" onclick="deleteClass(${c.id})">Delete</button>` : ''}
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function handleCreateClass(e) {
+            e.preventDefault();
+            classes.unshift({
+                id: Date.now(),
+                topic: document.getElementById("classTopic").value,
+                coach: document.getElementById("classCoach").value,
+                date: document.getElementById("classDate").value,
+                time: document.getElementById("classTime").value,
+                meetLink: document.getElementById("classMeetLink").value,
+            });
+            saveData();
+            renderAll();
+            e.target.reset();
+        }
+
+        function deleteClass(id) {
+            classes = classes.filter(c => c.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function renderMaterials() {
+            const container = document.getElementById("materialsListContainer");
+            if (materials.length === 0) {
+                container.innerHTML = `<p class="empty-state card">No study resources uploaded yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = materials.map(m => `
+                <div class="list-item-card">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                            <h4 style="font-size: 1.05rem; color: var(--text-bright);">${m.title}</h4>
+                            <span class="badge badge-paid">${m.category}</span>
+                        </div>
+                        <p class="text-muted" style="font-size: 0.85rem;">${m.description}</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Access Study</a>
+                        ${currentUserRole === 'coach' ? `<button class="btn btn-danger btn-sm" onclick="deleteMaterial(${m.id})">Delete</button>` : ''}
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function handleCreateMaterial(e) {
+            e.preventDefault();
+            materials.unshift({
+                id: Date.now(),
+                title: document.getElementById("matTitle").value,
+                category: document.getElementById("matCategory").value,
+                url: document.getElementById("matUrl").value,
+                description: document.getElementById("matDesc").value,
+            });
+            saveData();
+            renderAll();
+            e.target.reset();
+        }
+
+        function deleteMaterial(id) {
+            materials = materials.filter(m => m.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function renderStudentsTable() {
+            const tbody = document.getElementById("studentTableBody");
+            if (!tbody) return;
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No students registered yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = students.map(s => `
+                <tr>
+                    <td><code>${s.id}</code></td>
+                    <td><strong style="color: var(--text-bright);">${s.name}</strong></td>
+                    <td>${s.email}</td>
+                    <td>${s.rating}</td>
+                    <td>
+                        <select onchange="updateStudentFee('${s.id}', this.value)" style="padding: 0.2rem 0.4rem; border-radius: 4px; background: #121417; color: #fff; border: 1px solid var(--border);">
+                            <option value="paid" ${s.feeStatus === 'paid' ? 'selected' : ''}>Paid</option>
+                            <option value="pending" ${s.feeStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="overdue" ${s.feeStatus === 'overdue' ? 'selected' : ''}>Overdue</option>
+                        </select>
+                    </td>
+                    <td>${s.feeDueDate || '—'}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">Remove</button>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function handleCreateStudent(e) {
+            e.preventDefault();
+            students.push({
+                id: document.getElementById("studId").value.trim(),
+                name: document.getElementById("studName").value.trim(),
+                email: document.getElementById("studEmail").value.trim(),
+                rating: parseInt(document.getElementById("studRating").value) || 1200,
+                feeStatus: document.getElementById("studFeeStatus").value,
+                feeDueDate: document.getElementById("studFeeDueDate").value || "",
+            });
+            if (!activeStudentId && students.length > 0) {
+                activeStudentId = students[0].id;
+            }
+            saveData();
+            renderAll();
+            e.target.reset();
+        }
+
+        function updateStudentFee(studentId, newStatus) {
+            const s = students.find(x => x.id === studentId);
+            if (s) {
+                s.feeStatus = newStatus;
+                saveData();
+                renderAll();
+            }
+        }
+
+        function removeStudent(studentId) {
+            if (confirm("Remove this student from academy records?")) {
+                students = students.filter(s => s.id !== studentId);
+                if (activeStudentId === studentId) {
+                    activeStudentId = students[0]?.id || "";
+                }
+                saveData();
+                renderAll();
+            }
+        }
+
+        /* -------------------------------------------------------------
+           9. GAME TREE ARCHITECTURE (POWERED BY CHESS.JS)
+        ------------------------------------------------------------- */
+        const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+        let nodeIdCounter = 1;
+        function createRootNode() {
+            return {
+                id: 0,
+                parent: null,
+                children: [],
+                fen: START_FEN,
+                notation: "",
+                from: null,
+                to: null,
+                moveNumber: 0
+            };
+        }
+
+        let rootNode = createRootNode();
+        let currentNode = rootNode;
+
+        let selectedSquare = null;
+        let isFlipped = false;
+        let draggedFrom = null;
+
+        function fenToMatrix(fen) {
+            const matrix = Array(8).fill(null).map(() => Array(8).fill(null));
+            const ranks = fen.split(" ")[0].split("/");
+            for (let r = 0; r < 8; r++) {
+                let c = 0;
+                for (let char of ranks[r]) {
+                    if (char >= '1' && char <= '8') {
+                        c += parseInt(char);
+                    } else {
+                        matrix[r][c] = char;
+                        c++;
+                    }
+                }
+            }
+            return matrix;
+        }
+
+        function getTurnAtCurrentStep() {
+            return currentNode.fen.split(" ")[1] === 'w' ? "white" : "black";
+        }
+
+        function renderChessboard() {
+            const boardEl = document.getElementById("chessboard");
+            boardEl.innerHTML = "";
+
+            const displayBoard = fenToMatrix(currentNode.fen);
+            const ranks = isFlipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
+            const files = isFlipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
+
+            const fileLetters = ['a','b','c','d','e','f','g','h'];
+            const rankNumbers = ['8','7','6','5','4','3','2','1'];
+
+            for (let r of ranks) {
+                for (let f of files) {
+                    const square = document.createElement("div");
+                    const isLight = (r + f) % 2 === 0;
+                    square.className = `square ${isLight ? 'light' : 'dark'}`;
+                    square.dataset.row = r;
+                    square.dataset.col = f;
+
+                    if (currentNode.from && currentNode.to) {
+                        if ((currentNode.from.r === r && currentNode.from.c === f) ||
+                            (currentNode.to.r === r && currentNode.to.c === f)) {
+                            square.classList.add("last-move");
+                        }
+                    }
+
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === f) {
+                        square.classList.add("selected");
+                    }
+
+                    if (tintedSquares.has(`${r},${f}`)) {
+                        square.classList.add("tint-red");
+                    }
+
+                    if (f === (isFlipped ? 7 : 0)) {
+                        const rankLabel = document.createElement("span");
+                        rankLabel.className = "coord-rank";
+                        rankLabel.textContent = rankNumbers[r];
+                        square.appendChild(rankLabel);
+                    }
+                    if (r === (isFlipped ? 0 : 7)) {
+                        const fileLabel = document.createElement("span");
+                        fileLabel.className = "coord-file";
+                        fileLabel.textContent = fileLetters[f];
+                        square.appendChild(fileLabel);
+                    }
+
+                    const pieceChar = displayBoard[r][f];
+                    if (pieceChar) {
+                        const img = document.createElement("img");
+                        img.src = getLichessPieceUrl(pieceChar);
+                        img.alt = pieceChar;
+                        img.className = "piece-img";
+
+                        if (currentUserRole === "coach") {
+                            img.draggable = true;
+                            img.ondragstart = (e) => handleDragStart(e, r, f);
+                        } else {
+                            img.draggable = false;
+                        }
+                        square.appendChild(img);
+                    }
+
+                    if (currentUserRole === "coach") {
+                        square.ondragover = (e) => { e.preventDefault(); square.classList.add("dragover"); };
+                        square.ondragleave = () => square.classList.remove("dragover");
+                        square.ondrop = (e) => handleDrop(e, r, f);
+                        square.onclick = (e) => handleSquareClick(r, f);
+
+                        square.onmousedown = (e) => handleMouseDown(e, r, f);
+                        square.onmouseup = (e) => handleMouseUp(e, r, f);
+                    }
+
+                    boardEl.appendChild(square);
+                }
+            }
+
+            const currentTurn = getTurnAtCurrentStep();
+            document.getElementById("turnIndicator").textContent = `Turn: ${currentTurn.toUpperCase()}`;
+            document.getElementById("stepCounter").textContent = currentNode.id === 0 ? "Starting Position" : `Move: ${currentNode.notation}`;
+
+            renderArrows();
+            renderVariationTree();
+            updatePGNDisplay();
+            updateSidelineBranchPopup();
+        }
+
+        /* -------------------------------------------------------------
+           10. SIDELINE CHOICE POPUP
+        ------------------------------------------------------------- */
+        function updateSidelineBranchPopup() {
+            const bar = document.getElementById("branchSelectorBar");
+            const container = document.getElementById("branchOptionsContainer");
+
+            if (currentUserRole !== "coach" || currentNode.children.length <= 1) {
+                bar.style.display = "none";
+                return;
+            }
+
+            container.innerHTML = "";
+            currentNode.children.forEach((childNode, index) => {
+                const btn = document.createElement("button");
+                btn.className = `btn btn-sm ${index === 0 ? 'btn-primary' : 'btn-secondary'}`;
+                btn.textContent = `${index === 0 ? 'Main: ' : 'Sideline: '}${childNode.notation}`;
+                btn.onclick = () => {
+                    jumpToNode(childNode);
+                };
+                container.appendChild(btn);
+            });
+            bar.style.display = "flex";
+        }
+
+        /* -------------------------------------------------------------
+           RIGHT CLICK ANNOTATIONS
+        ------------------------------------------------------------- */
+        function handleMouseDown(e, r, f) {
+            if (e.button === 2) {
+                e.preventDefault();
+                rightClickDragStart = { r, f };
+            }
+        }
+
+        function handleMouseUp(e, r, f) {
+            if (e.button === 2) {
+                e.preventDefault();
+                if (!rightClickDragStart) return;
+
+                const startR = rightClickDragStart.r;
+                const startF = rightClickDragStart.f;
+
+                if (startR === r && startF === f) {
+                    const key = `${r},${f}`;
+                    if (tintedSquares.has(key)) tintedSquares.delete(key);
+                    else tintedSquares.add(key);
+                } else {
+                    const existingIdx = drawnArrows.findIndex(a => 
+                        a.from.r === startR && a.from.f === startF && a.to.r === r && a.to.f === f
+                    );
+                    if (existingIdx >= 0) {
+                        drawnArrows.splice(existingIdx, 1);
+                    } else {
+                        drawnArrows.push({ from: { r: startR, f: startF }, to: { r: r, f: f } });
+                    }
+                }
+
+                rightClickDragStart = null;
+                renderChessboard();
+            }
+        }
+
+        function renderArrows() {
+            const svgGroup = document.getElementById("arrowGroup");
+            if (!svgGroup) return;
+            svgGroup.innerHTML = "";
+
+            const boardEl = document.getElementById("chessboard");
+            const rect = boardEl.getBoundingClientRect();
+            const sqSize = rect.width / 8;
+
+            drawnArrows.forEach(arrow => {
+                const startCol = isFlipped ? 7 - arrow.from.f : arrow.from.f;
+                const startRow = isFlipped ? 7 - arrow.from.r : arrow.from.r;
+                const endCol = isFlipped ? 7 - arrow.to.f : arrow.to.f;
+                const endRow = isFlipped ? 7 - arrow.to.r : arrow.to.r;
+
+                const x1 = startCol * sqSize + sqSize / 2;
+                const y1 = startRow * sqSize + sqSize / 2;
+                const x2 = endCol * sqSize + sqSize / 2;
+                const y2 = endRow * sqSize + sqSize / 2;
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1);
+                line.setAttribute("y1", y1);
+                line.setAttribute("x2", x2);
+                line.setAttribute("y2", y2);
+                line.setAttribute("stroke", "rgba(239, 68, 68, 0.85)");
+                line.setAttribute("stroke-width", "6");
+                line.setAttribute("stroke-linecap", "round");
+                line.setAttribute("marker-end", "url(#arrowHead)");
+                svgGroup.appendChild(line);
+            });
+        }
+
+        function clearAnnotations() {
+            tintedSquares.clear();
+            drawnArrows = [];
+        }
+
+        /* -------------------------------------------------------------
+           11. CHESS.JS MOVE EXECUTION & TREE BRANCHING
+        ------------------------------------------------------------- */
+        function coordsToSquare(r, c) {
+            const fileLetters = ['a','b','c','d','e','f','g','h'];
+            const rankNumbers = ['8','7','6','5','4','3','2','1'];
+            return fileLetters[c] + rankNumbers[r];
+        }
+
+        function squareToCoords(sq) {
+            const file = sq.charCodeAt(0) - 97;
+            const rank = 8 - parseInt(sq[1]);
+            return { r: rank, c: file };
+        }
+
+        function makeMoveWithEngine(fromSq, toSq) {
+            const game = new Chess(currentNode.fen);
+            const moveResult = game.move({ from: fromSq, to: toSq, promotion: 'q' });
+
+            if (!moveResult) return null;
+
+            const newFen = game.fen();
+            const fromCoords = squareToCoords(moveResult.from);
+            const toCoords = squareToCoords(moveResult.to);
+
+            const existingChild = currentNode.children.find(ch => 
+                ch.from.r === fromCoords.r && ch.from.c === fromCoords.c &&
+                ch.to.r === toCoords.r && ch.to.c === toCoords.c
+            );
+
+            if (existingChild) {
+                currentNode = existingChild;
+                return existingChild;
+            }
+
+            const isWhiteTurn = currentNode.fen.split(" ")[1] === 'w';
+            const mNum = isWhiteTurn ? currentNode.moveNumber + 1 : currentNode.moveNumber;
+
+            const newNode = {
+                id: nodeIdCounter++,
+                parent: currentNode,
+                children: [],
+                fen: newFen,
+                notation: moveResult.san,
+                from: fromCoords,
+                to: toCoords,
+                moveNumber: mNum === 0 ? 1 : mNum
+            };
+
+            currentNode.children.push(newNode);
+            currentNode = newNode;
+            return newNode;
+        }
+
+        function handleDragStart(e, r, c) {
+            if (currentUserRole !== "coach") return;
+            draggedFrom = { r, c };
+            selectedSquare = { r, c };
+            e.dataTransfer.setData("text/plain", `${r},${c}`);
+            e.dataTransfer.effectAllowed = "move";
+        }
+
+        function handleDrop(e, toR, toC) {
+            e.preventDefault();
+            document.querySelectorAll(".square").forEach(sq => sq.classList.remove("dragover"));
+            if (currentUserRole !== "coach" || !draggedFrom) return;
+
+            const fromSq = coordsToSquare(draggedFrom.r, draggedFrom.c);
+            const toSq = coordsToSquare(toR, toC);
+
+            if (fromSq !== toSq) {
+                const moved = makeMoveWithEngine(fromSq, toSq);
+                if (moved) clearAnnotations();
+            }
+
+            draggedFrom = null;
+            selectedSquare = null;
+            renderChessboard();
+        }
+
+        function handleSquareClick(r, c) {
+            if (currentUserRole !== "coach") return;
+
+            const matrix = fenToMatrix(currentNode.fen);
+            const clickedPiece = matrix[r][c];
+            const isWhiteTurn = currentNode.fen.split(" ")[1] === 'w';
+
+            if (!selectedSquare) {
+                if (clickedPiece) {
+                    const isPieceWhite = clickedPiece === clickedPiece.toUpperCase();
+                    if ((isPieceWhite && isWhiteTurn) || (!isPieceWhite && !isWhiteTurn)) {
+                        selectedSquare = { r, c };
+                        renderChessboard();
+                    }
+                }
+                return;
+            }
+
+            const fromSq = coordsToSquare(selectedSquare.r, selectedSquare.c);
+            const toSq = coordsToSquare(r, c);
+
+            if (fromSq === toSq) {
+                selectedSquare = null;
+                renderChessboard();
+                return;
+            }
+
+            if (clickedPiece) {
+                const isPieceWhite = clickedPiece === clickedPiece.toUpperCase();
+                if ((isPieceWhite && isWhiteTurn) || (!isPieceWhite && !isWhiteTurn)) {
+                    selectedSquare = { r, c };
+                    renderChessboard();
+                    return;
+                }
+            }
+
+            const moved = makeMoveWithEngine(fromSq, toSq);
+            if (moved) clearAnnotations();
+            selectedSquare = null;
+            renderChessboard();
+        }
+
+        /* -------------------------------------------------------------
+           12. PRODUCTION PGN PARSER (STATE-TRACKED SCOPES FOR SIBLINGS)
+        ------------------------------------------------------------- */
+        function openPgnImportModal() {
+            document.getElementById("pgnImportError").style.display = "none";
+            document.getElementById("pgnImportModal").classList.add("active");
+            document.getElementById("pgnInputArea").focus();
+        }
+
+        function closePgnImportModal() {
+            document.getElementById("pgnImportModal").classList.remove("active");
+        }
+
+        function handleLoadPgn() {
+            const rawPgn = document.getElementById("pgnInputArea").value;
+            const errorBanner = document.getElementById("pgnImportError");
+
+            if (!rawPgn.trim()) {
+                errorBanner.style.display = "block";
+                errorBanner.textContent = "PGN is invalid: Input is empty.";
+                return;
+            }
+
+            try {
+                // 1. Remove bracket headers
+                let cleaned = rawPgn.replace(/\[.*?\]/g, " ");
+                // 2. Remove comments { ... }
+                cleaned = cleaned.replace(/\{[^}]*\}/g, " ");
+                // 3. Remove NAGs ($1, $4, etc.)
+                cleaned = cleaned.replace(/\$\d+/g, " ");
+                // 4. Pad parentheses so they tokenize cleanly
+                cleaned = cleaned.replace(/\(/g, " ( ").replace(/\)/g, " ) ");
+                // 5. Strip move numbers with periods
+                cleaned = cleaned.replace(/\d+\s*\.{1,3}/g, " ");
+                // 6. Strip game outcomes
+                cleaned = cleaned.replace(/(1-0|0-1|1\/2-1\/2|\*)/g, " ");
+
+                const tokens = cleaned.trim().split(/\s+/).filter(t => t.length > 0 && t !== "...");
+                if (tokens.length === 0) throw new Error("No moves found in text.");
+
+                nodeIdCounter = 1;
+                const newRoot = createRootNode();
+                
+                let currentParseNode = newRoot;
+
+                // Stack holds { parent: nodeToBranchFrom, returnTo: nodeToResumeAfterClosing }
+                let scopeStack = [];
+
+                for (let i = 0; i < tokens.length; i++) {
+                    const tok = tokens[i];
+
+                    if (tok === "(") {
+                        if (!currentParseNode.parent) throw new Error("Variation without preceding move");
+                        
+                        // Push scope: variation branches off the PARENT of current move,
+                        // and when it closes, it returns to currentParseNode (the main continuation)
+                        scopeStack.push({
+                            parent: currentParseNode.parent,
+                            returnTo: currentParseNode
+                        });
+
+                        currentParseNode = currentParseNode.parent;
+                        continue;
+                    }
+
+                    if (tok === ")") {
+                        if (scopeStack.length === 0) throw new Error("Mismatched parentheses");
+                        const scope = scopeStack.pop();
+                        // Restore parser pointer to the active line being continued
+                        currentParseNode = scope.returnTo;
+                        continue;
+                    }
+
+                    // Validate move using Chess.js engine
+                    const tempGame = new Chess(currentParseNode.fen);
+                    const moveResult = tempGame.move(tok, { sloppy: true });
+
+                    if (!moveResult) {
+                        throw new Error(`Illegal or unresolvable move: ${tok}`);
+                    }
+
+                    const fromCoords = squareToCoords(moveResult.from);
+                    const toCoords = squareToCoords(moveResult.to);
+
+                    // Check if node already exists on this junction
+                    let targetNode = currentParseNode.children.find(ch => 
+                        ch.from.r === fromCoords.r && ch.from.c === fromCoords.c &&
+                        ch.to.r === toCoords.r && ch.to.c === toCoords.c
+                    );
+
+                    if (!targetNode) {
+                        const isWhiteTurn = currentParseNode.fen.split(" ")[1] === 'w';
+                        const mNum = isWhiteTurn ? currentParseNode.moveNumber + 1 : currentParseNode.moveNumber;
+
+                        targetNode = {
+                            id: nodeIdCounter++,
+                            parent: currentParseNode,
+                            children: [],
+                            fen: tempGame.fen(),
+                            notation: moveResult.san,
+                            from: fromCoords,
+                            to: toCoords,
+                            moveNumber: mNum === 0 ? 1 : mNum
+                        };
+                        currentParseNode.children.push(targetNode);
+                    }
+
+                    currentParseNode = targetNode;
+                }
+
+                rootNode = newRoot;
+                currentNode = rootNode;
+                clearAnnotations();
+                closePgnImportModal();
+                renderChessboard();
+
+            } catch (err) {
+                console.error("PGN Parsing Error:", err);
+                errorBanner.style.display = "block";
+                errorBanner.textContent = `Invalid PGN: ${err.message}`;
+            }
+        }
+
+        /* -------------------------------------------------------------
+           13. TRAVERSAL & LINE PROMOTION/DELETION
+        ------------------------------------------------------------- */
+        function stepMove(target) {
+            if (currentUserRole !== "coach") return;
+
+            if (target === 'start') {
+                currentNode = rootNode;
+            } else if (target === 'prev') {
+                if (currentNode.parent) currentNode = currentNode.parent;
+            } else if (target === 'next') {
+                if (currentNode.children.length > 0) {
+                    currentNode = currentNode.children[0];
+                }
+            } else if (target === 'end') {
+                while (currentNode.children.length > 0) {
+                    currentNode = currentNode.children[0];
+                }
+            }
+            selectedSquare = null;
+            clearAnnotations();
+            renderChessboard();
+        }
+
+        function jumpToNode(node) {
+            if (currentUserRole !== "coach") return;
+            currentNode = node;
+            selectedSquare = null;
+            clearAnnotations();
+            renderChessboard();
+        }
+
+        function promoteCurrentLine() {
+            if (currentUserRole !== "coach" || !currentNode.parent) return;
+
+            let walk = currentNode;
+            let promoted = false;
+
+            while (walk && walk.parent) {
+                const parent = walk.parent;
+                const idx = parent.children.indexOf(walk);
+                if (idx > 0) {
+                    parent.children.splice(idx, 1);
+                    parent.children.unshift(walk);
+                    promoted = true;
+                }
+                walk = walk.parent;
+            }
+
+            if (promoted) {
+                alert("Variation promoted to Main Line.");
+                renderChessboard();
+            } else {
+                alert("This move is already on the Main Line.");
+            }
+        }
+
+        function deleteCurrentBranch() {
+            if (currentUserRole !== "coach" || !currentNode.parent) return;
+
+            if (confirm(`Delete this branch starting from move ${currentNode.notation}?`)) {
+                const parent = currentNode.parent;
+                const idx = parent.children.indexOf(currentNode);
+                if (idx >= 0) {
+                    parent.children.splice(idx, 1);
+                }
+                currentNode = parent;
+                renderChessboard();
+            }
+        }
+
+        function resetBoard() {
+            if (currentUserRole !== "coach") return;
+            if (confirm("Reset chessboard and erase entire game tree?")) {
+                rootNode = createRootNode();
+                currentNode = rootNode;
+                clearAnnotations();
+                renderChessboard();
+            }
+        }
+
+        function flipBoard() {
+            if (currentUserRole !== "coach") return;
+            isFlipped = !isFlipped;
+            renderChessboard();
+        }
+
+        /* -------------------------------------------------------------
+           14. VARIATION TREE RENDERER
+        ------------------------------------------------------------- */
+        function renderVariationTree() {
+            const container = document.getElementById("moveHistoryTree");
+            if (rootNode.children.length === 0) {
+                container.innerHTML = `<p class="empty-state" style="padding: 0.5rem;">No moves in tree.</p>`;
+                return;
+            }
+
+            container.innerHTML = "";
+            renderSubtreeDOM(rootNode, container, true);
+        }
+
+        function renderSubtreeDOM(node, targetEl, isMainLine) {
+            if (!node || node.children.length === 0) return;
+
+            const mainChild = node.children[0];
+            const isWhite = mainChild.parent.fen.split(" ")[1] === 'w';
+
+            const moveSpan = document.createElement("span");
+            moveSpan.className = `node-move ${currentNode === mainChild ? 'active-step' : ''}`;
+            moveSpan.textContent = isWhite ? `${mainChild.moveNumber}. ${mainChild.notation}` : `${mainChild.notation}`;
+            moveSpan.onclick = () => jumpToNode(mainChild);
+            targetEl.appendChild(moveSpan);
+            targetEl.appendChild(document.createTextNode(" "));
+
+            if (node.children.length > 1) {
+                for (let i = 1; i < node.children.length; i++) {
+                    const sidelineChild = node.children[i];
+                    const branchDiv = document.createElement("div");
+                    branchDiv.className = "variation-branch";
+
+                    const sideLabel = document.createElement("span");
+                    sideLabel.style.color = "var(--accent)";
+                    sideLabel.style.fontWeight = "600";
+                    sideLabel.textContent = `(Line ${i}: `;
+                    branchDiv.appendChild(sideLabel);
+
+                    const sideMoveSpan = document.createElement("span");
+                    sideMoveSpan.className = `node-move ${currentNode === sidelineChild ? 'active-step' : ''}`;
+                    sideMoveSpan.textContent = isWhite ? `${sidelineChild.moveNumber}. ${sidelineChild.notation}` : `${sidelineChild.moveNumber}... ${sidelineChild.notation}`;
+                    sideMoveSpan.onclick = () => jumpToNode(sidelineChild);
+                    branchDiv.appendChild(sideMoveSpan);
+                    branchDiv.appendChild(document.createTextNode(" "));
+
+                    renderSubtreeDOM(sidelineChild, branchDiv, false);
+                    branchDiv.appendChild(document.createTextNode(")"));
+                    targetEl.appendChild(branchDiv);
+                }
+            }
+
+            renderSubtreeDOM(mainChild, targetEl, isMainLine);
+        }
+
+        /* -------------------------------------------------------------
+           15. RECURSIVE PGN EXPORT
+        ------------------------------------------------------------- */
+        function generatePgnRecursive(node) {
+            let str = "";
+            if (!node || node.children.length === 0) return str;
+
+            const mainChild = node.children[0];
+            const isWhite = mainChild.parent.fen.split(" ")[1] === 'w';
+
+            if (isWhite) {
+                str += `${mainChild.moveNumber}. ${mainChild.notation} `;
+            } else {
+                str += `${mainChild.notation} `;
+            }
+
+            if (node.children.length > 1) {
+                for (let i = 1; i < node.children.length; i++) {
+                    const sideChild = node.children[i];
+                    str += `(${sideChild.moveNumber}${isWhite ? '.' : '...'} ${sideChild.notation} `;
+                    str += generatePgnRecursive(sideChild).trim();
+                    str += `) `;
+                }
+            }
+
+            str += generatePgnRecursive(mainChild);
+            return str;
+        }
+
+        function updatePGNDisplay() {
+            const pgnBox = document.getElementById("pgnBox");
+            let pgnText = `[Event "${academyConfig.name} Study"]\n[Site "Academy Live"]\n[Date "${new Date().toISOString().split('T')[0]}"]\n\n`;
+
+            const moves = generatePgnRecursive(rootNode).trim();
+            pgnText += (moves.length > 0 ? moves + " *" : "*");
+            pgnBox.textContent = pgnText;
+        }
+
+        function copyPGN() {
+            navigator.clipboard.writeText(document.getElementById("pgnBox").textContent).then(() => {
+                alert("PGN with sidelines copied to clipboard!");
+            });
+        }
+
+        /* -------------------------------------------------------------
+           16. KEYBOARD NAVIGATION
+        ------------------------------------------------------------- */
+        window.addEventListener("keydown", (e) => {
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+            if (currentUserRole !== "coach") return;
+
+            if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                stepMove('prev');
+            } else if (e.key === "ArrowRight") {
+                e.preventDefault();
+                stepMove('next');
+            } else if (e.key === "Home") {
+                e.preventDefault();
+                stepMove('start');
+            } else if (e.key === "End") {
+                e.preventDefault();
+                stepMove('end');
+            }
+        });
+
+        /* -------------------------------------------------------------
+           17. INITIALIZATION
+        ------------------------------------------------------------- */
+        document.addEventListener("DOMContentLoaded", () => {
+            applyBranding();
+            applyRoleUI();
+            renderAll();
+            setInterval(checkAndCleanExpiredClasses, 60000);
+        });
+    </script>
+</body>
+</html>
