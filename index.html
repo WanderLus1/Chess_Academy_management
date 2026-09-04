@@ -2,11 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="htmlTitle">Chess Academy Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title id="htmlTitle">Mind Sharpener Chess Academy</title>
     
-    <!-- Standard Chess Engine for FIDE Rules and Move Verification -->
+    <!-- Standard Chess Engine for FIDE Rules -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <!-- Firebase Realtime App & Database SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root {
@@ -41,6 +45,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -50,12 +55,13 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         header.app-header {
             background-color: var(--bg-card);
             border-bottom: 1px solid var(--border);
-            padding: 0.6rem 1.5rem;
+            padding: 0.6rem 1rem;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -68,48 +74,60 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.6rem;
         }
 
         .brand-title {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
-            font-size: 1.25rem;
+            gap: 0.6rem;
+            font-size: 1.15rem;
             font-weight: 700;
             color: var(--text-bright);
             cursor: pointer;
+            text-decoration: none;
         }
 
         .brand-logo-img {
-            width: 46px;
-            height: 46px;
+            width: 38px;
+            height: 38px;
             object-fit: contain;
             border-radius: 6px;
         }
 
         .brand-logo-icon {
             color: var(--accent);
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             line-height: 1;
         }
 
         .nav-tabs {
             display: flex;
-            gap: 0.4rem;
+            gap: 0.35rem;
             align-items: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            max-width: 100%;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-btn {
             background: transparent;
             border: 1px solid transparent;
             color: var(--text-primary);
-            padding: 0.45rem 0.85rem;
+            padding: 0.4rem 0.75rem;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             transition: all 0.15s;
+            flex-shrink: 0;
         }
 
         .tab-btn:hover {
@@ -125,19 +143,19 @@
         .auth-widget {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.5rem;
             background: #14161a;
-            padding: 0.35rem 0.65rem;
+            padding: 0.3rem 0.55rem;
             border-radius: 6px;
             border: 1px solid var(--border);
-            font-size: 0.825rem;
+            font-size: 0.8rem;
         }
 
         .badge-role {
-            padding: 0.15rem 0.5rem;
+            padding: 0.15rem 0.45rem;
             border-radius: 4px;
             font-weight: 700;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             text-transform: uppercase;
         }
 
@@ -153,6 +171,7 @@
             align-items: center;
             z-index: 1000;
             backdrop-filter: blur(4px);
+            padding: 1rem;
         }
 
         .modal-overlay.active { display: flex; }
@@ -161,7 +180,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 1.75rem;
+            padding: 1.5rem;
             width: 100%;
             max-width: 440px;
             box-shadow: 0 15px 30px rgba(0,0,0,0.6);
@@ -195,8 +214,8 @@
 
         main.container {
             max-width: 1380px;
-            margin: 1.25rem auto;
-            padding: 0 1rem;
+            margin: 1rem auto;
+            padding: 0 0.85rem;
             flex: 1;
             width: 100%;
         }
@@ -205,13 +224,15 @@
         .tab-panel.active { display: block; }
 
         .alert-banner {
-            padding: 0.8rem 1.25rem;
+            padding: 0.75rem 1rem;
             border-radius: 6px;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .alert-banner.warning {
@@ -224,28 +245,30 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1.25rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.85rem;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .card-header h2, .card-header h3 {
             color: var(--text-bright);
-            font-size: 1.15rem;
+            font-size: 1.1rem;
         }
 
         .grid-2 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.25rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
         }
 
         .btn {
@@ -253,13 +276,13 @@
             align-items: center;
             justify-content: center;
             gap: 0.4rem;
-            padding: 0.5rem 0.9rem;
+            padding: 0.45rem 0.85rem;
             border-radius: 6px;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
             border: none;
-            font-size: 0.85rem;
+            font-size: 0.825rem;
             transition: 0.15s;
         }
 
@@ -273,12 +296,12 @@
 
         .form-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 0.65rem;
         }
 
-        .form-group { margin-bottom: 0.75rem; }
+        .form-group { margin-bottom: 0.65rem; }
         .form-group label {
             display: block;
             margin-bottom: 0.25rem;
@@ -288,7 +311,7 @@
 
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
-            padding: 0.55rem;
+            padding: 0.5rem;
             background: #121417;
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -312,14 +335,21 @@
         .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--accent-light); }
         .badge-overdue { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
+            min-width: 540px;
         }
 
         .data-table th, .data-table td {
-            padding: 0.7rem;
+            padding: 0.65rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
@@ -330,7 +360,7 @@
             background: #17191d;
         }
 
-        /* Classroom Grid & Lichess Board */
+        /* Classroom Grid & Fluid Board */
         .classroom-grid {
             display: grid;
             grid-template-columns: auto 400px 240px;
@@ -338,34 +368,35 @@
             align-items: start;
         }
 
-        @media (max-width: 1250px) {
-            .classroom-grid { grid-template-columns: auto 1fr; }
-            .attendance-panel { grid-column: span 2; }
-        }
-
-        @media (max-width: 850px) {
-            .classroom-grid { grid-template-columns: 1fr; }
-            .attendance-panel { grid-column: span 1; }
+        @media (max-width: 1200px) {
+            .classroom-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
         }
 
         .board-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
         }
 
         #chessboard-wrapper {
             position: relative;
             background: #25282e;
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.65);
-            width: fit-content;
+            width: 100%;
+            max-width: 560px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
         }
 
         #chessboard {
-            width: 560px;
-            height: 560px;
+            width: 100%;
+            height: 100%;
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
@@ -375,17 +406,12 @@
 
         #arrowOverlay {
             position: absolute;
-            top: 8px;
-            left: 8px;
-            width: 560px;
-            height: 560px;
+            top: 6px;
+            left: 6px;
+            width: calc(100% - 12px);
+            height: calc(100% - 12px);
             pointer-events: none;
             z-index: 10;
-        }
-
-        @media (max-width: 600px) {
-            #chessboard { width: 340px; height: 340px; }
-            #arrowOverlay { width: 340px; height: 340px; }
         }
 
         .square {
@@ -394,6 +420,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            touch-action: none;
         }
 
         .square.light { background-color: var(--sq-light); }
@@ -406,8 +433,8 @@
         .coord-rank {
             position: absolute;
             top: 2px;
-            left: 3px;
-            font-size: 11px;
+            left: 2px;
+            font-size: 10px;
             font-weight: 700;
             line-height: 1;
             pointer-events: none;
@@ -416,8 +443,8 @@
         .coord-file {
             position: absolute;
             bottom: 2px;
-            right: 3px;
-            font-size: 11px;
+            right: 2px;
+            font-size: 10px;
             font-weight: 700;
             line-height: 1;
             pointer-events: none;
@@ -427,29 +454,30 @@
         .square.dark .coord-rank, .square.dark .coord-file { color: var(--sq-light); }
 
         .piece-img {
-            width: 94%;
-            height: 94%;
+            width: 92%;
+            height: 92%;
             pointer-events: auto;
             cursor: grab;
-            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.35));
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
         }
 
         .piece-img:active { cursor: grabbing; }
 
         .board-controls {
-            margin-top: 0.75rem;
+            margin-top: 0.65rem;
             display: flex;
-            gap: 0.4rem;
+            gap: 0.35rem;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
+            max-width: 560px;
         }
 
         .nav-btn-group {
             display: flex;
-            gap: 0.25rem;
+            gap: 0.2rem;
             background: #17191d;
-            padding: 0.25rem;
+            padding: 0.2rem;
             border-radius: 6px;
             border: 1px solid var(--border);
         }
@@ -461,7 +489,7 @@
             padding: 0.65rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
             font-size: 0.8rem;
-            height: 110px;
+            height: 100px;
             overflow-y: auto;
             white-space: pre-wrap;
             color: #dcdad5;
@@ -469,13 +497,13 @@
 
         .tree-container {
             width: 100%;
-            height: 280px;
+            height: 220px;
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 6px;
             background: #121417;
-            padding: 0.75rem;
-            font-size: 0.875rem;
+            padding: 0.65rem;
+            font-size: 0.85rem;
             line-height: 1.7;
         }
 
@@ -500,29 +528,31 @@
 
         .variation-branch {
             display: block;
-            margin: 0.3rem 0 0.3rem 0.85rem;
-            padding: 0.25rem 0.6rem;
+            margin: 0.25rem 0 0.25rem 0.6rem;
+            padding: 0.2rem 0.5rem;
             border-left: 2px solid var(--accent);
             background: rgba(245, 158, 11, 0.04);
             border-radius: 0 4px 4px 0;
-            font-size: 0.825rem;
+            font-size: 0.8rem;
             color: #94a3b8;
         }
 
         #branchSelectorBar {
             display: none;
             position: absolute;
-            bottom: 14px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
             background: #1c1f24;
             border: 2px solid var(--accent);
             box-shadow: 0 8px 24px rgba(0,0,0,0.8);
             border-radius: 8px;
-            padding: 0.5rem 0.8rem;
+            padding: 0.4rem 0.75rem;
             z-index: 50;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
+            max-width: 90%;
+            overflow-x: auto;
         }
 
         .attendance-list {
@@ -530,8 +560,8 @@
             font-size: 0.85rem;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
-            max-height: 440px;
+            gap: 0.35rem;
+            max-height: 280px;
             overflow-y: auto;
         }
 
@@ -539,7 +569,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.45rem 0.6rem;
+            padding: 0.4rem 0.6rem;
             border-radius: 4px;
             background: #14161a;
             border: 1px solid var(--border);
@@ -552,19 +582,38 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 0.9rem;
+            padding: 0.85rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.6rem;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .empty-state {
             color: var(--text-muted);
             text-align: center;
-            padding: 1.5rem;
+            padding: 1.25rem;
             font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 640px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .brand-title {
+                justify-content: space-between;
+            }
+            .auth-widget {
+                justify-content: space-between;
+            }
+            .board-controls .btn {
+                font-size: 0.75rem;
+                padding: 0.3rem 0.5rem;
+            }
         }
     </style>
 </head>
@@ -572,13 +621,22 @@
 
     <header class="app-header">
         <div class="header-content">
-            <div class="brand-title" onclick="switchTab('dashboard')">
-                <span id="brandLogoContainer">
-                    <span id="brandLogoIcon" class="brand-logo-icon">♞</span>
-                </span>
-                <span id="brandName">Grandmaster's Edge Academy</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="brand-title" onclick="switchTab('dashboard')">
+                    <span id="brandLogoContainer">
+                        <span id="brandLogoIcon" class="brand-logo-icon">♞</span>
+                    </span>
+                    <span id="brandName">Mind Sharpener Chess Academy</span>
+                </div>
+
+                <div class="auth-widget">
+                    <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Raghav Juneja</span>
+                    <span id="userRoleBadge" class="badge-role coach">Coach</span>
+                    <button class="btn btn-secondary btn-sm" onclick="openAuthModal()">Switch</button>
+                </div>
             </div>
 
+            <!-- Horizontal Swipeable Ribbon for Mobile -->
             <nav class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
@@ -587,12 +645,6 @@
                 <button class="tab-btn coach-only" onclick="switchTab('students')">Students</button>
                 <button class="tab-btn" onclick="switchTab('about')">About</button>
             </nav>
-
-            <div class="auth-widget">
-                <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Coach</span>
-                <span id="userRoleBadge" class="badge-role coach">Coach</span>
-                <button class="btn btn-secondary btn-sm" onclick="openAuthModal()">Switch / Log In</button>
-            </div>
         </div>
     </header>
 
@@ -611,7 +663,7 @@
             <div class="card-header">
                 <div>
                     <h2 id="dashGreeting">Academy Dashboard</h2>
-                    <p class="text-muted" id="dashSub">Welcome to your academy workspace.</p>
+                    <p class="text-muted" id="dashSub" style="font-size: 0.85rem;">Welcome to your academy workspace.</p>
                 </div>
             </div>
 
@@ -646,9 +698,9 @@
             <div class="card-header">
                 <div>
                     <h2>Live Classroom Board</h2>
-                    <p class="text-muted" id="boardPermissionStatus">Full variation tree powered by chess.js engine. Alternate moves branch automatically.</p>
+                    <p class="text-muted" id="boardPermissionStatus" style="font-size: 0.8rem;">Tap or drag pieces to move. Board synchronizes live across devices.</p>
                 </div>
-                <div id="turnIndicator" class="badge" style="background:#17191d; border: 1px solid var(--border); color:#fff; font-size: 0.85rem;">Turn: White</div>
+                <div id="turnIndicator" class="badge" style="background:#17191d; border: 1px solid var(--border); color:#fff; font-size: 0.8rem;">Turn: White</div>
             </div>
 
             <div class="classroom-grid">
@@ -666,27 +718,26 @@
                         </svg>
 
                         <div id="branchSelectorBar">
-                            <span style="font-size: 0.8rem; color: var(--accent); font-weight: 600;">Choose Line:</span>
-                            <div id="branchOptionsContainer" style="display: flex; gap: 0.4rem;"></div>
+                            <span style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Line:</span>
+                            <div id="branchOptionsContainer" style="display: flex; gap: 0.35rem;"></div>
                         </div>
                     </div>
 
                     <div class="board-controls">
                         <div class="nav-btn-group">
-                            <button id="btnNavStart" class="btn btn-secondary btn-sm" onclick="stepMove('start')" title="First Move (Home)">|&lt;</button>
-                            <button id="btnNavPrev" class="btn btn-secondary btn-sm" onclick="stepMove('prev')" title="Previous Move (Left Arrow)">&lt;</button>
-                            <button id="btnNavNext" class="btn btn-secondary btn-sm" onclick="stepMove('next')" title="Next Move (Right Arrow)">&gt;</button>
-                            <button id="btnNavEnd" class="btn btn-secondary btn-sm" onclick="stepMove('end')" title="Current Line End (End)">&gt;|</button>
+                            <button id="btnNavStart" class="btn btn-secondary btn-sm" onclick="stepMove('start')" title="Start">|&lt;</button>
+                            <button id="btnNavPrev" class="btn btn-secondary btn-sm" onclick="stepMove('prev')" title="Prev">&lt;</button>
+                            <button id="btnNavNext" class="btn btn-secondary btn-sm" onclick="stepMove('next')" title="Next">&gt;</button>
+                            <button id="btnNavEnd" class="btn btn-secondary btn-sm" onclick="stepMove('end')" title="End">&gt;|</button>
                         </div>
                         <button id="btnFlipBoard" class="btn btn-secondary btn-sm" onclick="flipBoard()">Flip</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="openPgnImportModal()">Import PGN</button>
-                        <button class="btn btn-secondary btn-sm coach-only" onclick="promoteCurrentLine()" title="Promote this sideline to the main game">Promote Line</button>
-                        <button class="btn btn-danger btn-sm coach-only" onclick="deleteCurrentBranch()" title="Deletes this sideline or moves after position">Delete Line</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="promoteCurrentLine()">Promote</button>
+                        <button class="btn btn-danger btn-sm coach-only" onclick="deleteCurrentBranch()">Delete</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="resetBoard()">Reset</button>
                     </div>
                 </div>
 
-                <!-- Move Tree & PGN -->
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <div class="card" style="margin-bottom: 0;">
                         <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
@@ -698,21 +749,17 @@
 
                     <div class="card" style="margin-bottom: 0;">
                         <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
-                            <h3>PGN Game</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="copyPGN()">Copy PGN</button>
+                            <h3>PGN Export</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="copyPGN()">Copy</button>
                         </div>
                         <div id="pgnBox" class="pgn-box"></div>
                     </div>
                 </div>
 
-                <!-- Attendance -->
                 <div class="card attendance-panel" style="margin-bottom: 0;">
                     <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
-                        <h3>Class Attendance</h3>
+                        <h3>Attendance</h3>
                     </div>
-                    <p class="text-muted" style="font-size: 0.75rem; margin-bottom: 0.75rem;">
-                        Live attendance for current session.
-                    </p>
                     <ul id="attendanceList" class="attendance-list"></ul>
                 </div>
             </div>
@@ -722,7 +769,7 @@
         <section id="tab-classes" class="tab-panel">
             <div class="card-header">
                 <h2>Scheduled Classes</h2>
-                <span class="text-muted" style="font-size: 0.8rem;">Classes auto-archive 4 hours after start time</span>
+                <span class="text-muted" style="font-size: 0.8rem;">Auto-archives after 4 hours</span>
             </div>
 
             <div class="card coach-only">
@@ -731,11 +778,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Topic / Title</label>
-                            <input type="text" id="classTopic" placeholder="e.g., Tactical Calculation Drill" required>
+                            <input type="text" id="classTopic" placeholder="e.g., King's Indian Defence Dynamics" required>
                         </div>
                         <div class="form-group">
                             <label>Coach Name</label>
-                            <input type="text" id="classCoach" value="Coach" required>
+                            <input type="text" id="classCoach" value="Raghav Juneja" required>
                         </div>
                     </div>
                     <div class="form-row">
@@ -814,7 +861,7 @@
                         </div>
                         <div class="form-group">
                             <label>Student ID</label>
-                            <input type="text" id="studId" placeholder="e.g., CA-101" required>
+                            <input type="text" id="studId" placeholder="e.g., MS-01" required>
                         </div>
                         <div class="form-group">
                             <label>Email</label>
@@ -844,20 +891,22 @@
             </div>
 
             <div class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Student Name</th>
-                            <th>Email</th>
-                            <th>Rating</th>
-                            <th>Fee Status</th>
-                            <th>Due Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTableBody"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Rating</th>
+                                <th>Fee Status</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -874,7 +923,7 @@
                             <input type="text" id="cfgAcademyName" required>
                         </div>
                         <div class="form-group">
-                            <label>Upload Logo Image (PNG / JPG / SVG)</label>
+                            <label>Upload Logo Image</label>
                             <input type="file" id="cfgLogoFileInput" accept="image/*" onchange="handleLogoUpload(event)">
                         </div>
                     </div>
@@ -884,7 +933,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Head Coach Title &amp; Credentials</label>
+                            <label>Head Coach Name &amp; Title</label>
                             <input type="text" id="cfgCoachBio">
                         </div>
                         <div class="form-group">
@@ -898,24 +947,24 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h2 id="aboutAcademyName">Grandmaster's Edge Chess Academy</h2>
+                    <h2 id="aboutAcademyName">Mind Sharpener Chess Academy</h2>
                 </div>
                 <p id="aboutAcademyBio" style="margin-bottom: 1.25rem; color: #cbd5e1; font-size: 0.95rem;">
-                    Dedicated private chess training academy. Structured openings, dynamic middlegames, and endgame technique.
+                    Dedicated chess training academy based in Fazilka. Focused on building deep tactical calculation, positional mastery, and tournament preparation.
                 </p>
                 <div class="grid-2">
                     <div>
                         <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Head Coach Credentials</h4>
                         <p id="aboutCoachBio" style="color: var(--text-muted); font-size: 0.9rem;">
-                            FIDE Certified Coach &amp; Master.
+                            Raghav Juneja — Head Coach &amp; Master Trainer.
                         </p>
                     </div>
                     <div>
                         <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Academy Training Pillars</h4>
                         <ul style="list-style: square; padding-left: 1.25rem; color: var(--text-muted); font-size: 0.9rem;">
-                            <li>Live interactive analysis with strict legal move validation</li>
-                            <li>Integrated Google Meet coaching sessions</li>
-                            <li>Full variation tree and non-destructive sidelines</li>
+                            <li>Real-time interactive analysis board synchronized across devices</li>
+                            <li>Integrated Google Meet live classroom sessions</li>
+                            <li>Deep variation tree analysis with multi-branch sidelines</li>
                         </ul>
                     </div>
                 </div>
@@ -941,7 +990,7 @@
                     <select id="authStudentSelect"></select>
                 </div>
                 <div id="noStudentMsg" style="display:none; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem;">
-                    No students registered yet. Ask coach to add your account.
+                    No students registered yet. Ask Coach Raghav to add your account.
                 </div>
                 <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Access Student Portal</button>
             </form>
@@ -964,24 +1013,44 @@
         <div class="modal-card" style="max-width: 540px;">
             <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Import PGN Game with Sidelines</h3>
             <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">
-                Paste PGN containing nested variations in parentheses. Powered by Chess.js.
+                Paste PGN containing nested variations in parentheses.
             </p>
             <div id="pgnImportError" style="display: none; padding: 0.5rem; border-radius: 4px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.75rem;">
                 Invalid PGN: Could not parse moves.
             </div>
-            <textarea id="pgnInputArea" rows="9" style="width: 100%; background: #121417; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; color: #fff; font-family: monospace; font-size: 0.825rem;" placeholder='Paste PGN here...'></textarea>
+            <textarea id="pgnInputArea" rows="8" style="width: 100%; background: #121417; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; color: #fff; font-family: monospace; font-size: 0.825rem;" placeholder='Paste PGN here...'></textarea>
             <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button class="btn btn-primary" style="flex: 1;" onclick="handleLoadPgn()">Load PGN onto Board</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="handleLoadPgn()">Load PGN</button>
                 <button class="btn btn-secondary" onclick="closePgnImportModal()">Cancel</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT ENGINE -->
+    <!-- FIREBASE REAL-TIME ENGINE SCRIPT -->
     <script>
-        /* -------------------------------------------------------------
-           1. PIECE URL GENERATOR
-        ------------------------------------------------------------- */
+        const firebaseConfig = {
+            apiKey: "AIzaSyCp3-kqyqU_9Nfb_PqOfKwRJnxYugtWnNo",
+            authDomain: "mind-sharpener-chess.firebaseapp.com",
+            databaseURL: "https://mind-sharpener-chess-default-rtdb.firebaseio.com",
+            projectId: "mind-sharpener-chess",
+            storageBucket: "mind-sharpener-chess.firebasestorage.app",
+            messagingSenderId: "714762764930",
+            appId: "1:714762764930:web:2ba9d6599793734b9f2a9b",
+            measurementId: "G-NS8DGRM4P7"
+        };
+
+        let db = null;
+        let isFirebaseConnected = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            isFirebaseConnected = true;
+            console.log("Firebase Realtime Database connected to mind-sharpener-chess.");
+        } catch (e) {
+            console.error("Firebase init failed:", e);
+        }
+
         function getLichessPieceUrl(piece) {
             const isWhite = piece === piece.toUpperCase();
             const colorPrefix = isWhite ? 'w' : 'b';
@@ -989,14 +1058,11 @@
             return `https://lichess1.org/assets/piece/cburnett/${colorPrefix}${pieceLetter}.svg`;
         }
 
-        /* -------------------------------------------------------------
-           2. CONFIGURATION & STATE
-        ------------------------------------------------------------- */
         const DEFAULT_CONFIG = {
-            name: "Grandmaster's Edge Academy",
+            name: "Mind Sharpener Chess Academy",
             logoImg: "",
-            bio: "Dedicated private chess training academy. Structured openings, dynamic middlegames, and endgame technique.",
-            coachBio: "Coach Anand (FM) — Specialist in tactical calculation & master preparation.",
+            bio: "Dedicated chess training academy based in Fazilka. Focused on building deep tactical calculation, positional mastery, and tournament preparation.",
+            coachBio: "Raghav Juneja — Head Coach & Master Trainer",
             adminPasscode: "coach123"
         };
 
@@ -1013,9 +1079,6 @@
         let drawnArrows = [];
         let rightClickDragStart = null;
 
-        /* -------------------------------------------------------------
-           3. AUTO-EXPIRY ENGINE (4 HOURS)
-        ------------------------------------------------------------- */
         function checkAndCleanExpiredClasses() {
             const now = new Date().getTime();
             const fourHoursMs = 4 * 60 * 60 * 1000;
@@ -1032,9 +1095,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-           4. DATA PERSISTENCE & HELPERS
-        ------------------------------------------------------------- */
         function saveData() {
             localStorage.setItem("ca_config", JSON.stringify(academyConfig));
             localStorage.setItem("ca_students", JSON.stringify(students));
@@ -1042,15 +1102,19 @@
             localStorage.setItem("ca_materials", JSON.stringify(materials));
             localStorage.setItem("ca_role", currentUserRole);
             localStorage.setItem("ca_active_student_id", activeStudentId);
+
+            if (isFirebaseConnected) {
+                db.ref("academy/config").set(academyConfig);
+                db.ref("academy/students").set(students);
+                db.ref("academy/classes").set(classes);
+                db.ref("academy/materials").set(materials);
+            }
         }
 
         function getActiveStudent() {
             return students.find(s => s.id === activeStudentId) || null;
         }
 
-        /* -------------------------------------------------------------
-           5. BRANDING & LOGO
-        ------------------------------------------------------------- */
         function applyBranding() {
             document.getElementById("htmlTitle").textContent = academyConfig.name;
             document.getElementById("brandName").textContent = academyConfig.name;
@@ -1102,9 +1166,6 @@
             renderAll();
         }
 
-        /* -------------------------------------------------------------
-           6. AUTHENTICATION MODAL LOGIC
-        ------------------------------------------------------------- */
         function openAuthModal() {
             populateStudentAuthDropdown();
             document.getElementById("authModal").classList.add("active");
@@ -1202,11 +1263,11 @@
             ];
 
             if (currentUserRole === "coach") {
-                nameLabel.textContent = "Coach / Admin";
+                nameLabel.textContent = academyConfig.coachBio.split("—")[0].trim() || "Raghav Juneja";
                 roleBadge.textContent = "Coach";
                 roleBadge.className = "badge-role coach";
                 coachOnlyElements.forEach(el => el.style.display = "");
-                permStatus.textContent = "Coach controls board. Playing alternate moves creates a sideline branch automatically.";
+                permStatus.textContent = "Coach controls board. Moves synchronize live across all connected devices.";
                 navBtns.forEach(btn => { if (btn) btn.disabled = false; });
             } else {
                 const s = getActiveStudent();
@@ -1214,7 +1275,7 @@
                 roleBadge.textContent = "Student";
                 roleBadge.className = "badge-role student";
                 coachOnlyElements.forEach(el => el.style.display = "none");
-                permStatus.textContent = "Spectator mode (Locked). Only coach can move pieces or choose variations.";
+                permStatus.textContent = "Live classroom board (Read-only). Follow along with Coach Raghav.";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
             }
 
@@ -1226,12 +1287,12 @@
             }
         }
 
-        /* -------------------------------------------------------------
-           7. ATTENDANCE TRACKER
-        ------------------------------------------------------------- */
         function recordStudentAttendance(studentId) {
             if (studentId) {
                 attendedStudentIds.add(studentId);
+                if (isFirebaseConnected) {
+                    db.ref("academy/attendance/" + studentId).set(true);
+                }
                 renderAttendancePanel();
             }
         }
@@ -1257,7 +1318,7 @@
                     <li class="attendance-item ${isPresent ? 'present' : 'absent'}">
                         <div>
                             <strong>${s.name}</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">${s.id}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.id}</div>
                         </div>
                         <span class="badge ${isPresent ? 'badge-paid' : 'badge-overdue'}">
                             ${isPresent ? 'Joined' : 'Not Joined'}
@@ -1267,9 +1328,6 @@
             }).join("");
         }
 
-        /* -------------------------------------------------------------
-           8. DASHBOARD, CLASSES, STUDENTS & MATERIALS
-        ------------------------------------------------------------- */
         function switchTab(tabId) {
             document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
             document.querySelectorAll(".nav-tabs .tab-btn").forEach(b => b.classList.remove("active"));
@@ -1310,12 +1368,12 @@
                         alertBanner.style.display = "none";
                     }
                 } else {
-                    greeting.textContent = "Welcome to the Academy!";
+                    greeting.textContent = "Welcome to Mind Sharpener Chess Academy!";
                     sub.textContent = "Please select your profile.";
                     alertBanner.style.display = "none";
                 }
             } else {
-                greeting.textContent = "Coach / Admin Workspace";
+                greeting.textContent = "Coach Raghav Juneja — Workspace";
                 sub.textContent = "Academy operations, scheduling and classroom management.";
                 const overdue = students.filter(s => s.feeStatus === "overdue").length;
                 if (overdue > 0) {
@@ -1546,7 +1604,7 @@
         }
 
         /* -------------------------------------------------------------
-           9. GAME TREE ARCHITECTURE (POWERED BY CHESS.JS)
+           CHESS ENGINE & VARIATION TREE (CHESS.JS)
         ------------------------------------------------------------- */
         const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -1679,9 +1737,6 @@
             updateSidelineBranchPopup();
         }
 
-        /* -------------------------------------------------------------
-           10. SIDELINE CHOICE POPUP
-        ------------------------------------------------------------- */
         function updateSidelineBranchPopup() {
             const bar = document.getElementById("branchSelectorBar");
             const container = document.getElementById("branchOptionsContainer");
@@ -1739,6 +1794,7 @@
 
                 rightClickDragStart = null;
                 renderChessboard();
+                broadcastBoardState();
             }
         }
 
@@ -1768,7 +1824,7 @@
                 line.setAttribute("x2", x2);
                 line.setAttribute("y2", y2);
                 line.setAttribute("stroke", "rgba(239, 68, 68, 0.85)");
-                line.setAttribute("stroke-width", "6");
+                line.setAttribute("stroke-width", "5");
                 line.setAttribute("stroke-linecap", "round");
                 line.setAttribute("marker-end", "url(#arrowHead)");
                 svgGroup.appendChild(line);
@@ -1781,7 +1837,98 @@
         }
 
         /* -------------------------------------------------------------
-           11. CHESS.JS MOVE EXECUTION & TREE BRANCHING
+           BROADCAST BOARD TO FIREBASE (COACH -> ALL STUDENTS)
+        ------------------------------------------------------------- */
+        function broadcastBoardState() {
+            if (!isFirebaseConnected || currentUserRole !== "coach") return;
+
+            const livePayload = {
+                fen: currentNode.fen,
+                notation: currentNode.notation,
+                from: currentNode.from || null,
+                to: currentNode.to || null,
+                tinted: Array.from(tintedSquares),
+                arrows: drawnArrows,
+                updatedAt: Date.now()
+            };
+
+            db.ref("academy/liveBoard").set(livePayload);
+        }
+
+        function setupLiveBoardListener() {
+            if (!isFirebaseConnected) return;
+
+            db.ref("academy/liveBoard").on("value", (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                if (currentUserRole === "student") {
+                    currentNode = {
+                        id: -99,
+                        parent: null,
+                        children: [],
+                        fen: data.fen,
+                        notation: data.notation || "",
+                        from: data.from || null,
+                        to: data.to || null,
+                        moveNumber: 0
+                    };
+
+                    tintedSquares = new Set(data.tinted || []);
+                    drawnArrows = data.arrows || [];
+                    renderChessboard();
+                }
+            });
+
+            db.ref("academy/config").on("value", (snap) => {
+                const val = snap.val();
+                if (val) {
+                    academyConfig = val;
+                    localStorage.setItem("ca_config", JSON.stringify(val));
+                    applyBranding();
+                }
+            });
+
+            db.ref("academy/students").on("value", (snap) => {
+                const val = snap.val();
+                if (val) {
+                    students = val;
+                    localStorage.setItem("ca_students", JSON.stringify(val));
+                    renderAll();
+                }
+            });
+
+            db.ref("academy/classes").on("value", (snap) => {
+                const val = snap.val();
+                if (val) {
+                    classes = val;
+                    localStorage.setItem("ca_classes", JSON.stringify(val));
+                    renderClasses();
+                    renderDashboard();
+                }
+            });
+
+            db.ref("academy/materials").on("value", (snap) => {
+                const val = snap.val();
+                if (val) {
+                    materials = val;
+                    localStorage.setItem("ca_materials", JSON.stringify(val));
+                    renderMaterials();
+                    renderDashboard();
+                }
+            });
+
+            db.ref("academy/attendance").on("value", (snap) => {
+                const val = snap.val();
+                if (val) {
+                    attendedStudentIds = new Set(Object.keys(val));
+                    renderAttendancePanel();
+                }
+            });
+        }
+
+        /* -------------------------------------------------------------
+           CHESS.JS MOVE EXECUTION
         ------------------------------------------------------------- */
         function coordsToSquare(r, c) {
             const fileLetters = ['a','b','c','d','e','f','g','h'];
@@ -1812,6 +1959,7 @@
 
             if (existingChild) {
                 currentNode = existingChild;
+                broadcastBoardState();
                 return existingChild;
             }
 
@@ -1831,6 +1979,7 @@
 
             currentNode.children.push(newNode);
             currentNode = newNode;
+            broadcastBoardState();
             return newNode;
         }
 
@@ -1903,7 +2052,7 @@
         }
 
         /* -------------------------------------------------------------
-           12. PRODUCTION PGN PARSER (STATE-TRACKED SCOPES FOR SIBLINGS)
+           RECURSIVE PGN IMPORT (STATE-TRACKED SCOPE RECOVERY)
         ------------------------------------------------------------- */
         function openPgnImportModal() {
             document.getElementById("pgnImportError").style.display = "none";
@@ -1926,43 +2075,30 @@
             }
 
             try {
-                // 1. Remove bracket headers
                 let cleaned = rawPgn.replace(/\[.*?\]/g, " ");
-                // 2. Remove comments { ... }
                 cleaned = cleaned.replace(/\{[^}]*\}/g, " ");
-                // 3. Remove NAGs ($1, $4, etc.)
                 cleaned = cleaned.replace(/\$\d+/g, " ");
-                // 4. Pad parentheses so they tokenize cleanly
                 cleaned = cleaned.replace(/\(/g, " ( ").replace(/\)/g, " ) ");
-                // 5. Strip move numbers with periods
                 cleaned = cleaned.replace(/\d+\s*\.{1,3}/g, " ");
-                // 6. Strip game outcomes
                 cleaned = cleaned.replace(/(1-0|0-1|1\/2-1\/2|\*)/g, " ");
 
                 const tokens = cleaned.trim().split(/\s+/).filter(t => t.length > 0 && t !== "...");
-                if (tokens.length === 0) throw new Error("No moves found in text.");
+                if (tokens.length === 0) throw new Error("No moves found.");
 
                 nodeIdCounter = 1;
                 const newRoot = createRootNode();
-                
                 let currentParseNode = newRoot;
-
-                // Stack holds { parent: nodeToBranchFrom, returnTo: nodeToResumeAfterClosing }
                 let scopeStack = [];
 
                 for (let i = 0; i < tokens.length; i++) {
                     const tok = tokens[i];
 
                     if (tok === "(") {
-                        if (!currentParseNode.parent) throw new Error("Variation without preceding move");
-                        
-                        // Push scope: variation branches off the PARENT of current move,
-                        // and when it closes, it returns to currentParseNode (the main continuation)
+                        if (!currentParseNode.parent) throw new Error("Variation syntax error");
                         scopeStack.push({
                             parent: currentParseNode.parent,
                             returnTo: currentParseNode
                         });
-
                         currentParseNode = currentParseNode.parent;
                         continue;
                     }
@@ -1970,12 +2106,10 @@
                     if (tok === ")") {
                         if (scopeStack.length === 0) throw new Error("Mismatched parentheses");
                         const scope = scopeStack.pop();
-                        // Restore parser pointer to the active line being continued
                         currentParseNode = scope.returnTo;
                         continue;
                     }
 
-                    // Validate move using Chess.js engine
                     const tempGame = new Chess(currentParseNode.fen);
                     const moveResult = tempGame.move(tok, { sloppy: true });
 
@@ -1986,7 +2120,6 @@
                     const fromCoords = squareToCoords(moveResult.from);
                     const toCoords = squareToCoords(moveResult.to);
 
-                    // Check if node already exists on this junction
                     let targetNode = currentParseNode.children.find(ch => 
                         ch.from.r === fromCoords.r && ch.from.c === fromCoords.c &&
                         ch.to.r === toCoords.r && ch.to.c === toCoords.c
@@ -2017,6 +2150,7 @@
                 clearAnnotations();
                 closePgnImportModal();
                 renderChessboard();
+                broadcastBoardState();
 
             } catch (err) {
                 console.error("PGN Parsing Error:", err);
@@ -2026,7 +2160,7 @@
         }
 
         /* -------------------------------------------------------------
-           13. TRAVERSAL & LINE PROMOTION/DELETION
+           TRAVERSAL CONTROLS
         ------------------------------------------------------------- */
         function stepMove(target) {
             if (currentUserRole !== "coach") return;
@@ -2047,6 +2181,7 @@
             selectedSquare = null;
             clearAnnotations();
             renderChessboard();
+            broadcastBoardState();
         }
 
         function jumpToNode(node) {
@@ -2055,6 +2190,7 @@
             selectedSquare = null;
             clearAnnotations();
             renderChessboard();
+            broadcastBoardState();
         }
 
         function promoteCurrentLine() {
@@ -2077,6 +2213,7 @@
             if (promoted) {
                 alert("Variation promoted to Main Line.");
                 renderChessboard();
+                broadcastBoardState();
             } else {
                 alert("This move is already on the Main Line.");
             }
@@ -2093,6 +2230,7 @@
                 }
                 currentNode = parent;
                 renderChessboard();
+                broadcastBoardState();
             }
         }
 
@@ -2103,6 +2241,7 @@
                 currentNode = rootNode;
                 clearAnnotations();
                 renderChessboard();
+                broadcastBoardState();
             }
         }
 
@@ -2112,9 +2251,6 @@
             renderChessboard();
         }
 
-        /* -------------------------------------------------------------
-           14. VARIATION TREE RENDERER
-        ------------------------------------------------------------- */
         function renderVariationTree() {
             const container = document.getElementById("moveHistoryTree");
             if (rootNode.children.length === 0) {
@@ -2167,9 +2303,6 @@
             renderSubtreeDOM(mainChild, targetEl, isMainLine);
         }
 
-        /* -------------------------------------------------------------
-           15. RECURSIVE PGN EXPORT
-        ------------------------------------------------------------- */
         function generatePgnRecursive(node) {
             let str = "";
             if (!node || node.children.length === 0) return str;
@@ -2211,9 +2344,6 @@
             });
         }
 
-        /* -------------------------------------------------------------
-           16. KEYBOARD NAVIGATION
-        ------------------------------------------------------------- */
         window.addEventListener("keydown", (e) => {
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
             if (currentUserRole !== "coach") return;
@@ -2233,13 +2363,15 @@
             }
         });
 
-        /* -------------------------------------------------------------
-           17. INITIALIZATION
-        ------------------------------------------------------------- */
+        window.addEventListener("resize", () => {
+            renderArrows();
+        });
+
         document.addEventListener("DOMContentLoaded", () => {
             applyBranding();
             applyRoleUI();
             renderAll();
+            setupLiveBoardListener();
             setInterval(checkAndCleanExpiredClasses, 60000);
         });
     </script>
