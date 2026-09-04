@@ -162,15 +162,16 @@
         .badge-role.coach { background: var(--accent-glow); color: var(--accent-light); border: 1px solid var(--accent); }
         .badge-role.student { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
 
+        /* Mandatory Auth Modal Gate */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.82);
+            background: rgba(0, 0, 0, 0.88);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
             padding: 1rem;
         }
 
@@ -179,11 +180,11 @@
         .modal-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
+            border-radius: 10px;
+            padding: 1.75rem;
             width: 100%;
             max-width: 440px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
         }
 
         .auth-switch-tab {
@@ -630,13 +631,12 @@
                 </div>
 
                 <div class="auth-widget">
-                    <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Raghav Juneja</span>
-                    <span id="userRoleBadge" class="badge-role coach">Coach</span>
-                    <button class="btn btn-secondary btn-sm" onclick="openAuthModal()">Switch</button>
+                    <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Guest</span>
+                    <span id="userRoleBadge" class="badge-role student">Student</span>
+                    <button class="btn btn-secondary btn-sm" onclick="openAuthModal(false)">Log Out</button>
                 </div>
             </div>
 
-            <!-- Horizontal Swipeable Ribbon for Mobile -->
             <nav class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
@@ -973,38 +973,41 @@
 
     </main>
 
-    <!-- AUTH MODAL -->
+    <!-- MANDATORY AUTH / SIGN-IN GATE MODAL -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-card">
             <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Academy Sign-In</h3>
-            <p class="text-muted" style="font-size: 0.825rem;">Switch identity or enter credentials.</p>
+            <p class="text-muted" style="font-size: 0.825rem;">Enter your student profile or coach access key to continue.</p>
 
             <div class="auth-switch-tab">
-                <button type="button" class="auth-switch-btn active" id="btnAuthStudentTab" onclick="setAuthModalMode('student')">Student</button>
-                <button type="button" class="auth-switch-btn" id="btnAuthCoachTab" onclick="setAuthModalMode('coach')">Coach / Admin</button>
+                <button type="button" class="auth-switch-btn active" id="btnAuthStudentTab" onclick="setAuthModalMode('student')">Student Portal</button>
+                <button type="button" class="auth-switch-btn" id="btnAuthCoachTab" onclick="setAuthModalMode('coach')">Coach Access</button>
             </div>
 
+            <!-- Student Form -->
             <form id="studentAuthForm" onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
-                    <label>Select Your Student Profile</label>
+                    <label>Select Your Enrolled Name</label>
                     <select id="authStudentSelect"></select>
                 </div>
-                <div id="noStudentMsg" style="display:none; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem;">
-                    No students registered yet. Ask Coach Raghav to add your account.
+                <div id="noStudentMsg" style="display:none; color: var(--accent); font-size: 0.8rem; margin-bottom: 0.5rem;">
+                    No students enrolled yet. If you are the coach, switch to "Coach Access" to set up your academy.
                 </div>
-                <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Access Student Portal</button>
+                <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Enter Student Workspace</button>
             </form>
 
+            <!-- Coach Password Form -->
             <form id="coachAuthForm" onsubmit="handleCoachLogin(event)" style="display: none;">
                 <div class="form-group">
-                    <label>Admin Passcode</label>
-                    <input type="password" id="coachPasswordInput" required autocomplete="current-password">
+                    <label>Coach Access Key (Passcode)</label>
+                    <input type="password" id="coachPasswordInput" placeholder="Default: coach123" required autocomplete="current-password">
                 </div>
                 <div id="coachAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid Passcode.</div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Unlock Coach Workspace</button>
             </form>
 
-            <button type="button" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem;" onclick="closeAuthModal()">Cancel</button>
+            <!-- Cancel button only renders if user is already logged in -->
+            <button type="button" id="btnAuthCancel" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem; display: none;" onclick="closeAuthModal()">Cancel</button>
         </div>
     </div>
 
@@ -1046,7 +1049,7 @@
             firebase.initializeApp(firebaseConfig);
             db = firebase.database();
             isFirebaseConnected = true;
-            console.log("Firebase Realtime Database connected to mind-sharpener-chess.");
+            console.log("Firebase Realtime Database connected.");
         } catch (e) {
             console.error("Firebase init failed:", e);
         }
@@ -1071,8 +1074,9 @@
         let classes = JSON.parse(localStorage.getItem("ca_classes")) || [];
         let materials = JSON.parse(localStorage.getItem("ca_materials")) || [];
 
-        let currentUserRole = localStorage.getItem("ca_role") || "coach";
-        let activeStudentId = localStorage.getItem("ca_active_student_id") || (students[0]?.id || "");
+        // STRICT AUTH: Do not default to coach! Check if session exists
+        let currentUserRole = localStorage.getItem("ca_role") || null; // null = NOT LOGGED IN
+        let activeStudentId = localStorage.getItem("ca_active_student_id") || null;
         let attendedStudentIds = new Set();
 
         let tintedSquares = new Set();
@@ -1100,8 +1104,8 @@
             localStorage.setItem("ca_students", JSON.stringify(students));
             localStorage.setItem("ca_classes", JSON.stringify(classes));
             localStorage.setItem("ca_materials", JSON.stringify(materials));
-            localStorage.setItem("ca_role", currentUserRole);
-            localStorage.setItem("ca_active_student_id", activeStudentId);
+            if (currentUserRole) localStorage.setItem("ca_role", currentUserRole);
+            if (activeStudentId) localStorage.setItem("ca_active_student_id", activeStudentId);
 
             if (isFirebaseConnected) {
                 db.ref("academy/config").set(academyConfig);
@@ -1166,14 +1170,28 @@
             renderAll();
         }
 
-        function openAuthModal() {
+        /* -------------------------------------------------------------
+           MANDATORY AUTHENTICATION MODAL GATE
+        ------------------------------------------------------------- */
+        function openAuthModal(isMandatory = false) {
             populateStudentAuthDropdown();
-            document.getElementById("authModal").classList.add("active");
+            const modal = document.getElementById("authModal");
+            const cancelBtn = document.getElementById("btnAuthCancel");
+
+            modal.classList.add("active");
             document.getElementById("coachAuthError").style.display = "none";
             document.getElementById("coachPasswordInput").value = "";
+
+            // If user has not signed in yet, they cannot cancel or bypass this modal
+            if (isMandatory || !currentUserRole) {
+                cancelBtn.style.display = "none";
+            } else {
+                cancelBtn.style.display = "block";
+            }
         }
 
         function closeAuthModal() {
+            if (!currentUserRole) return; // Prevent closing if not logged in
             document.getElementById("authModal").classList.remove("active");
         }
 
@@ -1225,8 +1243,10 @@
 
             currentUserRole = "student";
             activeStudentId = selectedId;
-            saveData();
-            closeAuthModal();
+            localStorage.setItem("ca_role", currentUserRole);
+            localStorage.setItem("ca_active_student_id", activeStudentId);
+
+            document.getElementById("authModal").classList.remove("active");
             applyRoleUI();
             renderAll();
         }
@@ -1238,14 +1258,25 @@
 
             if (password === academyConfig.adminPasscode) {
                 currentUserRole = "coach";
-                saveData();
-                closeAuthModal();
+                activeStudentId = null;
+                localStorage.setItem("ca_role", currentUserRole);
+                localStorage.removeItem("ca_active_student_id");
+
+                document.getElementById("authModal").classList.remove("active");
                 applyRoleUI();
                 renderAll();
             } else {
                 errorLabel.style.display = "block";
                 errorLabel.textContent = "Incorrect admin passcode.";
             }
+        }
+
+        function logout() {
+            localStorage.removeItem("ca_role");
+            localStorage.removeItem("ca_active_student_id");
+            currentUserRole = null;
+            activeStudentId = null;
+            openAuthModal(true);
         }
 
         function applyRoleUI() {
@@ -1269,7 +1300,7 @@
                 coachOnlyElements.forEach(el => el.style.display = "");
                 permStatus.textContent = "Coach controls board. Moves synchronize live across all connected devices.";
                 navBtns.forEach(btn => { if (btn) btn.disabled = false; });
-            } else {
+            } else if (currentUserRole === "student") {
                 const s = getActiveStudent();
                 nameLabel.textContent = s ? s.name : "Student";
                 roleBadge.textContent = "Student";
@@ -1277,9 +1308,15 @@
                 coachOnlyElements.forEach(el => el.style.display = "none");
                 permStatus.textContent = "Live classroom board (Read-only). Follow along with Coach Raghav.";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
+            } else {
+                nameLabel.textContent = "Not Signed In";
+                roleBadge.textContent = "Guest";
+                roleBadge.className = "badge-role";
+                coachOnlyElements.forEach(el => el.style.display = "none");
+                navBtns.forEach(btn => { if (btn) btn.disabled = true; });
             }
 
-            if (currentUserRole === "student") {
+            if (currentUserRole !== "coach") {
                 const activeTab = document.querySelector(".tab-btn.active");
                 if (activeTab && activeTab.textContent.trim() === "Students") {
                     switchTab("dashboard");
@@ -1369,10 +1406,10 @@
                     }
                 } else {
                     greeting.textContent = "Welcome to Mind Sharpener Chess Academy!";
-                    sub.textContent = "Please select your profile.";
+                    sub.textContent = "Please sign in.";
                     alertBanner.style.display = "none";
                 }
-            } else {
+            } else if (currentUserRole === "coach") {
                 greeting.textContent = "Coach Raghav Juneja — Workspace";
                 sub.textContent = "Academy operations, scheduling and classroom management.";
                 const overdue = students.filter(s => s.feeStatus === "overdue").length;
@@ -1382,6 +1419,10 @@
                 } else {
                     alertBanner.style.display = "none";
                 }
+            } else {
+                greeting.textContent = "Mind Sharpener Chess Academy";
+                sub.textContent = "Please select your student profile or log in as Coach.";
+                alertBanner.style.display = "none";
             }
 
             const nextClassWidget = document.getElementById("nextClassWidget");
@@ -1575,9 +1616,6 @@
                 feeStatus: document.getElementById("studFeeStatus").value,
                 feeDueDate: document.getElementById("studFeeDueDate").value || "",
             });
-            if (!activeStudentId && students.length > 0) {
-                activeStudentId = students[0].id;
-            }
             saveData();
             renderAll();
             e.target.reset();
@@ -1596,7 +1634,7 @@
             if (confirm("Remove this student from academy records?")) {
                 students = students.filter(s => s.id !== studentId);
                 if (activeStudentId === studentId) {
-                    activeStudentId = students[0]?.id || "";
+                    activeStudentId = null;
                 }
                 saveData();
                 renderAll();
@@ -1894,6 +1932,7 @@
                 if (val) {
                     students = val;
                     localStorage.setItem("ca_students", JSON.stringify(val));
+                    populateStudentAuthDropdown();
                     renderAll();
                 }
             });
@@ -2052,7 +2091,7 @@
         }
 
         /* -------------------------------------------------------------
-           RECURSIVE PGN IMPORT (STATE-TRACKED SCOPE RECOVERY)
+           RECURSIVE PGN IMPORT
         ------------------------------------------------------------- */
         function openPgnImportModal() {
             document.getElementById("pgnImportError").style.display = "none";
@@ -2373,6 +2412,11 @@
             renderAll();
             setupLiveBoardListener();
             setInterval(checkAndCleanExpiredClasses, 60000);
+
+            // Mandatory gate check: If first-time user has no saved role, trigger sign-in popup
+            if (!currentUserRole) {
+                openAuthModal(true);
+            }
         });
     </script>
 </body>
