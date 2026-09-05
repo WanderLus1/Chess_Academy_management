@@ -14,18 +14,19 @@
 
     <style>
         :root {
-            --bg-main: #121417;
-            --bg-card: #1c1f24;
-            --bg-card-hover: #262a30;
-            --border: #323740;
+            --bg-main: #101216;
+            --bg-card: #181b20;
+            --bg-card-hover: #21252c;
+            --border: #2c323c;
+            --border-highlight: #3e4654;
             --text-primary: #cbd5e1;
             --text-bright: #ffffff;
-            --text-muted: #838e9e;
+            --text-muted: #828e9f;
 
             /* Yellowish-Orange Accent */
             --accent: #f59e0b;
             --accent-hover: #d97706;
-            --accent-glow: rgba(245, 158, 11, 0.25);
+            --accent-glow: rgba(245, 158, 11, 0.2);
             --accent-light: #fbbf24;
 
             --success: #22c55e;
@@ -58,13 +59,40 @@
             overflow-x: hidden;
         }
 
+        /* -------------------------------------------------------------
+           SMOOTH ANIMATIONS & MICRO-INTERACTIONS
+        ------------------------------------------------------------- */
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Responsive Header */
         header.app-header {
             background-color: var(--bg-card);
             border-bottom: 1px solid var(--border);
-            padding: 0.6rem 1rem;
+            padding: 0.65rem 1.25rem;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         }
 
         .header-content {
@@ -80,12 +108,17 @@
         .brand-title {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.65rem;
             font-size: 1.15rem;
             font-weight: 700;
             color: var(--text-bright);
             cursor: pointer;
             text-decoration: none;
+            transition: transform 0.15s ease;
+        }
+
+        .brand-title:hover {
+            transform: scale(1.01);
         }
 
         .brand-logo-img {
@@ -121,12 +154,12 @@
             background: transparent;
             border: 1px solid transparent;
             color: var(--text-primary);
-            padding: 0.4rem 0.75rem;
+            padding: 0.4rem 0.85rem;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             font-size: 0.85rem;
-            transition: all 0.15s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
         }
 
@@ -138,14 +171,15 @@
         .tab-btn.active {
             background-color: var(--accent);
             color: #000000;
+            box-shadow: 0 2px 8px var(--accent-glow);
         }
 
         .auth-widget {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: #14161a;
-            padding: 0.3rem 0.55rem;
+            background: #111317;
+            padding: 0.3rem 0.6rem;
             border-radius: 6px;
             border: 1px solid var(--border);
             font-size: 0.8rem;
@@ -161,11 +195,13 @@
 
         .badge-role.coach { background: var(--accent-glow); color: var(--accent-light); border: 1px solid var(--accent); }
         .badge-role.student { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
+        .badge-role.guest { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid #64748b; }
 
+        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.88);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
@@ -174,42 +210,48 @@
             padding: 1rem;
         }
 
-        .modal-overlay.active { display: flex; }
+        .modal-overlay.active { 
+            display: flex; 
+        }
 
         .modal-card {
             background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
+            border: 1px solid var(--border-highlight);
+            border-radius: 12px;
             padding: 1.75rem;
             width: 100%;
-            max-width: 440px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            max-width: 450px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+            animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .auth-switch-tab {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.35rem;
             margin: 1rem 0;
-            background: #121417;
+            background: #111317;
             padding: 0.25rem;
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         .auth-switch-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 0.45rem;
-            border-radius: 4px;
+            padding: 0.45rem 0.2rem;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            transition: all 0.15s ease;
+            text-align: center;
         }
 
         .auth-switch-btn.active {
             background: var(--bg-card);
             color: var(--text-bright);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         }
 
         main.container {
@@ -220,12 +262,18 @@
             width: 100%;
         }
 
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        .tab-panel { 
+            display: none; 
+        }
+
+        .tab-panel.active { 
+            display: block; 
+            animation: fadeInSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
         .alert-banner {
             padding: 0.75rem 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
@@ -236,24 +284,36 @@
         }
 
         .alert-banner.warning {
-            background-color: rgba(245, 158, 11, 0.15);
+            background-color: rgba(245, 158, 11, 0.12);
             border: 1px solid var(--accent);
             color: var(--accent-light);
+        }
+
+        .alert-banner.info {
+            background-color: rgba(59, 130, 246, 0.12);
+            border: 1px solid #3b82f6;
+            color: #93c5fd;
         }
 
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            border-radius: 10px;
+            padding: 1.15rem;
+            margin-bottom: 1.15rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border-highlight);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.85rem;
+            margin-bottom: 0.9rem;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
             flex-wrap: wrap;
@@ -283,16 +343,25 @@
             cursor: pointer;
             border: none;
             font-size: 0.825rem;
-            transition: 0.15s;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         .btn-primary { background: var(--accent); color: #000; }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-secondary { background: #2a2f38; color: var(--text-bright); border: 1px solid var(--border); }
-        .btn-secondary:hover { background: #353b47; }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 2px 8px var(--accent-glow); }
+        .btn-secondary { background: #262b33; color: var(--text-bright); border: 1px solid var(--border); }
+        .btn-secondary:hover:not(:disabled) { background: #323843; border-color: var(--border-highlight); }
         .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover:not(:disabled) { background: #dc2626; }
         .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.8rem; }
-        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .form-row {
             display: grid;
@@ -311,17 +380,19 @@
 
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
-            padding: 0.5rem;
-            background: #121417;
+            padding: 0.5rem 0.65rem;
+            background: #111317;
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text-bright);
             font-size: 0.875rem;
+            transition: border-color 0.15s ease;
         }
 
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
         }
 
         .badge {
@@ -357,7 +428,96 @@
         .data-table th {
             color: var(--text-muted);
             font-weight: 600;
-            background: #17191d;
+            background: #14161a;
+        }
+
+        /* -------------------------------------------------------------
+           COACH LIST CARD FORMAT
+        ------------------------------------------------------------- */
+        .coaches-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .coach-profile-card {
+            background: #15171c;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            gap: 1.15rem;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+        }
+
+        .coach-profile-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        .coach-avatar-wrapper {
+            width: 85px;
+            height: 85px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #232730;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-highlight);
+        }
+
+        .coach-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .coach-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .coach-contact-bar {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.45rem;
+            font-size: 0.82rem;
+        }
+
+        .coach-contact-bar a {
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .coach-contact-bar a:hover {
+            text-decoration: underline;
+        }
+
+        /* DEVELOPER SHOWCASE CARD */
+        .developer-card {
+            background: linear-gradient(145deg, #161a22, #101216);
+            border: 1px solid #3b4252;
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .developer-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), #3b82f6);
         }
 
         /* Classroom Grid & Fluid Board */
@@ -671,6 +831,14 @@
                 font-size: 0.75rem;
                 padding: 0.3rem 0.5rem;
             }
+            .coach-profile-card {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .coach-contact-bar {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -688,18 +856,19 @@
 
                 <div class="auth-widget">
                     <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Guest</span>
-                    <span id="userRoleBadge" class="badge-role student">Student</span>
-                    <button class="btn btn-secondary btn-sm" onclick="openAuthModal(false)">Log Out</button>
+                    <span id="userRoleBadge" class="badge-role guest">Guest</span>
+                    <button class="btn btn-secondary btn-sm" onclick="openAuthModal(false)">Switch / Sign In</button>
                 </div>
             </div>
 
+            <!-- Tab Ribbon -->
             <nav class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
                 <button class="tab-btn" onclick="switchTab('classes')">Classes</button>
                 <button class="tab-btn" onclick="switchTab('materials')">Materials</button>
                 <button class="tab-btn coach-only" onclick="switchTab('students')">Students</button>
-                <button class="tab-btn" onclick="switchTab('about')">About</button>
+                <button class="tab-btn" onclick="switchTab('about')">About &amp; Coaches</button>
             </nav>
         </div>
     </header>
@@ -712,6 +881,13 @@
                 <span id="feeAlertMessage">Tuition payment is due.</span>
             </div>
             <span class="badge badge-warning">Action Required</span>
+        </div>
+
+        <div id="guestNoticeBanner" class="alert-banner info" style="display: none;">
+            <div>
+                <strong>Visitor Preview:</strong> You are exploring Mind Sharpener Chess Academy as a Guest. To access live classroom meets, study links, and tactical tests, please enroll or sign in.
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('about')">Contact Coaches</button>
         </div>
 
         <!-- 1. DASHBOARD TAB -->
@@ -889,7 +1065,7 @@
                         </div>
                         <div class="form-group">
                             <label>Coach Name</label>
-                            <input type="text" id="classCoach" value="Raghav Juneja" required>
+                            <select id="classCoachSelect" required></select>
                         </div>
                     </div>
                     <div class="form-row">
@@ -952,7 +1128,7 @@
             <div id="materialsListContainer"></div>
         </section>
 
-        <!-- 5. STUDENTS TAB -->
+        <!-- 5. STUDENTS TAB (COACH ONLY) -->
         <section id="tab-students" class="tab-panel">
             <div class="card-header">
                 <h2>Student Directory &amp; Tuition Tracking</h2>
@@ -1017,11 +1193,13 @@
             </div>
         </section>
 
-        <!-- 6. ABOUT TAB -->
+        <!-- 6. ABOUT TAB & COACHES & DEVELOPER -->
         <section id="tab-about" class="tab-panel">
+            
+            <!-- Coach-Only Academy Administration -->
             <div class="card coach-only" style="border: 1px solid var(--accent);">
                 <div class="card-header">
-                    <h3 style="color: var(--accent);">⚙️ Academy Branding &amp; Settings (Admin)</h3>
+                    <h3 style="color: var(--accent);">⚙️ Academy Settings &amp; Security (Coach Only)</h3>
                 </div>
                 <form onsubmit="handleSaveAcademySettings(event)">
                     <div class="form-row">
@@ -1030,18 +1208,28 @@
                             <input type="text" id="cfgAcademyName" required>
                         </div>
                         <div class="form-group">
-                            <label>Upload Logo Image</label>
+                            <label>Official Academy Instagram URL / Handle</label>
+                            <input type="text" id="cfgAcademyInsta" placeholder="https://instagram.com/mind_sharpener_chess">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Official Contact Number</label>
+                            <input type="text" id="cfgAcademyPhone" placeholder="+91 XXXXXXXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label>Upload Academy Logo (PNG / JPG)</label>
                             <input type="file" id="cfgLogoFileInput" accept="image/*" onchange="handleLogoUpload(event)">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Academy Mission / Bio</label>
+                        <label>Academy Overview &amp; Mission</label>
                         <textarea id="cfgAcademyBio" rows="3"></textarea>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Head Coach Name &amp; Title</label>
-                            <input type="text" id="cfgCoachBio">
+                            <label>Shared Student Passcode</label>
+                            <input type="text" id="cfgStudentPasscode" placeholder="Default: sharpener2026" required>
                         </div>
                         <div class="form-group">
                             <label>Update Admin Passcode</label>
@@ -1052,30 +1240,119 @@
                 </form>
             </div>
 
+            <!-- Coach-Only: Add New Coach Form -->
+            <div class="card coach-only">
+                <div class="card-header">
+                    <h3>👨‍🏫 Add New Coach / Faculty</h3>
+                </div>
+                <form onsubmit="handleCreateCoach(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Coach Full Name</label>
+                            <input type="text" id="coachFormName" placeholder="e.g. Raghav Juneja" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Title &amp; FIDE Rating / Role</label>
+                            <input type="text" id="coachFormRole" placeholder="e.g. FIDE Instructor | Master Trainer" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone / WhatsApp Number</label>
+                            <input type="text" id="coachFormPhone" placeholder="+91 XXXXXXXXXX" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Instagram Handle / Link</label>
+                            <input type="text" id="coachFormInsta" placeholder="@coach_instagram">
+                        </div>
+                        <div class="form-group">
+                            <label>Profile Photo URL</label>
+                            <input type="url" id="coachFormPhoto" placeholder="https://example.com/photo.jpg">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Achievements &amp; Specialization</label>
+                        <textarea id="coachFormBio" rows="2" placeholder="Describe tournaments won, specializations, students trained..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Coach to Faculty</button>
+                </form>
+            </div>
+
+            <!-- Public Academy Overview Card -->
             <div class="card">
                 <div class="card-header">
                     <h2 id="aboutAcademyName">Mind Sharpener Chess Academy</h2>
+                    <span class="badge badge-paid">Fazilka, Punjab</span>
                 </div>
-                <p id="aboutAcademyBio" style="margin-bottom: 1.25rem; color: #cbd5e1; font-size: 0.95rem;">
-                    Dedicated chess training academy based in Fazilka. Focused on building deep tactical calculation, positional mastery, and tournament preparation.
+                <p id="aboutAcademyBio" style="margin-bottom: 1.15rem; color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                    Dedicated chess training academy based in Fazilka. Focused on building deep tactical calculation, positional mastery, and tournament preparation for emerging chess players.
                 </p>
-                <div class="grid-2">
+
+                <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 1rem; font-size: 0.88rem;">
                     <div>
-                        <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Head Coach Credentials</h4>
-                        <p id="aboutCoachBio" style="color: var(--text-muted); font-size: 0.9rem;">
-                            Raghav Juneja — Head Coach &amp; Master Trainer.
-                        </p>
+                        <strong style="color: var(--accent);">Official Contact: </strong>
+                        <span id="displayAcademyPhone">+91 XXXXXXXXXX</span>
                     </div>
                     <div>
-                        <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Academy Training Pillars</h4>
-                        <ul style="list-style: square; padding-left: 1.25rem; color: var(--text-muted); font-size: 0.9rem;">
-                            <li>Real-time interactive analysis board synchronized across devices</li>
-                            <li>Integrated Google Meet live classroom sessions</li>
+                        <strong style="color: var(--accent);">Instagram: </strong>
+                        <a id="displayAcademyInsta" href="#" target="_blank" style="color: #60a5fa; text-decoration: none;">@mindsharpnerchess_fazilka</a>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent);">Location: </strong>
+                        <span>Fazilka, Punjab, India</span>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 1rem;">
+                    <div style="background: #121417; padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Academy Training Pillars</h4>
+                        <ul style="list-style: square; padding-left: 1.25rem; color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
+                            <li>Live cross-device interactive analysis boards</li>
+                            <li>Integrated Google Meet coaching sessions</li>
                             <li>Deep variation tree analysis with multi-branch sidelines</li>
+                            <li>Endgame drills and tactical calculation tests</li>
                         </ul>
+                    </div>
+                    <div style="background: #121417; padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Enrollment Inquiries</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                            Interested in joining our online or offline batches? Contact our trainers below or drop a WhatsApp message to schedule an introductory evaluation session.
+                        </p>
                     </div>
                 </div>
             </div>
+
+            <!-- Coaches Roster List Container -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Meet Our Coaches</h2>
+                    <span class="text-muted" style="font-size: 0.8rem;">Certified Chess Trainers</span>
+                </div>
+                <div id="coachesListContainer" class="coaches-grid"></div>
+            </div>
+
+            <!-- DEVELOPER SHOWCASE SECTION -->
+            <div class="developer-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem;">
+                    <div>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--accent); letter-spacing: 0.05em;">Engine &amp; Portal Architecture</span>
+                        <h3 style="color: #fff; font-size: 1.15rem; margin-top: 0.15rem;" id="devName">Designed &amp; Developed by [Developer Name]</h3>
+                    </div>
+                    <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6;">Lead Engineer</span>
+                </div>
+                <p id="devBio" style="font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-bottom: 0.85rem;">
+                    Built with custom real-time database synchronization, chess engine validation, multi-branch variation parsing, and responsive touch-first UI for Mind Sharpener Chess Academy.
+                </p>
+                <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                    <a id="devGithubLink" href="https://github.com" target="_blank" class="btn btn-secondary btn-sm">
+                        <span>GitHub Profile</span>
+                    </a>
+                    <a id="devLinkedinLink" href="https://linkedin.com" target="_blank" class="btn btn-secondary btn-sm">
+                        <span>LinkedIn Profile</span>
+                    </a>
+                </div>
+            </div>
+
         </section>
 
     </main>
@@ -1083,34 +1360,51 @@
     <!-- MANDATORY AUTH / SIGN-IN GATE MODAL -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-card">
-            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Academy Sign-In</h3>
-            <p class="text-muted" style="font-size: 0.825rem;">Enter your student profile or coach access key to continue.</p>
+            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Academy Portal Access</h3>
+            <p class="text-muted" style="font-size: 0.825rem;">Sign in with your profile or explore as a guest visitor.</p>
 
             <div class="auth-switch-tab">
-                <button type="button" class="auth-switch-btn active" id="btnAuthStudentTab" onclick="setAuthModalMode('student')">Student Portal</button>
-                <button type="button" class="auth-switch-btn" id="btnAuthCoachTab" onclick="setAuthModalMode('coach')">Coach Access</button>
+                <button type="button" class="auth-switch-btn active" id="btnAuthStudentTab" onclick="setAuthModalMode('student')">Student</button>
+                <button type="button" class="auth-switch-btn" id="btnAuthCoachTab" onclick="setAuthModalMode('coach')">Coach</button>
+                <button type="button" class="auth-switch-btn" id="btnAuthGuestTab" onclick="setAuthModalMode('guest')">Guest</button>
             </div>
 
+            <!-- Student Form -->
             <form id="studentAuthForm" onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
                     <label>Select Your Enrolled Name</label>
                     <select id="authStudentSelect"></select>
                 </div>
-                <div id="noStudentMsg" style="display:none; color: var(--accent); font-size: 0.8rem; margin-bottom: 0.5rem;">
-                    No students enrolled yet. If you are the coach, switch to "Coach Access" to set up your academy.
+                <div class="form-group">
+                    <label>Student Access Passcode</label>
+                    <input type="password" id="studentPasswordInput" placeholder="Enter student passcode" required autocomplete="current-password">
                 </div>
-                <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Enter Student Workspace</button>
+                <div id="studentAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid student passcode. Ask your coach.</div>
+                <div id="noStudentMsg" style="display:none; color: var(--accent); font-size: 0.8rem; margin-bottom: 0.5rem;">
+                    No students enrolled yet. Use Coach Access to register students or explore as Guest.
+                </div>
+                <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Enter Student Portal</button>
             </form>
 
+            <!-- Coach Password Form -->
             <form id="coachAuthForm" onsubmit="handleCoachLogin(event)" style="display: none;">
                 <div class="form-group">
-                    <label>Coach Access Key (Passcode)</label>
+                    <label>Coach Admin Passcode</label>
                     <input type="password" id="coachPasswordInput" placeholder="Default: coach123" required autocomplete="current-password">
                 </div>
-                <div id="coachAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid Passcode.</div>
+                <div id="coachAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid Coach Passcode.</div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Unlock Coach Workspace</button>
             </form>
 
+            <!-- Guest Visitor Form -->
+            <div id="guestAuthBox" style="display: none;">
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; line-height: 1.5;">
+                    Just checking out the academy? Browse our schedule, curriculum, and coach profiles freely with read-only preview access.
+                </p>
+                <button type="button" class="btn btn-primary" style="width: 100%;" onclick="handleGuestLogin()">Explore Academy as Guest</button>
+            </div>
+
+            <!-- Cancel button only renders if user is already logged in -->
             <button type="button" id="btnAuthCancel" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem; display: none;" onclick="closeAuthModal()">Cancel</button>
         </div>
     </div>
@@ -1187,15 +1481,31 @@
             name: "Mind Sharpener Chess Academy",
             logoImg: "",
             bio: "Dedicated chess training academy based in Fazilka. Focused on building deep tactical calculation, positional mastery, and tournament preparation.",
-            coachBio: "Raghav Juneja — Head Coach & Master Trainer",
-            adminPasscode: "coach123"
+            adminPasscode: "coach123",
+            studentPasscode: "sharpener2026",
+            academyPhone: "+91 XXXXXXXXXX",
+            academyInsta: "https://instagram.com/mindsharpnerchess_fazilka"
         };
+
+        const DEFAULT_COACHES = [
+            {
+                id: "coach_raghav",
+                name: "Raghav Juneja",
+                role: "Head Coach & Master Trainer",
+                phone: "+91 XXXXXXXXXX",
+                instagram: "https://instagram.com/raghav_chess",
+                bio: "Experienced FIDE rated trainer specializing in sharp tactical calculation, opening repertoire formulation, and high-level endgame technique. Trained multiple state-level champions.",
+                photo: ""
+            }
+        ];
 
         let academyConfig = JSON.parse(localStorage.getItem("ca_config")) || DEFAULT_CONFIG;
         let students = JSON.parse(localStorage.getItem("ca_students")) || [];
         let classes = JSON.parse(localStorage.getItem("ca_classes")) || [];
         let materials = JSON.parse(localStorage.getItem("ca_materials")) || [];
+        let coaches = JSON.parse(localStorage.getItem("ca_coaches")) || DEFAULT_COACHES;
 
+        // Persistent Role state: 'coach', 'student', or 'guest'
         let currentUserRole = localStorage.getItem("ca_role") || null;
         let activeStudentId = localStorage.getItem("ca_active_student_id") || null;
         let attendedStudentIds = new Set();
@@ -1230,6 +1540,7 @@
             localStorage.setItem("ca_students", JSON.stringify(students));
             localStorage.setItem("ca_classes", JSON.stringify(classes));
             localStorage.setItem("ca_materials", JSON.stringify(materials));
+            localStorage.setItem("ca_coaches", JSON.stringify(coaches));
             if (currentUserRole) localStorage.setItem("ca_role", currentUserRole);
             if (activeStudentId) localStorage.setItem("ca_active_student_id", activeStudentId);
 
@@ -1238,6 +1549,7 @@
                 db.ref("academy/students").set(students);
                 db.ref("academy/classes").set(classes);
                 db.ref("academy/materials").set(materials);
+                db.ref("academy/coaches").set(coaches);
             }
         }
 
@@ -1250,7 +1562,15 @@
             document.getElementById("brandName").textContent = academyConfig.name;
             document.getElementById("aboutAcademyName").textContent = academyConfig.name;
             document.getElementById("aboutAcademyBio").textContent = academyConfig.bio;
-            document.getElementById("aboutCoachBio").textContent = academyConfig.coachBio;
+
+            const phoneEl = document.getElementById("displayAcademyPhone");
+            if (phoneEl) phoneEl.textContent = academyConfig.academyPhone || "+91 XXXXXXXXXX";
+
+            const instaEl = document.getElementById("displayAcademyInsta");
+            if (instaEl) {
+                instaEl.href = academyConfig.academyInsta || "#";
+                instaEl.textContent = academyConfig.academyInsta ? academyConfig.academyInsta.replace("https://instagram.com/", "@") : "@mindsharpnerchess";
+            }
 
             const logoContainer = document.getElementById("brandLogoContainer");
             if (academyConfig.logoImg) {
@@ -1259,9 +1579,11 @@
                 logoContainer.innerHTML = `<span id="brandLogoIcon" class="brand-logo-icon">♞</span>`;
             }
 
-            document.getElementById("cfgAcademyName").value = academyConfig.name;
-            document.getElementById("cfgAcademyBio").value = academyConfig.bio;
-            document.getElementById("cfgCoachBio").value = academyConfig.coachBio;
+            document.getElementById("cfgAcademyName").value = academyConfig.name || "";
+            document.getElementById("cfgAcademyBio").value = academyConfig.bio || "";
+            document.getElementById("cfgAcademyPhone").value = academyConfig.academyPhone || "";
+            document.getElementById("cfgAcademyInsta").value = academyConfig.academyInsta || "";
+            document.getElementById("cfgStudentPasscode").value = academyConfig.studentPasscode || "sharpener2026";
         }
 
         function handleLogoUpload(e) {
@@ -1281,19 +1603,95 @@
             e.preventDefault();
             academyConfig.name = document.getElementById("cfgAcademyName").value.trim();
             academyConfig.bio = document.getElementById("cfgAcademyBio").value.trim();
-            academyConfig.coachBio = document.getElementById("cfgCoachBio").value.trim();
+            academyConfig.academyPhone = document.getElementById("cfgAcademyPhone").value.trim();
+            academyConfig.academyInsta = document.getElementById("cfgAcademyInsta").value.trim();
+            academyConfig.studentPasscode = document.getElementById("cfgStudentPasscode").value.trim() || "sharpener2026";
 
             const newPass = document.getElementById("cfgAdminPasscode").value.trim();
             if (newPass) {
                 academyConfig.adminPasscode = newPass;
-                alert("Settings and Admin Passcode updated.");
+                alert("Academy Profile and Admin Passcode updated.");
             } else {
-                alert("Academy branding updated.");
+                alert("Academy profile updated.");
             }
 
             saveData();
             applyBranding();
             renderAll();
+        }
+
+        /* -------------------------------------------------------------
+           COACH MANAGEMENT (COACH ONLY)
+        ------------------------------------------------------------- */
+        function handleCreateCoach(e) {
+            e.preventDefault();
+            const newCoach = {
+                id: "coach_" + Date.now(),
+                name: document.getElementById("coachFormName").value.trim(),
+                role: document.getElementById("coachFormRole").value.trim(),
+                phone: document.getElementById("coachFormPhone").value.trim(),
+                instagram: document.getElementById("coachFormInsta").value.trim(),
+                photo: document.getElementById("coachFormPhoto").value.trim(),
+                bio: document.getElementById("coachFormBio").value.trim()
+            };
+
+            coaches.push(newCoach);
+            saveData();
+            renderCoaches();
+            e.target.reset();
+            alert(`Coach ${newCoach.name} added to the faculty.`);
+        }
+
+        function deleteCoach(id) {
+            if (coaches.length <= 1) {
+                alert("At least one coach must remain on the roster.");
+                return;
+            }
+            if (confirm("Remove this coach from the academy faculty?")) {
+                coaches = coaches.filter(c => c.id !== id);
+                saveData();
+                renderCoaches();
+            }
+        }
+
+        function renderCoaches() {
+            const container = document.getElementById("coachesListContainer");
+            const selectDropdown = document.getElementById("classCoachSelect");
+
+            if (selectDropdown) {
+                selectDropdown.innerHTML = coaches.map(c => `
+                    <option value="${c.name}">${c.name} (${c.role})</option>
+                `).join("");
+            }
+
+            if (!container) return;
+
+            if (coaches.length === 0) {
+                container.innerHTML = `<p class="empty-state">No coaches listed yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = coaches.map(c => `
+                <div class="coach-profile-card">
+                    <div class="coach-avatar-wrapper">
+                        ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="coach-avatar-img">` : `<span style="font-size: 2.2rem; color: var(--accent);">♞</span>`}
+                    </div>
+                    <div class="coach-details">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.4rem;">
+                            <div>
+                                <h3 style="color: var(--text-bright); font-size: 1.05rem;">${c.name}</h3>
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-light); margin-top: 0.2rem;">${c.role}</span>
+                            </div>
+                            ${currentUserRole === 'coach' ? `<button class="btn btn-danger btn-sm" onclick="deleteCoach('${c.id}')">Remove</button>` : ''}
+                        </div>
+                        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; line-height: 1.5;">${c.bio}</p>
+                        <div class="coach-contact-bar">
+                            ${c.phone ? `<span>📞 <a href="tel:${c.phone}">${c.phone}</a></span>` : ''}
+                            ${c.instagram ? `<span>📸 <a href="${c.instagram.startsWith('http') ? c.instagram : 'https://instagram.com/' + c.instagram.replace('@', '')}" target="_blank">${c.instagram.replace('https://instagram.com/', '@')}</a></span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join("");
         }
 
         /* -------------------------------------------------------------
@@ -1306,7 +1704,9 @@
 
             modal.classList.add("active");
             document.getElementById("coachAuthError").style.display = "none";
+            document.getElementById("studentAuthError").style.display = "none";
             document.getElementById("coachPasswordInput").value = "";
+            document.getElementById("studentPasswordInput").value = "";
 
             if (isMandatory || !currentUserRole) {
                 cancelBtn.style.display = "none";
@@ -1323,21 +1723,22 @@
         function setAuthModalMode(mode) {
             const studentBtn = document.getElementById("btnAuthStudentTab");
             const coachBtn = document.getElementById("btnAuthCoachTab");
+            const guestBtn = document.getElementById("btnAuthGuestTab");
+
             const studentForm = document.getElementById("studentAuthForm");
             const coachForm = document.getElementById("coachAuthForm");
+            const guestBox = document.getElementById("guestAuthBox");
 
-            if (mode === 'student') {
-                studentBtn.classList.add("active");
-                coachBtn.classList.remove("active");
-                studentForm.style.display = "block";
-                coachForm.style.display = "none";
-            } else {
-                coachBtn.classList.add("active");
-                studentBtn.classList.remove("active");
-                coachForm.style.display = "block";
-                studentForm.style.display = "none";
-                document.getElementById("coachPasswordInput").focus();
-            }
+            studentBtn.classList.toggle("active", mode === 'student');
+            coachBtn.classList.toggle("active", mode === 'coach');
+            guestBtn.classList.toggle("active", mode === 'guest');
+
+            studentForm.style.display = mode === 'student' ? "block" : "none";
+            coachForm.style.display = mode === 'coach' ? "block" : "none";
+            guestBox.style.display = mode === 'guest' ? "block" : "none";
+
+            if (mode === 'coach') document.getElementById("coachPasswordInput").focus();
+            if (mode === 'student') document.getElementById("studentPasswordInput").focus();
         }
 
         function populateStudentAuthDropdown() {
@@ -1364,7 +1765,16 @@
         function handleStudentLogin(e) {
             e.preventDefault();
             const selectedId = document.getElementById("authStudentSelect").value;
-            if (!selectedId) return;
+            const inputPass = document.getElementById("studentPasswordInput").value.trim();
+            const errorLabel = document.getElementById("studentAuthError");
+
+            const validStudentPass = academyConfig.studentPasscode || "sharpener2026";
+
+            if (inputPass !== validStudentPass) {
+                errorLabel.style.display = "block";
+                errorLabel.textContent = "Invalid student passcode. Ask your coach.";
+                return;
+            }
 
             currentUserRole = "student";
             activeStudentId = selectedId;
@@ -1396,12 +1806,15 @@
             }
         }
 
-        function logout() {
-            localStorage.removeItem("ca_role");
-            localStorage.removeItem("ca_active_student_id");
-            currentUserRole = null;
+        function handleGuestLogin() {
+            currentUserRole = "guest";
             activeStudentId = null;
-            openAuthModal(true);
+            localStorage.setItem("ca_role", "guest");
+            localStorage.removeItem("ca_active_student_id");
+
+            document.getElementById("authModal").classList.remove("active");
+            applyRoleUI();
+            renderAll();
         }
 
         function applyRoleUI() {
@@ -1409,6 +1822,7 @@
             const roleBadge = document.getElementById("userRoleBadge");
             const coachOnlyElements = document.querySelectorAll(".coach-only");
             const permStatus = document.getElementById("boardPermissionStatus");
+            const guestBanner = document.getElementById("guestNoticeBanner");
 
             const navBtns = [
                 document.getElementById("btnNavStart"),
@@ -1419,11 +1833,12 @@
             ];
 
             if (currentUserRole === "coach") {
-                nameLabel.textContent = academyConfig.coachBio.split("—")[0].trim() || "Raghav Juneja";
+                nameLabel.textContent = coaches[0]?.name || "Coach";
                 roleBadge.textContent = "Coach";
                 roleBadge.className = "badge-role coach";
                 coachOnlyElements.forEach(el => el.style.display = "");
                 permStatus.textContent = "Coach controls board. Moves synchronize live across all connected devices.";
+                guestBanner.style.display = "none";
                 navBtns.forEach(btn => { if (btn) btn.disabled = false; });
             } else if (currentUserRole === "student") {
                 const s = getActiveStudent();
@@ -1431,21 +1846,27 @@
                 roleBadge.textContent = "Student";
                 roleBadge.className = "badge-role student";
                 coachOnlyElements.forEach(el => el.style.display = "none");
-                permStatus.textContent = "Live classroom board (Read-only). Follow along with Coach Raghav.";
+                permStatus.textContent = "Live classroom board (Read-only). Follow along with coach analysis.";
+                guestBanner.style.display = "none";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
                 document.getElementById("editorPaletteBar").style.display = "none";
                 document.getElementById("coachEngineBox").style.display = "none";
             } else {
-                nameLabel.textContent = "Not Signed In";
+                // Guest Role
+                nameLabel.textContent = "Visitor";
                 roleBadge.textContent = "Guest";
-                roleBadge.className = "badge-role";
+                roleBadge.className = "badge-role guest";
                 coachOnlyElements.forEach(el => el.style.display = "none");
+                permStatus.textContent = "Preview Mode (Read-only). Synchronized live analysis is active during student sessions.";
+                guestBanner.style.display = "flex";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
+                document.getElementById("editorPaletteBar").style.display = "none";
+                document.getElementById("coachEngineBox").style.display = "none";
             }
 
             if (currentUserRole !== "coach") {
                 const activeTab = document.querySelector(".tab-btn.active");
-                if (activeTab && activeTab.textContent.trim() === "Students") {
+                if (activeTab && activeTab.textContent.trim().includes("Students")) {
                     switchTab("dashboard");
                 }
             }
@@ -1465,8 +1886,12 @@
             if (currentUserRole === "student") {
                 const s = getActiveStudent();
                 if (s) recordStudentAttendance(s.id);
+                window.open(meetUrl, "_blank");
+            } else if (currentUserRole === "coach") {
+                window.open(meetUrl, "_blank");
+            } else {
+                alert("Live Google Meet sessions are reserved for enrolled students. Please contact our coaches in the About tab to enroll.");
             }
-            window.open(meetUrl, "_blank");
         }
 
         function renderAttendancePanel() {
@@ -1510,6 +1935,7 @@
             renderClasses();
             renderMaterials();
             renderStudentsTable();
+            renderCoaches();
             renderChessboard();
             renderAttendancePanel();
         }
@@ -1537,7 +1963,7 @@
                     alertBanner.style.display = "none";
                 }
             } else if (currentUserRole === "coach") {
-                greeting.textContent = "Coach Raghav Juneja — Workspace";
+                greeting.textContent = `${coaches[0]?.name || "Coach"} — Workspace`;
                 sub.textContent = "Academy operations, scheduling and classroom management.";
                 const overdue = students.filter(s => s.feeStatus === "overdue").length;
                 if (overdue > 0) {
@@ -1548,7 +1974,7 @@
                 }
             } else {
                 greeting.textContent = "Mind Sharpener Chess Academy";
-                sub.textContent = "Please select your student profile or log in as Coach.";
+                sub.textContent = "Welcome, Visitor! Explore our training pillars, master coaches, and public schedule.";
                 alertBanner.style.display = "none";
             }
 
@@ -1560,7 +1986,9 @@
                         <h4 style="font-size: 1.05rem; color: var(--accent);">${c.topic}</h4>
                         <p class="text-muted" style="font-size: 0.85rem;">Date: ${c.date} at ${c.time} • Coach: ${c.coach}</p>
                     </div>
-                    <button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>
+                    ${currentUserRole === 'guest' 
+                        ? `<button class="btn btn-secondary btn-sm" onclick="alert('Join links are active for enrolled students only. Please see About tab to contact coaches.')">🔒 Enrolled Access Only</button>`
+                        : `<button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>`}
                 `;
             } else {
                 nextClassWidget.innerHTML = `<p class="empty-state">No scheduled classes right now.</p>`;
@@ -1581,7 +2009,7 @@
                         </div>
                     </div>
                 `;
-            } else {
+            } else if (currentUserRole === "coach") {
                 statusWidget.innerHTML = `
                     <div style="display: flex; gap: 1.5rem;">
                         <div>
@@ -1593,8 +2021,21 @@
                             <h3 style="font-size: 1.5rem; color: var(--text-bright);">${classes.length}</h3>
                         </div>
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Materials</span>
-                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${materials.length}</h3>
+                            <span class="text-muted" style="font-size: 0.8rem;">Faculty</span>
+                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${coaches.length}</h3>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusWidget.innerHTML = `
+                    <div style="display: flex; gap: 1.5rem;">
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Location</span>
+                            <h3 style="font-size: 1.15rem; color: var(--text-bright);">Fazilka</h3>
+                        </div>
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Master Coaches</span>
+                            <h3 style="font-size: 1.15rem; color: var(--accent);">${coaches.length} Faculty</h3>
                         </div>
                     </div>
                 `;
@@ -1609,7 +2050,9 @@
                             <span class="badge badge-paid" style="margin-left: 0.5rem;">${m.category}</span>
                             <p class="text-muted" style="font-size: 0.8rem;">${m.description}</p>
                         </div>
-                        <a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Open</a>
+                        ${currentUserRole === 'guest'
+                            ? `<button class="btn btn-secondary btn-sm" disabled title="Enroll to access full curriculum">🔒 Enrolled Only</button>`
+                            : `<a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Open</a>`}
                     </div>
                 `).join("");
             } else {
@@ -1631,7 +2074,9 @@
                         <p class="text-muted" style="font-size: 0.85rem;">📅 ${c.date} at ${c.time} | 👨‍🏫 ${c.coach}</p>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>
+                        ${currentUserRole === 'guest'
+                            ? `<span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">🔒 Enrolled Only</span>`
+                            : `<button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>`}
                         ${currentUserRole === 'coach' ? `<button class="btn btn-danger btn-sm" onclick="deleteClass(${c.id})">Delete</button>` : ''}
                     </div>
                 </div>
@@ -1643,7 +2088,7 @@
             classes.unshift({
                 id: Date.now(),
                 topic: document.getElementById("classTopic").value,
-                coach: document.getElementById("classCoach").value,
+                coach: document.getElementById("classCoachSelect").value,
                 date: document.getElementById("classDate").value,
                 time: document.getElementById("classTime").value,
                 meetLink: document.getElementById("classMeetLink").value,
@@ -1676,7 +2121,9 @@
                         <p class="text-muted" style="font-size: 0.85rem;">${m.description}</p>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Access Study</a>
+                        ${currentUserRole === 'guest'
+                            ? `<button class="btn btn-secondary btn-sm" disabled title="Enroll to access study">🔒 Enrolled Only</button>`
+                            : `<a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Access Study</a>`}
                         ${currentUserRole === 'coach' ? `<button class="btn btn-danger btn-sm" onclick="deleteMaterial(${m.id})">Delete</button>` : ''}
                     </div>
                 </div>
@@ -1743,6 +2190,9 @@
                 feeStatus: document.getElementById("studFeeStatus").value,
                 feeDueDate: document.getElementById("studFeeDueDate").value || "",
             });
+            if (!activeStudentId && students.length > 0) {
+                activeStudentId = students[0].id;
+            }
             saveData();
             renderAll();
             e.target.reset();
@@ -1811,7 +2261,6 @@
             return matrix;
         }
 
-        // DYNAMIC CASTLING VALIDATION IN CUSTOM POSITIONS
         function matrixToFen(matrix, activeColor = 'w') {
             const rows = [];
             for (let r = 0; r < 8; r++) {
@@ -1830,7 +2279,6 @@
                 rows.push(rowStr);
             }
 
-            // Only add castling rights if King and Rook are actually sitting on their starting squares
             let castling = "";
             if (matrix[7][4] === 'K') {
                 if (matrix[7][7] === 'R') castling += "K";
@@ -1963,7 +2411,7 @@
         }
 
         /* -------------------------------------------------------------
-           IN-BOARD VISUAL POSITION EDITOR LOGIC
+           IN-BOARD POSITION EDITOR
         ------------------------------------------------------------- */
         function toggleBoardEditor() {
             if (currentUserRole !== "coach") return;
@@ -2083,7 +2531,7 @@
         }
 
         /* -------------------------------------------------------------
-           PRIVATE COACH STOCKFISH ASSISTANT EVALUATOR (MULTI-FORMAT)
+           STOCKFISH ASSISTANT EVALUATOR
         ------------------------------------------------------------- */
         async function fetchStockfishEval() {
             if (currentUserRole !== "coach") return;
@@ -2110,7 +2558,6 @@
                     evalBadge.style.background = (data.evaluation >= 0 || (data.mate && data.mate > 0)) ? "var(--success)" : "var(--danger)";
                     evalBadge.style.color = "#000";
 
-                    // Robust UCI extraction across both stockfish.online v1 and v2 formats
                     let bestUci = null;
                     if (typeof data.bestmove === "string") {
                         bestUci = data.bestmove.includes(" ") ? data.bestmove.split(" ")[1] : data.bestmove;
@@ -2220,7 +2667,7 @@
         }
 
         /* -------------------------------------------------------------
-           BROADCAST BOARD TO FIREBASE (COACH -> ALL STUDENTS)
+           BROADCAST BOARD TO FIREBASE (COACH -> ALL DEVICES)
         ------------------------------------------------------------- */
         function broadcastBoardState() {
             if (!isFirebaseConnected || currentUserRole !== "coach") return;
@@ -2245,7 +2692,7 @@
                 const data = snapshot.val();
                 if (!data) return;
 
-                if (currentUserRole === "student") {
+                if (currentUserRole === "student" || currentUserRole === "guest") {
                     currentNode = {
                         id: -99,
                         parent: null,
@@ -2266,9 +2713,18 @@
             db.ref("academy/config").on("value", (snap) => {
                 const val = snap.val();
                 if (val) {
-                    academyConfig = val;
-                    localStorage.setItem("ca_config", JSON.stringify(val));
+                    academyConfig = Object.assign({}, DEFAULT_CONFIG, val);
+                    localStorage.setItem("ca_config", JSON.stringify(academyConfig));
                     applyBranding();
+                }
+            });
+
+            db.ref("academy/coaches").on("value", (snap) => {
+                const val = snap.val();
+                if (val && Array.isArray(val)) {
+                    coaches = val;
+                    localStorage.setItem("ca_coaches", JSON.stringify(val));
+                    renderCoaches();
                 }
             });
 
@@ -2752,11 +3208,13 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             applyBranding();
+            renderCoaches();
             applyRoleUI();
             renderAll();
             setupLiveBoardListener();
             setInterval(checkAndCleanExpiredClasses, 60000);
 
+            // Mandatory gate: If user has never logged in, show modal immediately
             if (!currentUserRole) {
                 openAuthModal(true);
             }
