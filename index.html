@@ -162,7 +162,6 @@
         .badge-role.coach { background: var(--accent-glow); color: var(--accent-light); border: 1px solid var(--accent); }
         .badge-role.student { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
 
-        /* Mandatory Auth Modal Gate */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -556,6 +555,63 @@
             overflow-x: auto;
         }
 
+        #editorPaletteBar {
+            display: none;
+            width: 100%;
+            max-width: 560px;
+            background: #1c1f24;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-bottom: 0.6rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .palette-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .palette-piece-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #121417;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .palette-piece-btn.active {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .palette-piece-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #coachEngineBox {
+            background: #14171c;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-top: 0.6rem;
+            width: 100%;
+            max-width: 560px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
         .attendance-list {
             list-style: none;
             font-size: 0.85rem;
@@ -705,6 +761,44 @@
 
             <div class="classroom-grid">
                 <div class="board-container">
+
+                    <!-- IN-BOARD POSITION EDITOR PALETTE (COACH ONLY) -->
+                    <div id="editorPaletteBar">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                            <strong style="color: var(--accent);">Board Editor Active: Tap piece then tap square</strong>
+                            <div>
+                                <select id="editTurnSelect" style="background: #121417; color: #fff; border: 1px solid var(--border); font-size: 0.75rem; padding: 0.2rem 0.4rem; border-radius: 4px;">
+                                    <option value="w">White to move</option>
+                                    <option value="b">Black to move</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="palette-row">
+                            <button type="button" class="palette-piece-btn" data-piece="K" onclick="selectPalettePiece('K')"><img src="https://lichess1.org/assets/piece/cburnett/wK.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="Q" onclick="selectPalettePiece('Q')"><img src="https://lichess1.org/assets/piece/cburnett/wQ.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="R" onclick="selectPalettePiece('R')"><img src="https://lichess1.org/assets/piece/cburnett/wR.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="B" onclick="selectPalettePiece('B')"><img src="https://lichess1.org/assets/piece/cburnett/wB.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="N" onclick="selectPalettePiece('N')"><img src="https://lichess1.org/assets/piece/cburnett/wN.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="P" onclick="selectPalettePiece('P')"><img src="https://lichess1.org/assets/piece/cburnett/wP.svg"></button>
+                            <span style="border-left: 1px solid var(--border); height: 28px; margin: 0 0.2rem;"></span>
+                            <button type="button" class="palette-piece-btn" data-piece="k" onclick="selectPalettePiece('k')"><img src="https://lichess1.org/assets/piece/cburnett/bK.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="q" onclick="selectPalettePiece('q')"><img src="https://lichess1.org/assets/piece/cburnett/bQ.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="r" onclick="selectPalettePiece('r')"><img src="https://lichess1.org/assets/piece/cburnett/bR.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="b" onclick="selectPalettePiece('b')"><img src="https://lichess1.org/assets/piece/cburnett/bB.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="n" onclick="selectPalettePiece('n')"><img src="https://lichess1.org/assets/piece/cburnett/bN.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="p" onclick="selectPalettePiece('p')"><img src="https://lichess1.org/assets/piece/cburnett/bP.svg"></button>
+                            <button type="button" class="palette-piece-btn" data-piece="clear" onclick="selectPalettePiece('clear')" title="Erase piece">🗑️</button>
+                        </div>
+
+                        <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                            <button class="btn btn-secondary btn-sm" onclick="resetEditorToInitial()">Standard Start</button>
+                            <button class="btn btn-secondary btn-sm" onclick="clearEditorBoard()">Clear All</button>
+                            <button class="btn btn-secondary btn-sm" onclick="toggleBoardEditor()">Cancel</button>
+                            <button class="btn btn-primary btn-sm" onclick="finishBoardEditing()">Done Editing</button>
+                        </div>
+                    </div>
+
                     <div id="chessboard-wrapper" oncontextmenu="return false;">
                         <div id="chessboard"></div>
                         
@@ -731,10 +825,23 @@
                             <button id="btnNavEnd" class="btn btn-secondary btn-sm" onclick="stepMove('end')" title="End">&gt;|</button>
                         </div>
                         <button id="btnFlipBoard" class="btn btn-secondary btn-sm" onclick="flipBoard()">Flip</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="toggleBoardEditor()">Edit Board</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="openFenModal()">Paste FEN</button>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="fetchStockfishEval()">Engine Eval</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="openPgnImportModal()">Import PGN</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="promoteCurrentLine()">Promote</button>
                         <button class="btn btn-danger btn-sm coach-only" onclick="deleteCurrentBranch()">Delete</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="resetBoard()">Reset</button>
+                    </div>
+
+                    <!-- COACH-ONLY STOCKFISH ASSISTANT DISPLAY -->
+                    <div id="coachEngineBox" class="coach-only">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <strong style="color: var(--accent);">Stockfish Engine Assistant (Coach Eyes Only)</strong>
+                            <span id="engineEvalBadge" class="badge" style="background: #25282e; color: #fff;">Eval: ...</span>
+                        </div>
+                        <div id="engineBestMove" style="font-size: 0.85rem; color: #fff; margin-bottom: 0.2rem;">Best Move: Calculating...</div>
+                        <div id="engineContinuation" class="text-muted" style="font-size: 0.78rem;">Line: ...</div>
                     </div>
                 </div>
 
@@ -984,7 +1091,6 @@
                 <button type="button" class="auth-switch-btn" id="btnAuthCoachTab" onclick="setAuthModalMode('coach')">Coach Access</button>
             </div>
 
-            <!-- Student Form -->
             <form id="studentAuthForm" onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
                     <label>Select Your Enrolled Name</label>
@@ -996,7 +1102,6 @@
                 <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Enter Student Workspace</button>
             </form>
 
-            <!-- Coach Password Form -->
             <form id="coachAuthForm" onsubmit="handleCoachLogin(event)" style="display: none;">
                 <div class="form-group">
                     <label>Coach Access Key (Passcode)</label>
@@ -1006,8 +1111,25 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Unlock Coach Workspace</button>
             </form>
 
-            <!-- Cancel button only renders if user is already logged in -->
             <button type="button" id="btnAuthCancel" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem; display: none;" onclick="closeAuthModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- FEN INPUT MODAL -->
+    <div id="fenModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 500px;">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Load Custom Position (FEN)</h3>
+            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">
+                Paste any FEN string from a book or puzzle to immediately set the board.
+            </p>
+            <div id="fenInputError" style="display: none; padding: 0.5rem; border-radius: 4px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.75rem;">
+                Invalid FEN string.
+            </div>
+            <input type="text" id="fenInputBox" style="width: 100%; background: #121417; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; color: #fff; font-family: monospace; font-size: 0.85rem;" placeholder="e.g. 8/8/8/4k3/8/8/4K1P1/8 w - - 0 1">
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="handleLoadFen()">Set Board Position</button>
+                <button class="btn btn-secondary" onclick="closeFenModal()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -1049,7 +1171,7 @@
             firebase.initializeApp(firebaseConfig);
             db = firebase.database();
             isFirebaseConnected = true;
-            console.log("Firebase Realtime Database connected.");
+            console.log("Firebase connected.");
         } catch (e) {
             console.error("Firebase init failed:", e);
         }
@@ -1074,14 +1196,18 @@
         let classes = JSON.parse(localStorage.getItem("ca_classes")) || [];
         let materials = JSON.parse(localStorage.getItem("ca_materials")) || [];
 
-        // STRICT AUTH: Do not default to coach! Check if session exists
-        let currentUserRole = localStorage.getItem("ca_role") || null; // null = NOT LOGGED IN
+        let currentUserRole = localStorage.getItem("ca_role") || null;
         let activeStudentId = localStorage.getItem("ca_active_student_id") || null;
         let attendedStudentIds = new Set();
 
         let tintedSquares = new Set();
         let drawnArrows = [];
         let rightClickDragStart = null;
+
+        // Visual Board Editor State
+        let isEditingBoard = false;
+        let selectedPalettePiece = null;
+        let editorBoardMatrix = null;
 
         function checkAndCleanExpiredClasses() {
             const now = new Date().getTime();
@@ -1182,7 +1308,6 @@
             document.getElementById("coachAuthError").style.display = "none";
             document.getElementById("coachPasswordInput").value = "";
 
-            // If user has not signed in yet, they cannot cancel or bypass this modal
             if (isMandatory || !currentUserRole) {
                 cancelBtn.style.display = "none";
             } else {
@@ -1191,7 +1316,7 @@
         }
 
         function closeAuthModal() {
-            if (!currentUserRole) return; // Prevent closing if not logged in
+            if (!currentUserRole) return;
             document.getElementById("authModal").classList.remove("active");
         }
 
@@ -1308,6 +1433,8 @@
                 coachOnlyElements.forEach(el => el.style.display = "none");
                 permStatus.textContent = "Live classroom board (Read-only). Follow along with Coach Raghav.";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
+                document.getElementById("editorPaletteBar").style.display = "none";
+                document.getElementById("coachEngineBox").style.display = "none";
             } else {
                 nameLabel.textContent = "Not Signed In";
                 roleBadge.textContent = "Guest";
@@ -1647,12 +1774,12 @@
         const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         let nodeIdCounter = 1;
-        function createRootNode() {
+        function createRootNode(initialFen = START_FEN) {
             return {
                 id: 0,
                 parent: null,
                 children: [],
-                fen: START_FEN,
+                fen: initialFen,
                 notation: "",
                 from: null,
                 to: null,
@@ -1684,6 +1811,40 @@
             return matrix;
         }
 
+        // DYNAMIC CASTLING VALIDATION IN CUSTOM POSITIONS
+        function matrixToFen(matrix, activeColor = 'w') {
+            const rows = [];
+            for (let r = 0; r < 8; r++) {
+                let empty = 0;
+                let rowStr = "";
+                for (let c = 0; c < 8; c++) {
+                    const p = matrix[r][c];
+                    if (!p) {
+                        empty++;
+                    } else {
+                        if (empty > 0) { rowStr += empty; empty = 0; }
+                        rowStr += p;
+                    }
+                }
+                if (empty > 0) rowStr += empty;
+                rows.push(rowStr);
+            }
+
+            // Only add castling rights if King and Rook are actually sitting on their starting squares
+            let castling = "";
+            if (matrix[7][4] === 'K') {
+                if (matrix[7][7] === 'R') castling += "K";
+                if (matrix[7][0] === 'R') castling += "Q";
+            }
+            if (matrix[0][4] === 'k') {
+                if (matrix[0][7] === 'r') castling += "k";
+                if (matrix[0][0] === 'r') castling += "q";
+            }
+            if (!castling) castling = "-";
+
+            return `${rows.join("/")} ${activeColor} ${castling} - 0 1`;
+        }
+
         function getTurnAtCurrentStep() {
             return currentNode.fen.split(" ")[1] === 'w' ? "white" : "black";
         }
@@ -1692,7 +1853,7 @@
             const boardEl = document.getElementById("chessboard");
             boardEl.innerHTML = "";
 
-            const displayBoard = fenToMatrix(currentNode.fen);
+            const displayBoard = isEditingBoard ? editorBoardMatrix : fenToMatrix(currentNode.fen);
             const ranks = isFlipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
             const files = isFlipped ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
 
@@ -1707,7 +1868,7 @@
                     square.dataset.row = r;
                     square.dataset.col = f;
 
-                    if (currentNode.from && currentNode.to) {
+                    if (!isEditingBoard && currentNode.from && currentNode.to) {
                         if ((currentNode.from.r === r && currentNode.from.c === f) ||
                             (currentNode.to.r === r && currentNode.to.c === f)) {
                             square.classList.add("last-move");
@@ -1742,7 +1903,7 @@
                         img.alt = pieceChar;
                         img.className = "piece-img";
 
-                        if (currentUserRole === "coach") {
+                        if (currentUserRole === "coach" && !isEditingBoard) {
                             img.draggable = true;
                             img.ondragstart = (e) => handleDragStart(e, r, f);
                         } else {
@@ -1752,13 +1913,17 @@
                     }
 
                     if (currentUserRole === "coach") {
-                        square.ondragover = (e) => { e.preventDefault(); square.classList.add("dragover"); };
-                        square.ondragleave = () => square.classList.remove("dragover");
-                        square.ondrop = (e) => handleDrop(e, r, f);
-                        square.onclick = (e) => handleSquareClick(r, f);
+                        if (isEditingBoard) {
+                            square.onclick = () => handleEditorSquareClick(r, f);
+                        } else {
+                            square.ondragover = (e) => { e.preventDefault(); square.classList.add("dragover"); };
+                            square.ondragleave = () => square.classList.remove("dragover");
+                            square.ondrop = (e) => handleDrop(e, r, f);
+                            square.onclick = () => handleSquareClick(r, f);
 
-                        square.onmousedown = (e) => handleMouseDown(e, r, f);
-                        square.onmouseup = (e) => handleMouseUp(e, r, f);
+                            square.onmousedown = (e) => handleMouseDown(e, r, f);
+                            square.onmouseup = (e) => handleMouseUp(e, r, f);
+                        }
                     }
 
                     boardEl.appendChild(square);
@@ -1766,8 +1931,8 @@
             }
 
             const currentTurn = getTurnAtCurrentStep();
-            document.getElementById("turnIndicator").textContent = `Turn: ${currentTurn.toUpperCase()}`;
-            document.getElementById("stepCounter").textContent = currentNode.id === 0 ? "Starting Position" : `Move: ${currentNode.notation}`;
+            document.getElementById("turnIndicator").textContent = isEditingBoard ? "Mode: Editing Board" : `Turn: ${currentTurn.toUpperCase()}`;
+            document.getElementById("stepCounter").textContent = currentNode.id === 0 ? "Initial Position" : `Move: ${currentNode.notation}`;
 
             renderArrows();
             renderVariationTree();
@@ -1779,7 +1944,7 @@
             const bar = document.getElementById("branchSelectorBar");
             const container = document.getElementById("branchOptionsContainer");
 
-            if (currentUserRole !== "coach" || currentNode.children.length <= 1) {
+            if (currentUserRole !== "coach" || currentNode.children.length <= 1 || isEditingBoard) {
                 bar.style.display = "none";
                 return;
             }
@@ -1795,6 +1960,186 @@
                 container.appendChild(btn);
             });
             bar.style.display = "flex";
+        }
+
+        /* -------------------------------------------------------------
+           IN-BOARD VISUAL POSITION EDITOR LOGIC
+        ------------------------------------------------------------- */
+        function toggleBoardEditor() {
+            if (currentUserRole !== "coach") return;
+
+            isEditingBoard = !isEditingBoard;
+            const paletteEl = document.getElementById("editorPaletteBar");
+
+            if (isEditingBoard) {
+                paletteEl.style.display = "flex";
+                editorBoardMatrix = JSON.parse(JSON.stringify(fenToMatrix(currentNode.fen)));
+                selectedPalettePiece = 'P';
+                highlightActivePaletteBtn();
+                clearAnnotations();
+            } else {
+                paletteEl.style.display = "none";
+                editorBoardMatrix = null;
+            }
+            renderChessboard();
+        }
+
+        function selectPalettePiece(p) {
+            selectedPalettePiece = p;
+            highlightActivePaletteBtn();
+        }
+
+        function highlightActivePaletteBtn() {
+            document.querySelectorAll(".palette-piece-btn").forEach(btn => {
+                if (btn.dataset.piece === selectedPalettePiece) {
+                    btn.classList.add("active");
+                } else {
+                    btn.classList.remove("active");
+                }
+            });
+        }
+
+        function handleEditorSquareClick(r, f) {
+            if (!isEditingBoard || !editorBoardMatrix) return;
+
+            if (selectedPalettePiece === 'clear') {
+                editorBoardMatrix[r][f] = null;
+            } else if (selectedPalettePiece) {
+                editorBoardMatrix[r][f] = selectedPalettePiece;
+            }
+            renderChessboard();
+        }
+
+        function clearEditorBoard() {
+            editorBoardMatrix = Array(8).fill(null).map(() => Array(8).fill(null));
+            renderChessboard();
+        }
+
+        function resetEditorToInitial() {
+            editorBoardMatrix = JSON.parse(JSON.stringify(fenToMatrix(START_FEN)));
+            renderChessboard();
+        }
+
+        function finishBoardEditing() {
+            const turn = document.getElementById("editTurnSelect").value || 'w';
+            const newFen = matrixToFen(editorBoardMatrix, turn);
+
+            const testGame = new Chess();
+            if (!testGame.load(newFen)) {
+                alert("Invalid Position: Please ensure there is exactly one King for each color, no pawns on the 1st/8th ranks, and the King is not already captured.");
+                return;
+            }
+
+            nodeIdCounter = 1;
+            rootNode = createRootNode(newFen);
+            currentNode = rootNode;
+            isEditingBoard = false;
+            editorBoardMatrix = null;
+            document.getElementById("editorPaletteBar").style.display = "none";
+
+            clearAnnotations();
+            renderChessboard();
+            broadcastBoardState();
+        }
+
+        /* -------------------------------------------------------------
+           CUSTOM FEN MODAL LOADER
+        ------------------------------------------------------------- */
+        function openFenModal() {
+            document.getElementById("fenInputError").style.display = "none";
+            document.getElementById("fenInputBox").value = "";
+            document.getElementById("fenModal").classList.add("active");
+            document.getElementById("fenInputBox").focus();
+        }
+
+        function closeFenModal() {
+            document.getElementById("fenModal").classList.remove("active");
+        }
+
+        function handleLoadFen() {
+            const rawFen = document.getElementById("fenInputBox").value.trim();
+            const errEl = document.getElementById("fenInputError");
+
+            if (!rawFen) {
+                errEl.style.display = "block";
+                errEl.textContent = "Please enter a valid FEN string.";
+                return;
+            }
+
+            const testGame = new Chess();
+            if (!testGame.load(rawFen)) {
+                errEl.style.display = "block";
+                errEl.textContent = "Invalid FEN: chess.js cannot validate position.";
+                return;
+            }
+
+            nodeIdCounter = 1;
+            rootNode = createRootNode(rawFen);
+            currentNode = rootNode;
+            clearAnnotations();
+            closeFenModal();
+            renderChessboard();
+            broadcastBoardState();
+        }
+
+        /* -------------------------------------------------------------
+           PRIVATE COACH STOCKFISH ASSISTANT EVALUATOR (MULTI-FORMAT)
+        ------------------------------------------------------------- */
+        async function fetchStockfishEval() {
+            if (currentUserRole !== "coach") return;
+
+            const box = document.getElementById("coachEngineBox");
+            const evalBadge = document.getElementById("engineEvalBadge");
+            const bestMoveEl = document.getElementById("engineBestMove");
+            const contEl = document.getElementById("engineContinuation");
+
+            box.style.display = "block";
+            evalBadge.textContent = "Calculating...";
+            bestMoveEl.textContent = "Best Move: Querying Stockfish...";
+            contEl.textContent = "Line: ...";
+
+            try {
+                const currentFen = encodeURIComponent(currentNode.fen);
+                const url = `https://stockfish.online/api/s/v2.php?fen=${currentFen}&depth=12`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    const evalScore = data.evaluation !== null && data.evaluation !== undefined ? (data.evaluation > 0 ? `+${data.evaluation}` : `${data.evaluation}`) : (data.mate ? `#${data.mate}` : "0.00");
+                    evalBadge.textContent = `Eval: ${evalScore}`;
+                    evalBadge.style.background = (data.evaluation >= 0 || (data.mate && data.mate > 0)) ? "var(--success)" : "var(--danger)";
+                    evalBadge.style.color = "#000";
+
+                    // Robust UCI extraction across both stockfish.online v1 and v2 formats
+                    let bestUci = null;
+                    if (typeof data.bestmove === "string") {
+                        bestUci = data.bestmove.includes(" ") ? data.bestmove.split(" ")[1] : data.bestmove;
+                    } else if (typeof data.data === "string") {
+                        bestUci = data.data.includes(" ") ? data.data.split(" ")[1] : data.data;
+                    }
+
+                    if (bestUci && bestUci.length >= 4) {
+                        const tempEngineGame = new Chess(currentNode.fen);
+                        const moveRes = tempEngineGame.move({
+                            from: bestUci.slice(0, 2),
+                            to: bestUci.slice(2, 4),
+                            promotion: bestUci.length > 4 ? bestUci[4] : 'q'
+                        });
+                        bestMoveEl.textContent = `Best Move: ${moveRes ? moveRes.san : bestUci}`;
+                    } else {
+                        bestMoveEl.textContent = `Best Move: ${data.bestmove || data.data || "N/A"}`;
+                    }
+
+                    contEl.textContent = `Line: ${data.continuation || "None"}`;
+                } else {
+                    evalBadge.textContent = "Unavailable";
+                    bestMoveEl.textContent = "Could not fetch engine analysis.";
+                }
+            } catch (err) {
+                console.warn("Stockfish query error:", err);
+                evalBadge.textContent = "Offline";
+                bestMoveEl.textContent = "Network check: Engine API unreachable.";
+            }
         }
 
         /* -------------------------------------------------------------
@@ -2023,7 +2368,7 @@
         }
 
         function handleDragStart(e, r, c) {
-            if (currentUserRole !== "coach") return;
+            if (currentUserRole !== "coach" || isEditingBoard) return;
             draggedFrom = { r, c };
             selectedSquare = { r, c };
             e.dataTransfer.setData("text/plain", `${r},${c}`);
@@ -2033,7 +2378,7 @@
         function handleDrop(e, toR, toC) {
             e.preventDefault();
             document.querySelectorAll(".square").forEach(sq => sq.classList.remove("dragover"));
-            if (currentUserRole !== "coach" || !draggedFrom) return;
+            if (currentUserRole !== "coach" || !draggedFrom || isEditingBoard) return;
 
             const fromSq = coordsToSquare(draggedFrom.r, draggedFrom.c);
             const toSq = coordsToSquare(toR, toC);
@@ -2049,7 +2394,7 @@
         }
 
         function handleSquareClick(r, c) {
-            if (currentUserRole !== "coach") return;
+            if (currentUserRole !== "coach" || isEditingBoard) return;
 
             const matrix = fenToMatrix(currentNode.fen);
             const clickedPiece = matrix[r][c];
@@ -2202,7 +2547,7 @@
            TRAVERSAL CONTROLS
         ------------------------------------------------------------- */
         function stepMove(target) {
-            if (currentUserRole !== "coach") return;
+            if (currentUserRole !== "coach" || isEditingBoard) return;
 
             if (target === 'start') {
                 currentNode = rootNode;
@@ -2224,7 +2569,7 @@
         }
 
         function jumpToNode(node) {
-            if (currentUserRole !== "coach") return;
+            if (currentUserRole !== "coach" || isEditingBoard) return;
             currentNode = node;
             selectedSquare = null;
             clearAnnotations();
@@ -2233,7 +2578,7 @@
         }
 
         function promoteCurrentLine() {
-            if (currentUserRole !== "coach" || !currentNode.parent) return;
+            if (currentUserRole !== "coach" || !currentNode.parent || isEditingBoard) return;
 
             let walk = currentNode;
             let promoted = false;
@@ -2259,7 +2604,7 @@
         }
 
         function deleteCurrentBranch() {
-            if (currentUserRole !== "coach" || !currentNode.parent) return;
+            if (currentUserRole !== "coach" || !currentNode.parent || isEditingBoard) return;
 
             if (confirm(`Delete this branch starting from move ${currentNode.notation}?`)) {
                 const parent = currentNode.parent;
@@ -2274,7 +2619,7 @@
         }
 
         function resetBoard() {
-            if (currentUserRole !== "coach") return;
+            if (currentUserRole !== "coach" || isEditingBoard) return;
             if (confirm("Reset chessboard and erase entire game tree?")) {
                 rootNode = createRootNode();
                 currentNode = rootNode;
@@ -2285,7 +2630,6 @@
         }
 
         function flipBoard() {
-            if (currentUserRole !== "coach") return;
             isFlipped = !isFlipped;
             renderChessboard();
         }
@@ -2385,7 +2729,7 @@
 
         window.addEventListener("keydown", (e) => {
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-            if (currentUserRole !== "coach") return;
+            if (currentUserRole !== "coach" || isEditingBoard) return;
 
             if (e.key === "ArrowLeft") {
                 e.preventDefault();
@@ -2413,7 +2757,6 @@
             setupLiveBoardListener();
             setInterval(checkAndCleanExpiredClasses, 60000);
 
-            // Mandatory gate check: If first-time user has no saved role, trigger sign-in popup
             if (!currentUserRole) {
                 openAuthModal(true);
             }
