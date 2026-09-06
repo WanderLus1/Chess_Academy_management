@@ -14,19 +14,19 @@
 
     <style>
         :root {
-            --bg-main: #101216;
-            --bg-card: #181b20;
-            --bg-card-hover: #21252c;
-            --border: #2c323c;
-            --border-highlight: #3e4654;
+            --bg-main: #0c0e12;
+            --bg-card: #15181e;
+            --bg-card-hover: #1c2028;
+            --border: #262c36;
+            --border-highlight: #384252;
             --text-primary: #cbd5e1;
             --text-bright: #ffffff;
-            --text-muted: #828e9f;
+            --text-muted: #8491a5;
 
             /* Yellowish-Orange Accent */
             --accent: #f59e0b;
             --accent-hover: #d97706;
-            --accent-glow: rgba(245, 158, 11, 0.2);
+            --accent-glow: rgba(245, 158, 11, 0.22);
             --accent-light: #fbbf24;
 
             --success: #22c55e;
@@ -57,42 +57,35 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.04) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.03) 0px, transparent 50%);
         }
 
         /* -------------------------------------------------------------
-           SMOOTH ANIMATIONS & MICRO-INTERACTIONS
+           ANIMATIONS & INTERACTION REFINEMENTS
         ------------------------------------------------------------- */
         @keyframes fadeInSlide {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalPop {
-            from {
-                opacity: 0;
-                transform: scale(0.96) translateY(-6px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
+            from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Responsive Header */
+        /* Glassmorphic Sticky Header */
         header.app-header {
-            background-color: var(--bg-card);
+            background: rgba(21, 24, 30, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border-bottom: 1px solid var(--border);
             padding: 0.65rem 1.25rem;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
         }
 
         .header-content {
@@ -109,7 +102,7 @@
             display: flex;
             align-items: center;
             gap: 0.65rem;
-            font-size: 1.15rem;
+            font-size: 1.18rem;
             font-weight: 700;
             color: var(--text-bright);
             cursor: pointer;
@@ -122,16 +115,18 @@
         }
 
         .brand-logo-img {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             object-fit: contain;
-            border-radius: 6px;
+            border-radius: 7px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
         .brand-logo-icon {
             color: var(--accent);
-            font-size: 1.8rem;
+            font-size: 1.85rem;
             line-height: 1;
+            filter: drop-shadow(0 2px 6px var(--accent-glow));
         }
 
         .nav-tabs {
@@ -154,7 +149,7 @@
             background: transparent;
             border: 1px solid transparent;
             color: var(--text-primary);
-            padding: 0.4rem 0.85rem;
+            padding: 0.42rem 0.85rem;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
@@ -171,15 +166,15 @@
         .tab-btn.active {
             background-color: var(--accent);
             color: #000000;
-            box-shadow: 0 2px 8px var(--accent-glow);
+            box-shadow: 0 2px 10px var(--accent-glow);
         }
 
         .auth-widget {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: #111317;
-            padding: 0.3rem 0.6rem;
+            background: #101217;
+            padding: 0.3rem 0.65rem;
             border-radius: 6px;
             border: 1px solid var(--border);
             font-size: 0.8rem;
@@ -201,12 +196,12 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.86);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(8px);
             padding: 1rem;
         }
 
@@ -220,8 +215,10 @@
             border-radius: 12px;
             padding: 1.75rem;
             width: 100%;
-            max-width: 450px;
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.85);
             animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -230,7 +227,7 @@
             grid-template-columns: 1fr 1fr 1fr;
             gap: 0.35rem;
             margin: 1rem 0;
-            background: #111317;
+            background: #0f1115;
             padding: 0.25rem;
             border-radius: 8px;
         }
@@ -251,13 +248,13 @@
         .auth-switch-btn.active {
             background: var(--bg-card);
             color: var(--text-bright);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         }
 
         main.container {
             max-width: 1380px;
-            margin: 1rem auto;
-            padding: 0 0.85rem;
+            margin: 1.15rem auto;
+            padding: 0 0.95rem;
             flex: 1;
             width: 100%;
         }
@@ -272,7 +269,7 @@
         }
 
         .alert-banner {
-            padding: 0.75rem 1rem;
+            padding: 0.8rem 1.15rem;
             border-radius: 8px;
             margin-bottom: 1rem;
             display: flex;
@@ -298,10 +295,10 @@
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.15rem;
-            margin-bottom: 1.15rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -313,22 +310,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.9rem;
+            margin-bottom: 0.95rem;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.55rem;
             flex-wrap: wrap;
             gap: 0.5rem;
         }
 
         .card-header h2, .card-header h3 {
             color: var(--text-bright);
-            font-size: 1.1rem;
+            font-size: 1.12rem;
+            letter-spacing: -0.01em;
         }
 
         .grid-2 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 1.15rem;
         }
 
         .btn {
@@ -336,13 +334,13 @@
             align-items: center;
             justify-content: center;
             gap: 0.4rem;
-            padding: 0.45rem 0.85rem;
-            border-radius: 6px;
+            padding: 0.48rem 0.9rem;
+            border-radius: 7px;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
             border: none;
-            font-size: 0.825rem;
+            font-size: 0.835rem;
             transition: all 0.15s ease;
         }
 
@@ -355,38 +353,39 @@
         }
 
         .btn-primary { background: var(--accent); color: #000; }
-        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 2px 8px var(--accent-glow); }
-        .btn-secondary { background: #262b33; color: var(--text-bright); border: 1px solid var(--border); }
-        .btn-secondary:hover:not(:disabled) { background: #323843; border-color: var(--border-highlight); }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 3px 12px var(--accent-glow); }
+        .btn-secondary { background: #232832; color: var(--text-bright); border: 1px solid var(--border); }
+        .btn-secondary:hover:not(:disabled) { background: #2d3442; border-color: var(--border-highlight); }
         .btn-danger { background: var(--danger); color: #fff; }
         .btn-danger:hover:not(:disabled) { background: #dc2626; }
-        .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+        .btn-sm { padding: 0.36rem 0.68rem; font-size: 0.8rem; }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .form-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 0.65rem;
-            margin-bottom: 0.65rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
         }
 
-        .form-group { margin-bottom: 0.65rem; }
+        .form-group { margin-bottom: 0.75rem; }
         .form-group label {
             display: block;
-            margin-bottom: 0.25rem;
-            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.82rem;
             color: var(--text-muted);
+            font-weight: 500;
         }
 
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
-            padding: 0.5rem 0.65rem;
-            background: #111317;
+            padding: 0.55rem 0.75rem;
+            background: #0f1116;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 7px;
             color: var(--text-bright);
             font-size: 0.875rem;
-            transition: border-color 0.15s ease;
+            transition: all 0.15s ease;
         }
 
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -397,14 +396,14 @@
 
         .badge {
             display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
+            padding: 0.2rem 0.55rem;
+            border-radius: 5px;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        .badge-paid { background: rgba(34, 197, 94, 0.2); color: #86efac; }
-        .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--accent-light); }
-        .badge-overdue { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-paid { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+        .badge-pending { background: rgba(245, 158, 11, 0.18); color: var(--accent-light); }
+        .badge-overdue { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
 
         .table-responsive {
             width: 100%;
@@ -415,12 +414,12 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
-            min-width: 540px;
+            font-size: 0.865rem;
+            min-width: 600px;
         }
 
         .data-table th, .data-table td {
-            padding: 0.65rem;
+            padding: 0.75rem 0.85rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
@@ -428,46 +427,56 @@
         .data-table th {
             color: var(--text-muted);
             font-weight: 600;
-            background: #14161a;
+            background: #121419;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
         /* -------------------------------------------------------------
-           COACH LIST CARD FORMAT
+           EXPANDED COACH PROFILE ROSTER
         ------------------------------------------------------------- */
         .coaches-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1rem;
+            gap: 1.15rem;
         }
 
         .coach-profile-card {
-            background: #15171c;
+            background: linear-gradient(145deg, #181c23, #12151b);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 14px;
+            padding: 1.35rem;
             display: flex;
-            gap: 1.15rem;
+            gap: 1.5rem;
             align-items: flex-start;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
         }
 
         .coach-profile-card:hover {
             border-color: var(--accent);
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
         }
 
         .coach-avatar-wrapper {
-            width: 85px;
-            height: 85px;
-            border-radius: 8px;
+            width: 140px;
+            height: 160px;
+            border-radius: 12px;
             overflow: hidden;
-            background: #232730;
+            background: #1e222a;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 2px solid var(--border-highlight);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
         }
 
         .coach-avatar-img {
@@ -483,10 +492,10 @@
 
         .coach-contact-bar {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.85rem;
             flex-wrap: wrap;
-            margin-top: 0.45rem;
-            font-size: 0.82rem;
+            margin-top: 0.65rem;
+            font-size: 0.84rem;
         }
 
         .coach-contact-bar a {
@@ -494,21 +503,29 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.3rem;
+            background: rgba(245, 158, 11, 0.08);
+            padding: 0.25rem 0.55rem;
+            border-radius: 6px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            transition: all 0.15s ease;
         }
 
         .coach-contact-bar a:hover {
-            text-decoration: underline;
+            background: rgba(245, 158, 11, 0.18);
+            border-color: var(--accent);
         }
 
-        /* DEVELOPER SHOWCASE CARD */
+        /* -------------------------------------------------------------
+           LEAD ENGINEER & ARCHITECTURE SHOWCASE
+        ------------------------------------------------------------- */
         .developer-card {
-            background: linear-gradient(145deg, #161a22, #101216);
-            border: 1px solid #3b4252;
-            border-radius: 10px;
-            padding: 1.25rem;
-            margin-top: 1.25rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            background: linear-gradient(145deg, #171c26, #101217);
+            border: 1px solid #364154;
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-top: 1.35rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
             position: relative;
             overflow: hidden;
         }
@@ -517,7 +534,7 @@
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, var(--accent), #3b82f6);
+            background: linear-gradient(90deg, var(--accent), #3b82f6, var(--accent));
         }
 
         /* Classroom Grid & Fluid Board */
@@ -546,8 +563,8 @@
             position: relative;
             background: #25282e;
             padding: 6px;
-            border-radius: 6px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+            border-radius: 8px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 24px rgba(245, 158, 11, 0.08);
             width: 100%;
             max-width: 560px;
             aspect-ratio: 1 / 1;
@@ -618,15 +635,15 @@
             height: 92%;
             pointer-events: auto;
             cursor: grab;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.35));
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
         }
 
         .piece-img:active { cursor: grabbing; }
 
         .board-controls {
-            margin-top: 0.65rem;
+            margin-top: 0.75rem;
             display: flex;
-            gap: 0.35rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
@@ -636,17 +653,17 @@
         .nav-btn-group {
             display: flex;
             gap: 0.2rem;
-            background: #17191d;
+            background: #15181f;
             padding: 0.2rem;
-            border-radius: 6px;
+            border-radius: 7px;
             border: 1px solid var(--border);
         }
 
         .pgn-box {
-            background: #121417;
+            background: #0f1116;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.65rem;
+            border-radius: 8px;
+            padding: 0.75rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
             font-size: 0.8rem;
             height: 100px;
@@ -660,9 +677,9 @@
             height: 220px;
             overflow-y: auto;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            background: #121417;
-            padding: 0.65rem;
+            border-radius: 8px;
+            background: #0f1116;
+            padding: 0.75rem;
             font-size: 0.85rem;
             line-height: 1.7;
         }
@@ -676,7 +693,7 @@
         }
 
         .node-move:hover {
-            background: #262a30;
+            background: #252a34;
             color: var(--text-bright);
         }
 
@@ -703,7 +720,7 @@
             bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1c1f24;
+            background: #1a1e26;
             border: 2px solid var(--accent);
             box-shadow: 0 8px 24px rgba(0,0,0,0.8);
             border-radius: 8px;
@@ -719,11 +736,11 @@
             display: none;
             width: 100%;
             max-width: 560px;
-            background: #1c1f24;
+            background: #181c24;
             border: 1px solid var(--accent);
-            border-radius: 6px;
-            padding: 0.5rem;
-            margin-bottom: 0.6rem;
+            border-radius: 8px;
+            padding: 0.65rem;
+            margin-bottom: 0.65rem;
             flex-direction: column;
             gap: 0.5rem;
         }
@@ -737,16 +754,17 @@
         }
 
         .palette-piece-btn {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #121417;
+            background: #0f1116;
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             padding: 2px;
+            transition: all 0.15s ease;
         }
 
         .palette-piece-btn.active {
@@ -761,11 +779,11 @@
         }
 
         #coachEngineBox {
-            background: #14171c;
+            background: #111419;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.75rem;
-            margin-top: 0.6rem;
+            border-radius: 8px;
+            padding: 0.85rem;
+            margin-top: 0.65rem;
             width: 100%;
             max-width: 560px;
             font-size: 0.85rem;
@@ -786,9 +804,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.4rem 0.6rem;
-            border-radius: 4px;
-            background: #14161a;
+            padding: 0.45rem 0.65rem;
+            border-radius: 5px;
+            background: #111317;
             border: 1px solid var(--border);
         }
 
@@ -796,22 +814,22 @@
         .attendance-item.absent { border-left: 3px solid var(--danger); opacity: 0.85; }
 
         .list-item-card {
-            background: var(--bg-card);
+            background: #161920;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.85rem;
+            border-radius: 8px;
+            padding: 0.95rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
+            gap: 0.85rem;
+            margin-bottom: 0.65rem;
             flex-wrap: wrap;
         }
 
         .empty-state {
             color: var(--text-muted);
             text-align: center;
-            padding: 1.25rem;
+            padding: 1.5rem;
             font-style: italic;
             font-size: 0.875rem;
         }
@@ -829,7 +847,7 @@
             }
             .board-controls .btn {
                 font-size: 0.75rem;
-                padding: 0.3rem 0.5rem;
+                padding: 0.32rem 0.5rem;
             }
             .coach-profile-card {
                 flex-direction: column;
@@ -838,6 +856,10 @@
             }
             .coach-contact-bar {
                 justify-content: center;
+            }
+            .coach-avatar-wrapper {
+                width: 130px;
+                height: 145px;
             }
         }
     </style>
@@ -861,14 +883,13 @@
                 </div>
             </div>
 
-            <!-- Tab Ribbon -->
             <nav class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
                 <button class="tab-btn" onclick="switchTab('classes')">Classes</button>
                 <button class="tab-btn" onclick="switchTab('materials')">Materials</button>
                 <button class="tab-btn coach-only" onclick="switchTab('students')">Students</button>
-                <button class="tab-btn" onclick="switchTab('about')">About &amp; Coaches</button>
+                <button class="tab-btn" onclick="switchTab('about')">About &amp; Faculty</button>
             </nav>
         </div>
     </header>
@@ -885,7 +906,7 @@
 
         <div id="guestNoticeBanner" class="alert-banner info" style="display: none;">
             <div>
-                <strong>Visitor Preview:</strong> You are exploring Mind Sharpener Chess Academy as a Guest. To access live classroom meets, study links, and tactical tests, please enroll or sign in.
+                <strong>Visitor Preview:</strong> You are viewing Mind Sharpener Chess Academy as a Guest. To access live interactive meet sessions and full curriculum studies, please sign in or contact our coaches.
             </div>
             <button class="btn btn-secondary btn-sm" onclick="switchTab('about')">Contact Coaches</button>
         </div>
@@ -943,7 +964,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                             <strong style="color: var(--accent);">Board Editor Active: Tap piece then tap square</strong>
                             <div>
-                                <select id="editTurnSelect" style="background: #121417; color: #fff; border: 1px solid var(--border); font-size: 0.75rem; padding: 0.2rem 0.4rem; border-radius: 4px;">
+                                <select id="editTurnSelect" style="background: #101216; color: #fff; border: 1px solid var(--border); font-size: 0.75rem; padding: 0.2rem 0.4rem; border-radius: 4px;">
                                     <option value="w">White to move</option>
                                     <option value="b">Black to move</option>
                                 </select>
@@ -1010,7 +1031,6 @@
                         <button class="btn btn-secondary btn-sm coach-only" onclick="resetBoard()">Reset</button>
                     </div>
 
-                    <!-- COACH-ONLY STOCKFISH ASSISTANT DISPLAY -->
                     <div id="coachEngineBox" class="coach-only">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <strong style="color: var(--accent);">Stockfish Engine Assistant (Coach Eyes Only)</strong>
@@ -1064,7 +1084,7 @@
                             <input type="text" id="classTopic" placeholder="e.g., King's Indian Defence Dynamics" required>
                         </div>
                         <div class="form-group">
-                            <label>Coach Name</label>
+                            <label>Assigned Coach</label>
                             <select id="classCoachSelect" required></select>
                         </div>
                     </div>
@@ -1193,10 +1213,10 @@
             </div>
         </section>
 
-        <!-- 6. ABOUT TAB & COACHES & DEVELOPER -->
+        <!-- 6. ABOUT TAB & FACULTY & DEVELOPER -->
         <section id="tab-about" class="tab-panel">
             
-            <!-- Coach-Only Academy Administration -->
+            <!-- Coach-Only Academy Profile Configuration -->
             <div class="card coach-only" style="border: 1px solid var(--accent);">
                 <div class="card-header">
                     <h3 style="color: var(--accent);">⚙️ Academy Settings &amp; Security (Coach Only)</h3>
@@ -1208,7 +1228,7 @@
                             <input type="text" id="cfgAcademyName" required>
                         </div>
                         <div class="form-group">
-                            <label>Official Academy Instagram URL / Handle</label>
+                            <label>Official Instagram URL</label>
                             <input type="text" id="cfgAcademyInsta" placeholder="https://instagram.com/mind_sharpener_chess">
                         </div>
                     </div>
@@ -1240,7 +1260,7 @@
                 </form>
             </div>
 
-            <!-- Coach-Only: Add New Coach Form -->
+            <!-- Coach-Only: Add New Coach Form with Device Upload -->
             <div class="card coach-only">
                 <div class="card-header">
                     <h3>👨‍🏫 Add New Coach / Faculty</h3>
@@ -1249,11 +1269,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Coach Full Name</label>
-                            <input type="text" id="coachFormName" placeholder="e.g. Raghav Juneja" required>
+                            <input type="text" id="coachFormName" placeholder="e.g. Coach Name" required>
                         </div>
                         <div class="form-group">
                             <label>Title &amp; FIDE Rating / Role</label>
-                            <input type="text" id="coachFormRole" placeholder="e.g. FIDE Instructor | Master Trainer" required>
+                            <input type="text" id="coachFormRole" placeholder="e.g. FIDE Instructor | Senior Master" required>
                         </div>
                     </div>
                     <div class="form-row">
@@ -1262,23 +1282,23 @@
                             <input type="text" id="coachFormPhone" placeholder="+91 XXXXXXXXXX" required>
                         </div>
                         <div class="form-group">
-                            <label>Instagram Handle / Link</label>
+                            <label>Instagram Profile Link / Handle</label>
                             <input type="text" id="coachFormInsta" placeholder="@coach_instagram">
                         </div>
                         <div class="form-group">
-                            <label>Profile Photo URL</label>
-                            <input type="url" id="coachFormPhoto" placeholder="https://example.com/photo.jpg">
+                            <label>Upload Coach Photo (Device)</label>
+                            <input type="file" id="coachFormPhotoFile" accept="image/*" onchange="handleNewCoachPhotoUpload(event)">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Achievements &amp; Specialization</label>
-                        <textarea id="coachFormBio" rows="2" placeholder="Describe tournaments won, specializations, students trained..." required></textarea>
+                        <textarea id="coachFormBio" rows="3" placeholder="Tournament titles, calculation training, opening specializations..." required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Add Coach to Faculty</button>
                 </form>
             </div>
 
-            <!-- Public Academy Overview Card -->
+            <!-- Public Academy Profile -->
             <div class="card">
                 <div class="card-header">
                     <h2 id="aboutAcademyName">Mind Sharpener Chess Academy</h2>
@@ -1304,8 +1324,8 @@
                 </div>
 
                 <div class="grid-2" style="margin-top: 1rem;">
-                    <div style="background: #121417; padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Academy Training Pillars</h4>
+                    <div style="background: #101217; padding: 0.95rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Training Pillars</h4>
                         <ul style="list-style: square; padding-left: 1.25rem; color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
                             <li>Live cross-device interactive analysis boards</li>
                             <li>Integrated Google Meet coaching sessions</li>
@@ -1313,42 +1333,45 @@
                             <li>Endgame drills and tactical calculation tests</li>
                         </ul>
                     </div>
-                    <div style="background: #121417; padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Enrollment Inquiries</h4>
+                    <div style="background: #101217; padding: 0.95rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Batch Enrollments</h4>
                         <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-                            Interested in joining our online or offline batches? Contact our trainers below or drop a WhatsApp message to schedule an introductory evaluation session.
+                            Ready to take your game to tournament strength? Reach out to our trainers directly below to book an introductory calculation assessment.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Coaches Roster List Container -->
+            <!-- Coaches Faculty Roster -->
             <div class="card">
                 <div class="card-header">
-                    <h2>Meet Our Coaches</h2>
-                    <span class="text-muted" style="font-size: 0.8rem;">Certified Chess Trainers</span>
+                    <h2>Academy Faculty &amp; Trainers</h2>
+                    <span class="text-muted" style="font-size: 0.8rem;">Master Coaches</span>
                 </div>
                 <div id="coachesListContainer" class="coaches-grid"></div>
             </div>
 
-            <!-- DEVELOPER SHOWCASE SECTION -->
+            <!-- LEAD ENGINEER / ARCHITECTURE CARD -->
             <div class="developer-card">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem;">
                     <div>
-                        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--accent); letter-spacing: 0.05em;">Engine &amp; Portal Architecture</span>
-                        <h3 style="color: #fff; font-size: 1.15rem; margin-top: 0.15rem;" id="devName">Designed &amp; Developed by [Developer Name]</h3>
+                        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--accent); letter-spacing: 0.05em;">Platform &amp; Engine Architecture</span>
+                        <!-- Replace [Your Name] below with your full name -->
+                        <h3 style="color: #fff; font-size: 1.2rem; margin-top: 0.2rem;" id="devName">Built by Lead Software Engineer</h3>
                     </div>
-                    <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6;">Lead Engineer</span>
+                    <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6;">Lead Architect</span>
                 </div>
-                <p id="devBio" style="font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-bottom: 0.85rem;">
-                    Built with custom real-time database synchronization, chess engine validation, multi-branch variation parsing, and responsive touch-first UI for Mind Sharpener Chess Academy.
+                <p id="devBio" style="font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1rem;">
+                    Architected high-concurrency real-time board synchronization, custom non-destructive PGN tree parsing, and interactive cloud analysis for Mind Sharpener Chess Academy.
                 </p>
-                <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
-                    <a id="devGithubLink" href="https://github.com" target="_blank" class="btn btn-secondary btn-sm">
-                        <span>GitHub Profile</span>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <!-- Replace the href with your actual LinkedIn profile URL -->
+                    <a id="devLinkedinLink" href="https://www.linkedin.com" target="_blank" class="btn btn-primary btn-sm">
+                        <span>Connect on LinkedIn</span>
                     </a>
-                    <a id="devLinkedinLink" href="https://linkedin.com" target="_blank" class="btn btn-secondary btn-sm">
-                        <span>LinkedIn Profile</span>
+                    <!-- Replace the href with your actual GitHub profile URL -->
+                    <a id="devGithubLink" href="https://github.com" target="_blank" class="btn btn-secondary btn-sm">
+                        <span>GitHub Portfolio</span>
                     </a>
                 </div>
             </div>
@@ -1404,8 +1427,97 @@
                 <button type="button" class="btn btn-primary" style="width: 100%;" onclick="handleGuestLogin()">Explore Academy as Guest</button>
             </div>
 
-            <!-- Cancel button only renders if user is already logged in -->
             <button type="button" id="btnAuthCancel" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem; display: none;" onclick="closeAuthModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- EDIT STUDENT MODAL -->
+    <div id="editStudentModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Edit Student Record</h3>
+            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">Modify enrollment details and tuition status.</p>
+            <form onsubmit="handleSaveEditStudent(event)">
+                <input type="hidden" id="editStudOriginalId">
+                <div class="form-group">
+                    <label>Student ID (Fixed)</label>
+                    <input type="text" id="editStudId" disabled style="opacity: 0.65;">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Student Name</label>
+                        <input type="text" id="editStudName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="editStudEmail" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <input type="number" id="editStudRating" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fee Status</label>
+                        <select id="editStudFeeStatus">
+                            <option value="paid">Paid</option>
+                            <option value="pending">Pending</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fee Due Date</label>
+                        <input type="date" id="editStudFeeDueDate">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT COACH MODAL -->
+    <div id="editCoachModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Edit Coach Profile</h3>
+            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">Update bio, contact information, and portrait.</p>
+            <form onsubmit="handleSaveEditCoach(event)">
+                <input type="hidden" id="editCoachId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Coach Full Name</label>
+                        <input type="text" id="editCoachName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Role / Title</label>
+                        <input type="text" id="editCoachRole" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone / WhatsApp</label>
+                        <input type="text" id="editCoachPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Instagram Handle</label>
+                        <input type="text" id="editCoachInsta">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Update Photo (Choose Device File)</label>
+                    <input type="file" id="editCoachPhotoFile" accept="image/*" onchange="handleEditCoachPhotoUpload(event)">
+                </div>
+                <div class="form-group">
+                    <label>Achievements &amp; Specialization</label>
+                    <textarea id="editCoachBio" rows="3" required></textarea>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Coach</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditCoachModal()">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1494,7 +1606,7 @@
                 role: "Head Coach & Master Trainer",
                 phone: "+91 XXXXXXXXXX",
                 instagram: "https://instagram.com/raghav_chess",
-                bio: "Experienced FIDE rated trainer specializing in sharp tactical calculation, opening repertoire formulation, and high-level endgame technique. Trained multiple state-level champions.",
+                bio: "Experienced FIDE rated trainer specializing in tactical calculation, opening formulation, and deep endgame technique. Dedicated to building tournament champions.",
                 photo: ""
             }
         ];
@@ -1505,7 +1617,6 @@
         let materials = JSON.parse(localStorage.getItem("ca_materials")) || [];
         let coaches = JSON.parse(localStorage.getItem("ca_coaches")) || DEFAULT_COACHES;
 
-        // Persistent Role state: 'coach', 'student', or 'guest'
         let currentUserRole = localStorage.getItem("ca_role") || null;
         let activeStudentId = localStorage.getItem("ca_active_student_id") || null;
         let attendedStudentIds = new Set();
@@ -1513,6 +1624,10 @@
         let tintedSquares = new Set();
         let drawnArrows = [];
         let rightClickDragStart = null;
+
+        // Temporary base64 storage for coach photo uploads
+        let newCoachPhotoBase64 = "";
+        let editCoachPhotoBase64 = "";
 
         // Visual Board Editor State
         let isEditingBoard = false;
@@ -1621,8 +1736,30 @@
         }
 
         /* -------------------------------------------------------------
-           COACH MANAGEMENT (COACH ONLY)
+           COACH PROFILE MANAGEMENT & DEVICE PHOTO UPLOAD
         ------------------------------------------------------------- */
+        function handleNewCoachPhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                newCoachPhotoBase64 = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleEditCoachPhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                editCoachPhotoBase64 = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function handleCreateCoach(e) {
             e.preventDefault();
             const newCoach = {
@@ -1631,15 +1768,56 @@
                 role: document.getElementById("coachFormRole").value.trim(),
                 phone: document.getElementById("coachFormPhone").value.trim(),
                 instagram: document.getElementById("coachFormInsta").value.trim(),
-                photo: document.getElementById("coachFormPhoto").value.trim(),
+                photo: newCoachPhotoBase64 || "",
                 bio: document.getElementById("coachFormBio").value.trim()
             };
 
             coaches.push(newCoach);
+            newCoachPhotoBase64 = "";
             saveData();
             renderCoaches();
             e.target.reset();
             alert(`Coach ${newCoach.name} added to the faculty.`);
+        }
+
+        function openEditCoachModal(coachId) {
+            const coach = coaches.find(c => c.id === coachId);
+            if (!coach) return;
+
+            document.getElementById("editCoachId").value = coach.id;
+            document.getElementById("editCoachName").value = coach.name;
+            document.getElementById("editCoachRole").value = coach.role;
+            document.getElementById("editCoachPhone").value = coach.phone;
+            document.getElementById("editCoachInsta").value = coach.instagram || "";
+            document.getElementById("editCoachBio").value = coach.bio;
+            editCoachPhotoBase64 = coach.photo || "";
+
+            document.getElementById("editCoachModal").classList.add("active");
+        }
+
+        function closeEditCoachModal() {
+            document.getElementById("editCoachModal").classList.remove("active");
+        }
+
+        function handleSaveEditCoach(e) {
+            e.preventDefault();
+            const id = document.getElementById("editCoachId").value;
+            const coach = coaches.find(c => c.id === id);
+            if (!coach) return;
+
+            coach.name = document.getElementById("editCoachName").value.trim();
+            coach.role = document.getElementById("editCoachRole").value.trim();
+            coach.phone = document.getElementById("editCoachPhone").value.trim();
+            coach.instagram = document.getElementById("editCoachInsta").value.trim();
+            coach.bio = document.getElementById("editCoachBio").value.trim();
+            if (editCoachPhotoBase64) {
+                coach.photo = editCoachPhotoBase64;
+            }
+
+            saveData();
+            closeEditCoachModal();
+            renderCoaches();
+            renderAll();
         }
 
         function deleteCoach(id) {
@@ -1674,24 +1852,70 @@
             container.innerHTML = coaches.map(c => `
                 <div class="coach-profile-card">
                     <div class="coach-avatar-wrapper">
-                        ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="coach-avatar-img">` : `<span style="font-size: 2.2rem; color: var(--accent);">♞</span>`}
+                        ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="coach-avatar-img">` : `<span style="font-size: 3.2rem; color: var(--accent);">♞</span>`}
                     </div>
                     <div class="coach-details">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.4rem;">
                             <div>
-                                <h3 style="color: var(--text-bright); font-size: 1.05rem;">${c.name}</h3>
-                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-light); margin-top: 0.2rem;">${c.role}</span>
+                                <h3 style="color: var(--text-bright); font-size: 1.18rem; font-weight: 700;">${c.name}</h3>
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.16); color: var(--accent-light); margin-top: 0.25rem;">${c.role}</span>
                             </div>
-                            ${currentUserRole === 'coach' ? `<button class="btn btn-danger btn-sm" onclick="deleteCoach('${c.id}')">Remove</button>` : ''}
+                            ${currentUserRole === 'coach' ? `
+                                <div style="display: flex; gap: 0.35rem;">
+                                    <button class="btn btn-secondary btn-sm" onclick="openEditCoachModal('${c.id}')">Edit</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteCoach('${c.id}')">Remove</button>
+                                </div>
+                            ` : ''}
                         </div>
-                        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; line-height: 1.5;">${c.bio}</p>
+                        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 0.65rem; line-height: 1.6;">${c.bio}</p>
                         <div class="coach-contact-bar">
-                            ${c.phone ? `<span>📞 <a href="tel:${c.phone}">${c.phone}</a></span>` : ''}
-                            ${c.instagram ? `<span>📸 <a href="${c.instagram.startsWith('http') ? c.instagram : 'https://instagram.com/' + c.instagram.replace('@', '')}" target="_blank">${c.instagram.replace('https://instagram.com/', '@')}</a></span>` : ''}
+                            ${c.phone ? `<a href="tel:${c.phone}">📞 Call ${c.phone}</a>` : ''}
+                            ${c.phone ? `<a href="https://wa.me/${c.phone.replace(/[^0-9]/g, '')}" target="_blank">💬 WhatsApp</a>` : ''}
+                            ${c.instagram ? `<a href="${c.instagram.startsWith('http') ? c.instagram : 'https://instagram.com/' + c.instagram.replace('@', '')}" target="_blank">📸 ${c.instagram.replace('https://instagram.com/', '@')}</a>` : ''}
                         </div>
                     </div>
                 </div>
             `).join("");
+        }
+
+        /* -------------------------------------------------------------
+           STUDENT RECORD EDITING
+        ------------------------------------------------------------- */
+        function openEditStudentModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            document.getElementById("editStudOriginalId").value = student.id;
+            document.getElementById("editStudId").value = student.id;
+            document.getElementById("editStudName").value = student.name;
+            document.getElementById("editStudEmail").value = student.email;
+            document.getElementById("editStudRating").value = student.rating;
+            document.getElementById("editStudFeeStatus").value = student.feeStatus;
+            document.getElementById("editStudFeeDueDate").value = student.feeDueDate || "";
+
+            document.getElementById("editStudentModal").classList.add("active");
+        }
+
+        function closeEditStudentModal() {
+            document.getElementById("editStudentModal").classList.remove("active");
+        }
+
+        function handleSaveEditStudent(e) {
+            e.preventDefault();
+            const originalId = document.getElementById("editStudOriginalId").value;
+            const student = students.find(s => s.id === originalId);
+            if (!student) return;
+
+            student.name = document.getElementById("editStudName").value.trim();
+            student.email = document.getElementById("editStudEmail").value.trim();
+            student.rating = parseInt(document.getElementById("editStudRating").value) || 1200;
+            student.feeStatus = document.getElementById("editStudFeeStatus").value;
+            student.feeDueDate = document.getElementById("editStudFeeDueDate").value || "";
+
+            saveData();
+            closeEditStudentModal();
+            renderStudentsTable();
+            renderAll();
         }
 
         /* -------------------------------------------------------------
@@ -1852,7 +2076,6 @@
                 document.getElementById("editorPaletteBar").style.display = "none";
                 document.getElementById("coachEngineBox").style.display = "none";
             } else {
-                // Guest Role
                 nameLabel.textContent = "Visitor";
                 roleBadge.textContent = "Guest";
                 roleBadge.className = "badge-role guest";
@@ -1974,7 +2197,7 @@
                 }
             } else {
                 greeting.textContent = "Mind Sharpener Chess Academy";
-                sub.textContent = "Welcome, Visitor! Explore our training pillars, master coaches, and public schedule.";
+                sub.textContent = "Welcome, Visitor! Explore our training curriculum, master trainers, and upcoming schedules.";
                 alertBanner.style.display = "none";
             }
 
@@ -1987,7 +2210,7 @@
                         <p class="text-muted" style="font-size: 0.85rem;">Date: ${c.date} at ${c.time} • Coach: ${c.coach}</p>
                     </div>
                     ${currentUserRole === 'guest' 
-                        ? `<button class="btn btn-secondary btn-sm" onclick="alert('Join links are active for enrolled students only. Please see About tab to contact coaches.')">🔒 Enrolled Access Only</button>`
+                        ? `<button class="btn btn-secondary btn-sm" onclick="alert('Google Meet calls are reserved for enrolled students. Please contact coaches in the About tab.')">🔒 Enrolled Access Only</button>`
                         : `<button class="btn btn-primary btn-sm" onclick="handleClassJoinClick('${c.meetLink}')">Join Google Meet</button>`}
                 `;
             } else {
@@ -2030,7 +2253,7 @@
                 statusWidget.innerHTML = `
                     <div style="display: flex; gap: 1.5rem;">
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Location</span>
+                            <span class="text-muted" style="font-size: 0.8rem;">Headquarters</span>
                             <h3 style="font-size: 1.15rem; color: var(--text-bright);">Fazilka</h3>
                         </div>
                         <div>
@@ -2166,15 +2389,14 @@
                     <td>${s.email}</td>
                     <td>${s.rating}</td>
                     <td>
-                        <select onchange="updateStudentFee('${s.id}', this.value)" style="padding: 0.2rem 0.4rem; border-radius: 4px; background: #121417; color: #fff; border: 1px solid var(--border);">
-                            <option value="paid" ${s.feeStatus === 'paid' ? 'selected' : ''}>Paid</option>
-                            <option value="pending" ${s.feeStatus === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="overdue" ${s.feeStatus === 'overdue' ? 'selected' : ''}>Overdue</option>
-                        </select>
+                        <span class="badge badge-${s.feeStatus}">${s.feeStatus.toUpperCase()}</span>
                     </td>
                     <td>${s.feeDueDate || '—'}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">Remove</button>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button class="btn btn-secondary btn-sm" onclick="openEditStudentModal('${s.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">Remove</button>
+                        </div>
                     </td>
                 </tr>
             `).join("");
@@ -2196,15 +2418,6 @@
             saveData();
             renderAll();
             e.target.reset();
-        }
-
-        function updateStudentFee(studentId, newStatus) {
-            const s = students.find(x => x.id === studentId);
-            if (s) {
-                s.feeStatus = newStatus;
-                saveData();
-                renderAll();
-            }
         }
 
         function removeStudent(studentId) {
@@ -2474,7 +2687,7 @@
 
             const testGame = new Chess();
             if (!testGame.load(newFen)) {
-                alert("Invalid Position: Please ensure there is exactly one King for each color, no pawns on the 1st/8th ranks, and the King is not already captured.");
+                alert("Invalid Position: Please ensure there is exactly one King for each color, no pawns on the 1st/8th ranks, and the King is not in illegal check.");
                 return;
             }
 
@@ -3214,7 +3427,6 @@
             setupLiveBoardListener();
             setInterval(checkAndCleanExpiredClasses, 60000);
 
-            // Mandatory gate: If user has never logged in, show modal immediately
             if (!currentUserRole) {
                 openAuthModal(true);
             }
