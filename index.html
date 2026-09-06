@@ -14,25 +14,29 @@
 
     <style>
         :root {
-            --bg-main: #0c0e12;
-            --bg-card: #15181e;
-            --bg-card-hover: #1c2028;
-            --border: #262c36;
-            --border-highlight: #384252;
+            /* Midnight Sapphire & Abyssal Navy Base */
+            --bg-main: #050811;
+            --bg-card: rgba(13, 20, 36, 0.72);
+            --bg-card-solid: #0d1424;
+            --bg-card-hover: rgba(20, 31, 56, 0.85);
+            --border: rgba(64, 110, 185, 0.18);
+            --border-highlight: rgba(147, 197, 253, 0.32);
+            
             --text-primary: #cbd5e1;
             --text-bright: #ffffff;
-            --text-muted: #8491a5;
+            --text-muted: #8496b0;
 
-            /* Yellowish-Orange Accent */
+            /* Molten Burnished Gold Accent Palette */
             --accent: #f59e0b;
             --accent-hover: #d97706;
-            --accent-glow: rgba(245, 158, 11, 0.22);
+            --accent-gradient: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #b45309 100%);
+            --accent-glow: rgba(245, 158, 11, 0.28);
             --accent-light: #fbbf24;
 
             --success: #22c55e;
             --danger: #ef4444;
 
-            /* Lichess Standard Wood Palette */
+            /* Lichess Standard Wood Palette (Untouched) */
             --sq-light: #f0d9b5;
             --sq-dark: #b58863;
             --sq-highlight: rgba(245, 158, 11, 0.65);
@@ -52,40 +56,41 @@
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
-            line-height: 1.5;
+            line-height: 1.55;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.04) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.03) 0px, transparent 50%);
+                radial-gradient(circle at 15% 10%, rgba(30, 58, 115, 0.35) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(10, 17, 34, 0.9) 0%, #050811 100%);
+            background-attachment: fixed;
         }
 
-        /* -------------------------------------------------------------
-           ANIMATIONS & INTERACTION REFINEMENTS
-        ------------------------------------------------------------- */
         @keyframes fadeInSlide {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalPop {
-            from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+            from { opacity: 0; transform: scale(0.96) translateY(-10px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Glassmorphic Sticky Header */
+        /* -------------------------------------------------------------
+           ELEVATED TOPBAR & SEGMENTED PILL NAVIGATION
+        ------------------------------------------------------------- */
         header.app-header {
-            background: rgba(21, 24, 30, 0.88);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background: rgba(8, 13, 25, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--border);
-            padding: 0.65rem 1.25rem;
+            padding: 0.75rem 1.4rem;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
 
         .header-content {
@@ -95,50 +100,55 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 0.6rem;
+            gap: 0.85rem;
         }
 
         .brand-title {
             display: flex;
             align-items: center;
-            gap: 0.65rem;
-            font-size: 1.18rem;
-            font-weight: 700;
+            gap: 0.75rem;
+            font-size: 1.22rem;
+            font-weight: 800;
             color: var(--text-bright);
             cursor: pointer;
             text-decoration: none;
+            letter-spacing: -0.015em;
             transition: transform 0.15s ease;
         }
 
         .brand-title:hover {
-            transform: scale(1.01);
+            transform: scale(1.015);
         }
 
         .brand-logo-img {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             object-fit: contain;
-            border-radius: 7px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
         }
 
         .brand-logo-icon {
             color: var(--accent);
-            font-size: 1.85rem;
+            font-size: 2rem;
             line-height: 1;
-            filter: drop-shadow(0 2px 6px var(--accent-glow));
+            filter: drop-shadow(0 2px 10px var(--accent-glow));
         }
 
+        /* Segmented Capsule Nav Ribbon */
         .nav-tabs {
             display: flex;
-            gap: 0.35rem;
+            gap: 0.3rem;
             align-items: center;
+            background: rgba(5, 9, 18, 0.75);
+            padding: 0.28rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
             overflow-x: auto;
             white-space: nowrap;
-            padding-bottom: 2px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
             max-width: 100%;
+            scrollbar-width: none;
         }
 
         .nav-tabs::-webkit-scrollbar {
@@ -148,60 +158,66 @@
         .tab-btn {
             background: transparent;
             border: 1px solid transparent;
-            color: var(--text-primary);
-            padding: 0.42rem 0.85rem;
-            border-radius: 6px;
+            color: var(--text-muted);
+            padding: 0.42rem 0.95rem;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             font-size: 0.85rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
         }
 
         .tab-btn:hover {
             color: var(--text-bright);
-            background: var(--bg-card-hover);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .tab-btn.active {
-            background-color: var(--accent);
-            color: #000000;
-            box-shadow: 0 2px 10px var(--accent-glow);
+            background: var(--accent-gradient);
+            color: #1a1002;
+            font-weight: 700;
+            box-shadow: 0 2px 14px var(--accent-glow);
+            border-color: rgba(255, 255, 255, 0.35);
         }
 
         .auth-widget {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            background: #101217;
-            padding: 0.3rem 0.65rem;
-            border-radius: 6px;
+            gap: 0.6rem;
+            background: rgba(7, 12, 24, 0.85);
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
             border: 1px solid var(--border);
-            font-size: 0.8rem;
+            font-size: 0.82rem;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.4);
         }
 
         .badge-role {
-            padding: 0.15rem 0.45rem;
-            border-radius: 4px;
+            padding: 0.18rem 0.5rem;
+            border-radius: 5px;
             font-weight: 700;
             font-size: 0.72rem;
             text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
 
         .badge-role.coach { background: var(--accent-glow); color: var(--accent-light); border: 1px solid var(--accent); }
         .badge-role.student { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
         .badge-role.guest { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid #64748b; }
 
-        /* Modals */
+        /* -------------------------------------------------------------
+           GLASSMORPHIC DIALOGS
+        ------------------------------------------------------------- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.86);
+            background: rgba(2, 4, 9, 0.88);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
             padding: 1rem;
         }
 
@@ -210,15 +226,15 @@
         }
 
         .modal-card {
-            background: var(--bg-card);
+            background: linear-gradient(150deg, #10192e 0%, #080d19 100%);
             border: 1px solid var(--border-highlight);
-            border-radius: 12px;
-            padding: 1.75rem;
+            border-radius: 16px;
+            padding: 2rem;
             width: 100%;
             max-width: 480px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.85);
+            box-shadow: 0 28px 65px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -226,35 +242,37 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 0.35rem;
-            margin: 1rem 0;
-            background: #0f1115;
-            padding: 0.25rem;
-            border-radius: 8px;
+            margin: 1.25rem 0;
+            background: rgba(5, 9, 18, 0.85);
+            padding: 0.3rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
 
         .auth-switch-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 0.45rem 0.2rem;
-            border-radius: 6px;
+            padding: 0.5rem 0.2rem;
+            border-radius: 7px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             transition: all 0.15s ease;
             text-align: center;
         }
 
         .auth-switch-btn.active {
-            background: var(--bg-card);
+            background: rgba(24, 38, 70, 0.9);
             color: var(--text-bright);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            border: 1px solid rgba(147, 197, 253, 0.2);
         }
 
         main.container {
             max-width: 1380px;
-            margin: 1.15rem auto;
-            padding: 0 0.95rem;
+            margin: 1.25rem auto;
+            padding: 0 1.1rem;
             flex: 1;
             width: 100%;
         }
@@ -265,145 +283,206 @@
 
         .tab-panel.active { 
             display: block; 
-            animation: fadeInSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: fadeInSlide 0.24s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .alert-banner {
-            padding: 0.8rem 1.15rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            padding: 0.9rem 1.25rem;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.6rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
         }
 
         .alert-banner.warning {
-            background-color: rgba(245, 158, 11, 0.12);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(180, 83, 9, 0.08));
             border: 1px solid var(--accent);
             color: var(--accent-light);
         }
 
         .alert-banner.info {
-            background-color: rgba(59, 130, 246, 0.12);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(30, 58, 138, 0.08));
             border: 1px solid #3b82f6;
-            color: #93c5fd;
+            color: #bfdbfe;
         }
 
+        /* -------------------------------------------------------------
+           SAPPHIRE GLASS CARDS & PHYSICAL INSETS
+        ------------------------------------------------------------- */
         .card {
-            background: var(--bg-card);
+            background: linear-gradient(145deg, rgba(16, 26, 48, 0.75) 0%, rgba(9, 14, 27, 0.85) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.25rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            border-radius: 14px;
+            padding: 1.4rem;
+            margin-bottom: 1.4rem;
+            box-shadow: 
+                0 8px 28px rgba(0, 0, 0, 0.5), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
         }
 
         .card:hover {
             border-color: var(--border-highlight);
+            box-shadow: 
+                0 12px 36px rgba(0, 0, 0, 0.6), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.95rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.55rem;
+            margin-bottom: 1.1rem;
+            border-bottom: 1px solid rgba(64, 110, 185, 0.15);
+            padding-bottom: 0.65rem;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
         .card-header h2, .card-header h3 {
             color: var(--text-bright);
-            font-size: 1.12rem;
-            letter-spacing: -0.01em;
+            font-size: 1.18rem;
+            letter-spacing: -0.015em;
+            font-weight: 700;
         }
 
         .grid-2 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-            gap: 1.15rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem;
         }
 
+        /* -------------------------------------------------------------
+           BURNISHED GOLD & SAPPHIRE SLATE BUTTONS
+        ------------------------------------------------------------- */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.4rem;
-            padding: 0.48rem 0.9rem;
-            border-radius: 7px;
-            font-weight: 600;
+            gap: 0.45rem;
+            padding: 0.52rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
             text-decoration: none;
             cursor: pointer;
-            border: none;
-            font-size: 0.835rem;
-            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            font-size: 0.85rem;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn:hover:not(:disabled) {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
 
         .btn:active:not(:disabled) {
             transform: translateY(0);
         }
 
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 3px 12px var(--accent-glow); }
-        .btn-secondary { background: #232832; color: var(--text-bright); border: 1px solid var(--border); }
-        .btn-secondary:hover:not(:disabled) { background: #2d3442; border-color: var(--border-highlight); }
-        .btn-danger { background: var(--danger); color: #fff; }
-        .btn-danger:hover:not(:disabled) { background: #dc2626; }
-        .btn-sm { padding: 0.36rem 0.68rem; font-size: 0.8rem; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-primary { 
+            background: var(--accent-gradient); 
+            color: #181002; 
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
 
+        .btn-primary:hover:not(:disabled) { 
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45); 
+            filter: brightness(1.05);
+        }
+
+        .btn-secondary { 
+            background: linear-gradient(145deg, rgba(23, 36, 64, 0.85), rgba(13, 20, 36, 0.95)); 
+            color: var(--text-bright); 
+            border: 1px solid rgba(80, 130, 210, 0.25); 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary:hover:not(:disabled) { 
+            background: linear-gradient(145deg, rgba(32, 50, 88, 0.9), rgba(18, 28, 50, 0.95)); 
+            border-color: var(--border-highlight); 
+        }
+
+        .btn-danger { 
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); 
+            color: #fff; 
+            box-shadow: 0 3px 10px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-danger:hover:not(:disabled) { 
+            background: #dc2626; 
+        }
+
+        .btn-sm { 
+            padding: 0.38rem 0.72rem; 
+            font-size: 0.82rem; 
+        }
+
+        .btn:disabled { 
+            opacity: 0.35; 
+            cursor: not-allowed; 
+        }
+
+        /* -------------------------------------------------------------
+           TACTILE RECESSED INPUT SLOTS
+        ------------------------------------------------------------- */
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
+            gap: 0.85rem;
+            margin-bottom: 0.85rem;
         }
 
-        .form-group { margin-bottom: 0.75rem; }
+        .form-group { 
+            margin-bottom: 0.85rem; 
+        }
+
         .form-group label {
             display: block;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.35rem;
             font-size: 0.82rem;
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
-            padding: 0.55rem 0.75rem;
-            background: #0f1116;
+            padding: 0.65rem 0.85rem;
+            background: rgba(6, 10, 20, 0.85);
             border: 1px solid var(--border);
-            border-radius: 7px;
+            border-radius: 8px;
             color: var(--text-bright);
-            font-size: 0.875rem;
-            transition: all 0.15s ease;
+            font-size: 0.9rem;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+            transition: all 0.18s ease;
         }
 
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px var(--accent-glow);
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 0 3px var(--accent-glow);
+            background: rgba(9, 15, 30, 0.95);
         }
 
         .badge {
             display: inline-block;
-            padding: 0.2rem 0.55rem;
-            border-radius: 5px;
+            padding: 0.22rem 0.6rem;
+            border-radius: 6px;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
-        .badge-paid { background: rgba(34, 197, 94, 0.18); color: #86efac; }
-        .badge-pending { background: rgba(245, 158, 11, 0.18); color: var(--accent-light); }
-        .badge-overdue { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+        .badge-paid { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.35); }
+        .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--accent-light); border: 1px solid rgba(245, 158, 11, 0.35); }
+        .badge-overdue { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
 
         .table-responsive {
             width: 100%;
@@ -414,20 +493,23 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.865rem;
+            font-size: 0.88rem;
             min-width: 600px;
         }
 
         .data-table th, .data-table td {
-            padding: 0.75rem 0.85rem;
+            padding: 0.85rem 1rem;
             text-align: left;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(64, 110, 185, 0.15);
         }
 
         .data-table th {
             color: var(--text-muted);
-            font-weight: 600;
-            background: #121419;
+            font-weight: 700;
+            background: rgba(6, 11, 22, 0.75);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
         }
 
         .data-table tbody tr {
@@ -435,48 +517,48 @@
         }
 
         .data-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         /* -------------------------------------------------------------
-           EXPANDED COACH PROFILE ROSTER
+           CHESS MASTER FACULTY DOSSIER CARDS
         ------------------------------------------------------------- */
         .coaches-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.15rem;
+            gap: 1.25rem;
         }
 
         .coach-profile-card {
-            background: linear-gradient(145deg, #181c23, #12151b);
+            background: linear-gradient(145deg, rgba(20, 32, 60, 0.7) 0%, rgba(9, 14, 28, 0.85) 100%);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.35rem;
+            border-radius: 16px;
+            padding: 1.5rem;
             display: flex;
-            gap: 1.5rem;
+            gap: 1.75rem;
             align-items: flex-start;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
         }
 
         .coach-profile-card:hover {
             border-color: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 14px 38px rgba(0, 0, 0, 0.65), 0 0 20px rgba(245, 158, 11, 0.15);
         }
 
         .coach-avatar-wrapper {
             width: 140px;
-            height: 160px;
+            height: 165px;
             border-radius: 12px;
             overflow: hidden;
-            background: #1e222a;
+            background: #090e1a;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid var(--border-highlight);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(80, 130, 210, 0.35);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
         }
 
         .coach-avatar-img {
@@ -494,38 +576,40 @@
             display: flex;
             gap: 0.85rem;
             flex-wrap: wrap;
-            margin-top: 0.65rem;
-            font-size: 0.84rem;
+            margin-top: 0.85rem;
+            font-size: 0.85rem;
         }
 
         .coach-contact-bar a {
-            color: var(--accent);
+            color: var(--accent-light);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            background: rgba(245, 158, 11, 0.08);
-            padding: 0.25rem 0.55rem;
+            gap: 0.35rem;
+            background: rgba(245, 158, 11, 0.09);
+            padding: 0.3rem 0.65rem;
             border-radius: 6px;
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            transition: all 0.15s ease;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            transition: all 0.18s ease;
+            font-weight: 600;
         }
 
         .coach-contact-bar a:hover {
-            background: rgba(245, 158, 11, 0.18);
+            background: rgba(245, 158, 11, 0.22);
             border-color: var(--accent);
+            transform: translateY(-1px);
         }
 
         /* -------------------------------------------------------------
-           LEAD ENGINEER & ARCHITECTURE SHOWCASE
+           HRIDAY PANCHAL (LEAD ARCHITECT) SHOWCASE CARD
         ------------------------------------------------------------- */
         .developer-card {
-            background: linear-gradient(145deg, #171c26, #101217);
-            border: 1px solid #364154;
-            border-radius: 14px;
-            padding: 1.5rem;
-            margin-top: 1.35rem;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+            background: linear-gradient(145deg, #131c31 0%, #080d1a 100%);
+            border: 1px solid rgba(147, 197, 253, 0.35);
+            border-radius: 16px;
+            padding: 1.65rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 10px 36px rgba(0, 0, 0, 0.65);
             position: relative;
             overflow: hidden;
         }
@@ -537,18 +621,18 @@
             background: linear-gradient(90deg, var(--accent), #3b82f6, var(--accent));
         }
 
-        /* Classroom Grid & Fluid Board */
+        /* Classroom Grid & Fluid Board Layout */
         .classroom-grid {
             display: grid;
             grid-template-columns: auto 400px 240px;
-            gap: 1.25rem;
+            gap: 1.35rem;
             align-items: start;
         }
 
         @media (max-width: 1200px) {
             .classroom-grid {
                 grid-template-columns: 1fr;
-                gap: 1rem;
+                gap: 1.15rem;
             }
         }
 
@@ -559,12 +643,16 @@
             width: 100%;
         }
 
+        /* Board Wrapper on Midnight Tablecloth */
         #chessboard-wrapper {
             position: relative;
-            background: #25282e;
-            padding: 6px;
-            border-radius: 8px;
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 24px rgba(245, 158, 11, 0.08);
+            background: #1b212c;
+            padding: 7px;
+            border-radius: 10px;
+            box-shadow: 
+                0 16px 44px rgba(0, 0, 0, 0.85), 
+                0 0 35px rgba(245, 158, 11, 0.12),
+                inset 0 1px 0 rgba(255,255,255,0.15);
             width: 100%;
             max-width: 560px;
             aspect-ratio: 1 / 1;
@@ -583,10 +671,10 @@
 
         #arrowOverlay {
             position: absolute;
-            top: 6px;
-            left: 6px;
-            width: calc(100% - 12px);
-            height: calc(100% - 12px);
+            top: 7px;
+            left: 7px;
+            width: calc(100% - 14px);
+            height: calc(100% - 14px);
             pointer-events: none;
             z-index: 10;
         }
@@ -635,15 +723,15 @@
             height: 92%;
             pointer-events: auto;
             cursor: grab;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
         }
 
         .piece-img:active { cursor: grabbing; }
 
         .board-controls {
-            margin-top: 0.75rem;
+            margin-top: 0.85rem;
             display: flex;
-            gap: 0.4rem;
+            gap: 0.42rem;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
@@ -653,23 +741,24 @@
         .nav-btn-group {
             display: flex;
             gap: 0.2rem;
-            background: #15181f;
-            padding: 0.2rem;
-            border-radius: 7px;
+            background: rgba(7, 12, 22, 0.9);
+            padding: 0.25rem;
+            border-radius: 8px;
             border: 1px solid var(--border);
         }
 
         .pgn-box {
-            background: #0f1116;
+            background: rgba(5, 9, 18, 0.9);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.75rem;
+            border-radius: 10px;
+            padding: 0.85rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-            font-size: 0.8rem;
-            height: 100px;
+            font-size: 0.82rem;
+            height: 105px;
             overflow-y: auto;
             white-space: pre-wrap;
-            color: #dcdad5;
+            color: #e2e8f0;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
         }
 
         .tree-container {
@@ -677,57 +766,60 @@
             height: 220px;
             overflow-y: auto;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            background: #0f1116;
-            padding: 0.75rem;
-            font-size: 0.85rem;
-            line-height: 1.7;
+            border-radius: 10px;
+            background: rgba(5, 9, 18, 0.9);
+            padding: 0.85rem;
+            font-size: 0.88rem;
+            line-height: 1.75;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
         }
 
         .node-move {
             cursor: pointer;
-            padding: 0.15rem 0.35rem;
-            border-radius: 4px;
+            padding: 0.15rem 0.4rem;
+            border-radius: 5px;
             display: inline-block;
             color: var(--text-primary);
+            transition: all 0.12s ease;
         }
 
         .node-move:hover {
-            background: #252a34;
+            background: rgba(40, 60, 100, 0.6);
             color: var(--text-bright);
         }
 
         .node-move.active-step {
-            background: var(--accent);
-            color: #000000 !important;
-            font-weight: 700;
+            background: var(--accent-gradient);
+            color: #181002 !important;
+            font-weight: 800;
+            box-shadow: 0 2px 8px var(--accent-glow);
         }
 
         .variation-branch {
             display: block;
-            margin: 0.25rem 0 0.25rem 0.6rem;
-            padding: 0.2rem 0.5rem;
+            margin: 0.3rem 0 0.3rem 0.75rem;
+            padding: 0.25rem 0.65rem;
             border-left: 2px solid var(--accent);
-            background: rgba(245, 158, 11, 0.04);
-            border-radius: 0 4px 4px 0;
-            font-size: 0.8rem;
+            background: rgba(245, 158, 11, 0.05);
+            border-radius: 0 6px 6px 0;
+            font-size: 0.82rem;
             color: #94a3b8;
         }
 
         #branchSelectorBar {
             display: none;
             position: absolute;
-            bottom: 12px;
+            bottom: 14px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1a1e26;
+            background: #111a2e;
             border: 2px solid var(--accent);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
-            border-radius: 8px;
-            padding: 0.4rem 0.75rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+            border-radius: 10px;
+            padding: 0.45rem 0.85rem;
             z-index: 50;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.45rem;
             max-width: 90%;
             overflow-x: auto;
         }
@@ -736,32 +828,33 @@
             display: none;
             width: 100%;
             max-width: 560px;
-            background: #181c24;
+            background: #10182c;
             border: 1px solid var(--accent);
-            border-radius: 8px;
-            padding: 0.65rem;
-            margin-bottom: 0.65rem;
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.6rem;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.6);
         }
 
         .palette-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.35rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
         }
 
         .palette-piece-btn {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #0f1116;
+            background: #080d19;
             border: 1px solid var(--border);
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             padding: 2px;
             transition: all 0.15s ease;
@@ -770,6 +863,7 @@
         .palette-piece-btn.active {
             border-color: var(--accent);
             background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .palette-piece-btn img {
@@ -779,23 +873,24 @@
         }
 
         #coachEngineBox {
-            background: #111419;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.85rem;
-            margin-top: 0.65rem;
+            background: #0a1122;
+            border: 1px solid var(--border-highlight);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 0.75rem;
             width: 100%;
             max-width: 560px;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             display: none;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
         }
 
         .attendance-list {
             list-style: none;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
+            gap: 0.45rem;
             max-height: 280px;
             overflow-y: auto;
         }
@@ -804,9 +899,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.45rem 0.65rem;
-            border-radius: 5px;
-            background: #111317;
+            padding: 0.55rem 0.75rem;
+            border-radius: 7px;
+            background: rgba(6, 11, 22, 0.85);
             border: 1px solid var(--border);
         }
 
@@ -814,24 +909,29 @@
         .attendance-item.absent { border-left: 3px solid var(--danger); opacity: 0.85; }
 
         .list-item-card {
-            background: #161920;
+            background: rgba(10, 16, 30, 0.75);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.95rem;
+            border-radius: 10px;
+            padding: 1.1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.85rem;
-            margin-bottom: 0.65rem;
+            gap: 0.95rem;
+            margin-bottom: 0.75rem;
             flex-wrap: wrap;
+            transition: border-color 0.18s ease;
+        }
+
+        .list-item-card:hover {
+            border-color: var(--border-highlight);
         }
 
         .empty-state {
             color: var(--text-muted);
             text-align: center;
-            padding: 1.5rem;
+            padding: 1.75rem;
             font-style: italic;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 640px) {
@@ -847,7 +947,7 @@
             }
             .board-controls .btn {
                 font-size: 0.75rem;
-                padding: 0.32rem 0.5rem;
+                padding: 0.35rem 0.52rem;
             }
             .coach-profile-card {
                 flex-direction: column;
@@ -858,8 +958,8 @@
                 justify-content: center;
             }
             .coach-avatar-wrapper {
-                width: 130px;
-                height: 145px;
+                width: 140px;
+                height: 155px;
             }
         }
     </style>
@@ -877,12 +977,13 @@
                 </div>
 
                 <div class="auth-widget">
-                    <span id="userDisplayName" style="font-weight: 600; color: var(--text-bright);">Guest</span>
+                    <span id="userDisplayName" style="font-weight: 700; color: var(--text-bright);">Guest</span>
                     <span id="userRoleBadge" class="badge-role guest">Guest</span>
                     <button class="btn btn-secondary btn-sm" onclick="openAuthModal(false)">Switch / Sign In</button>
                 </div>
             </div>
 
+            <!-- Inset Segmented Pill Ribbon -->
             <nav class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
@@ -906,7 +1007,7 @@
 
         <div id="guestNoticeBanner" class="alert-banner info" style="display: none;">
             <div>
-                <strong>Visitor Preview:</strong> You are viewing Mind Sharpener Chess Academy as a Guest. To access live interactive meet sessions and full curriculum studies, please sign in or contact our coaches.
+                <strong>Visitor Preview:</strong> You are viewing Mind Sharpener Chess Academy as a Guest. To access live classroom meets, personal tests, and studies, please sign in or connect with our faculty.
             </div>
             <button class="btn btn-secondary btn-sm" onclick="switchTab('about')">Contact Coaches</button>
         </div>
@@ -916,7 +1017,7 @@
             <div class="card-header">
                 <div>
                     <h2 id="dashGreeting">Academy Dashboard</h2>
-                    <p class="text-muted" id="dashSub" style="font-size: 0.85rem;">Welcome to your academy workspace.</p>
+                    <p class="text-muted" id="dashSub" style="font-size: 0.88rem;">Welcome to your academy workspace.</p>
                 </div>
             </div>
 
@@ -951,9 +1052,9 @@
             <div class="card-header">
                 <div>
                     <h2>Live Classroom Board</h2>
-                    <p class="text-muted" id="boardPermissionStatus" style="font-size: 0.8rem;">Tap or drag pieces to move. Board synchronizes live across devices.</p>
+                    <p class="text-muted" id="boardPermissionStatus" style="font-size: 0.82rem;">Tap or drag pieces to move. Board synchronizes live across devices.</p>
                 </div>
-                <div id="turnIndicator" class="badge" style="background:#17191d; border: 1px solid var(--border); color:#fff; font-size: 0.8rem;">Turn: White</div>
+                <div id="turnIndicator" class="badge" style="background: rgba(7, 12, 22, 0.9); border: 1px solid var(--border-highlight); color:#fff; font-size: 0.82rem;">Turn: White</div>
             </div>
 
             <div class="classroom-grid">
@@ -961,10 +1062,10 @@
 
                     <!-- IN-BOARD POSITION EDITOR PALETTE (COACH ONLY) -->
                     <div id="editorPaletteBar">
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem;">
                             <strong style="color: var(--accent);">Board Editor Active: Tap piece then tap square</strong>
                             <div>
-                                <select id="editTurnSelect" style="background: #101216; color: #fff; border: 1px solid var(--border); font-size: 0.75rem; padding: 0.2rem 0.4rem; border-radius: 4px;">
+                                <select id="editTurnSelect" style="background: #080d19; color: #fff; border: 1px solid var(--border); font-size: 0.78rem; padding: 0.25rem 0.5rem; border-radius: 6px;">
                                     <option value="w">White to move</option>
                                     <option value="b">Black to move</option>
                                 </select>
@@ -978,7 +1079,7 @@
                             <button type="button" class="palette-piece-btn" data-piece="B" onclick="selectPalettePiece('B')"><img src="https://lichess1.org/assets/piece/cburnett/wB.svg"></button>
                             <button type="button" class="palette-piece-btn" data-piece="N" onclick="selectPalettePiece('N')"><img src="https://lichess1.org/assets/piece/cburnett/wN.svg"></button>
                             <button type="button" class="palette-piece-btn" data-piece="P" onclick="selectPalettePiece('P')"><img src="https://lichess1.org/assets/piece/cburnett/wP.svg"></button>
-                            <span style="border-left: 1px solid var(--border); height: 28px; margin: 0 0.2rem;"></span>
+                            <span style="border-left: 1px solid var(--border); height: 28px; margin: 0 0.25rem;"></span>
                             <button type="button" class="palette-piece-btn" data-piece="k" onclick="selectPalettePiece('k')"><img src="https://lichess1.org/assets/piece/cburnett/bK.svg"></button>
                             <button type="button" class="palette-piece-btn" data-piece="q" onclick="selectPalettePiece('q')"><img src="https://lichess1.org/assets/piece/cburnett/bQ.svg"></button>
                             <button type="button" class="palette-piece-btn" data-piece="r" onclick="selectPalettePiece('r')"><img src="https://lichess1.org/assets/piece/cburnett/bR.svg"></button>
@@ -988,7 +1089,7 @@
                             <button type="button" class="palette-piece-btn" data-piece="clear" onclick="selectPalettePiece('clear')" title="Erase piece">🗑️</button>
                         </div>
 
-                        <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                        <div style="display: flex; gap: 0.45rem; justify-content: flex-end;">
                             <button class="btn btn-secondary btn-sm" onclick="resetEditorToInitial()">Standard Start</button>
                             <button class="btn btn-secondary btn-sm" onclick="clearEditorBoard()">Clear All</button>
                             <button class="btn btn-secondary btn-sm" onclick="toggleBoardEditor()">Cancel</button>
@@ -1009,8 +1110,8 @@
                         </svg>
 
                         <div id="branchSelectorBar">
-                            <span style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Line:</span>
-                            <div id="branchOptionsContainer" style="display: flex; gap: 0.35rem;"></div>
+                            <span style="font-size: 0.78rem; color: var(--accent); font-weight: 700;">Line:</span>
+                            <div id="branchOptionsContainer" style="display: flex; gap: 0.4rem;"></div>
                         </div>
                     </div>
 
@@ -1032,26 +1133,26 @@
                     </div>
 
                     <div id="coachEngineBox" class="coach-only">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                             <strong style="color: var(--accent);">Stockfish Engine Assistant (Coach Eyes Only)</strong>
-                            <span id="engineEvalBadge" class="badge" style="background: #25282e; color: #fff;">Eval: ...</span>
+                            <span id="engineEvalBadge" class="badge" style="background: #111a2e; color: #fff;">Eval: ...</span>
                         </div>
-                        <div id="engineBestMove" style="font-size: 0.85rem; color: #fff; margin-bottom: 0.2rem;">Best Move: Calculating...</div>
-                        <div id="engineContinuation" class="text-muted" style="font-size: 0.78rem;">Line: ...</div>
+                        <div id="engineBestMove" style="font-size: 0.88rem; color: #fff; margin-bottom: 0.25rem;">Best Move: Calculating...</div>
+                        <div id="engineContinuation" class="text-muted" style="font-size: 0.8rem;">Line: ...</div>
                     </div>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.85rem;">
                     <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
                             <h3>Notation &amp; Variations</h3>
-                            <span id="stepCounter" class="text-muted" style="font-size: 0.8rem;">Game Tree</span>
+                            <span id="stepCounter" class="text-muted" style="font-size: 0.82rem;">Game Tree</span>
                         </div>
                         <div id="moveHistoryTree" class="tree-container"></div>
                     </div>
 
                     <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
                             <h3>PGN Export</h3>
                             <button class="btn btn-secondary btn-sm" onclick="copyPGN()">Copy</button>
                         </div>
@@ -1060,7 +1161,7 @@
                 </div>
 
                 <div class="card attendance-panel" style="margin-bottom: 0;">
-                    <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+                    <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
                         <h3>Attendance</h3>
                     </div>
                     <ul id="attendanceList" class="attendance-list"></ul>
@@ -1072,11 +1173,11 @@
         <section id="tab-classes" class="tab-panel">
             <div class="card-header">
                 <h2>Scheduled Classes</h2>
-                <span class="text-muted" style="font-size: 0.8rem;">Auto-archives after 4 hours</span>
+                <span class="text-muted" style="font-size: 0.82rem;">Auto-archives after 4 hours</span>
             </div>
 
             <div class="card coach-only">
-                <h3 style="margin-bottom: 0.75rem;">Schedule a New Class</h3>
+                <h3 style="margin-bottom: 0.85rem;">Schedule a New Class</h3>
                 <form onsubmit="handleCreateClass(event)">
                     <div class="form-row">
                         <div class="form-group">
@@ -1116,7 +1217,7 @@
             </div>
 
             <div class="card coach-only">
-                <h3 style="margin-bottom: 0.75rem;">Add Study Material</h3>
+                <h3 style="margin-bottom: 0.85rem;">Add Study Material</h3>
                 <form onsubmit="handleCreateMaterial(event)">
                     <div class="form-row">
                         <div class="form-group">
@@ -1155,7 +1256,7 @@
             </div>
 
             <div class="card">
-                <h3 style="margin-bottom: 0.75rem;">Enroll New Student</h3>
+                <h3 style="margin-bottom: 0.85rem;">Enroll New Student</h3>
                 <form onsubmit="handleCreateStudent(event)">
                     <div class="form-row">
                         <div class="form-group">
@@ -1304,11 +1405,11 @@
                     <h2 id="aboutAcademyName">Mind Sharpener Chess Academy</h2>
                     <span class="badge badge-paid">Fazilka, Punjab</span>
                 </div>
-                <p id="aboutAcademyBio" style="margin-bottom: 1.15rem; color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                <p id="aboutAcademyBio" style="margin-bottom: 1.25rem; color: #cbd5e1; font-size: 0.98rem; line-height: 1.65;">
                     Dedicated chess training academy based in Fazilka. Focused on building deep tactical calculation, positional mastery, and tournament preparation for emerging chess players.
                 </p>
 
-                <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 1rem; font-size: 0.88rem;">
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 0.9rem;">
                     <div>
                         <strong style="color: var(--accent);">Official Contact: </strong>
                         <span id="displayAcademyPhone">+91 XXXXXXXXXX</span>
@@ -1324,18 +1425,18 @@
                 </div>
 
                 <div class="grid-2" style="margin-top: 1rem;">
-                    <div style="background: #101217; padding: 0.95rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Training Pillars</h4>
-                        <ul style="list-style: square; padding-left: 1.25rem; color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
+                    <div style="background: rgba(5, 9, 18, 0.85); padding: 1.15rem; border-radius: 10px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 0.4rem; color: var(--accent);">Training Pillars</h4>
+                        <ul style="list-style: square; padding-left: 1.3rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.7;">
                             <li>Live cross-device interactive analysis boards</li>
                             <li>Integrated Google Meet coaching sessions</li>
                             <li>Deep variation tree analysis with multi-branch sidelines</li>
                             <li>Endgame drills and tactical calculation tests</li>
                         </ul>
                     </div>
-                    <div style="background: #101217; padding: 0.95rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <h4 style="margin-bottom: 0.35rem; color: var(--accent);">Batch Enrollments</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                    <div style="background: rgba(5, 9, 18, 0.85); padding: 1.15rem; border-radius: 10px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 0.4rem; color: var(--accent);">Batch Enrollments</h4>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.7;">
                             Ready to take your game to tournament strength? Reach out to our trainers directly below to book an introductory calculation assessment.
                         </p>
                     </div>
@@ -1346,32 +1447,29 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Academy Faculty &amp; Trainers</h2>
-                    <span class="text-muted" style="font-size: 0.8rem;">Master Coaches</span>
+                    <span class="text-muted" style="font-size: 0.82rem;">Master Coaches</span>
                 </div>
                 <div id="coachesListContainer" class="coaches-grid"></div>
             </div>
 
-            <!-- LEAD ENGINEER / ARCHITECTURE CARD -->
+            <!-- LEAD ENGINEER / ARCHITECTURE CARD (HRIDAY PANCHAL) -->
             <div class="developer-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.75rem;">
                     <div>
-                        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--accent); letter-spacing: 0.05em;">Platform &amp; Engine Architecture</span>
-                        <!-- Replace [Your Name] below with your full name -->
-                        <h3 style="color: #fff; font-size: 1.2rem; margin-top: 0.2rem;" id="devName">Built by Lead Software Engineer</h3>
+                        <span style="font-size: 0.76rem; text-transform: uppercase; font-weight: 800; color: var(--accent); letter-spacing: 0.06em;">Platform &amp; Engine Architecture</span>
+                        <h3 style="color: #fff; font-size: 1.3rem; margin-top: 0.2rem; font-weight: 800;" id="devName">Designed &amp; Developed by Hriday Panchal</h3>
                     </div>
                     <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6;">Lead Architect</span>
                 </div>
-                <p id="devBio" style="font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1rem;">
+                <p id="devBio" style="font-size: 0.9rem; color: #94a3b8; line-height: 1.65; margin-bottom: 1.15rem;">
                     Architected high-concurrency real-time board synchronization, custom non-destructive PGN tree parsing, and interactive cloud analysis for Mind Sharpener Chess Academy.
                 </p>
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                    <!-- Replace the href with your actual LinkedIn profile URL -->
-                    <a id="devLinkedinLink" href="https://www.linkedin.com" target="_blank" class="btn btn-primary btn-sm">
-                        <span>Connect on LinkedIn</span>
+                <div style="display: flex; gap: 0.85rem; flex-wrap: wrap;">
+                    <a id="devLinkedinLink" href="https://www.linkedin.com/in/hriday-panchal-b85997370/" target="_blank" class="btn btn-primary btn-sm">
+                        <span>LinkedIn Profile</span>
                     </a>
-                    <!-- Replace the href with your actual GitHub profile URL -->
-                    <a id="devGithubLink" href="https://github.com" target="_blank" class="btn btn-secondary btn-sm">
-                        <span>GitHub Portfolio</span>
+                    <a id="devGithubLink" href="https://github.com/WanderLus1" target="_blank" class="btn btn-secondary btn-sm">
+                        <span>GitHub (@WanderLus1)</span>
                     </a>
                 </div>
             </div>
@@ -1383,8 +1481,8 @@
     <!-- MANDATORY AUTH / SIGN-IN GATE MODAL -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-card">
-            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Academy Portal Access</h3>
-            <p class="text-muted" style="font-size: 0.825rem;">Sign in with your profile or explore as a guest visitor.</p>
+            <h3 style="color: var(--text-bright); margin-bottom: 0.35rem; font-size: 1.25rem;">Academy Portal Access</h3>
+            <p class="text-muted" style="font-size: 0.85rem;">Sign in with your profile or explore as a guest visitor.</p>
 
             <div class="auth-switch-tab">
                 <button type="button" class="auth-switch-btn active" id="btnAuthStudentTab" onclick="setAuthModalMode('student')">Student</button>
@@ -1402,8 +1500,8 @@
                     <label>Student Access Passcode</label>
                     <input type="password" id="studentPasswordInput" placeholder="Enter student passcode" required autocomplete="current-password">
                 </div>
-                <div id="studentAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid student passcode. Ask your coach.</div>
-                <div id="noStudentMsg" style="display:none; color: var(--accent); font-size: 0.8rem; margin-bottom: 0.5rem;">
+                <div id="studentAuthError" style="color: var(--danger); font-size: 0.82rem; margin-bottom: 0.6rem; display: none;">Invalid student passcode. Ask your coach.</div>
+                <div id="noStudentMsg" style="display:none; color: var(--accent); font-size: 0.82rem; margin-bottom: 0.6rem;">
                     No students enrolled yet. Use Coach Access to register students or explore as Guest.
                 </div>
                 <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Enter Student Portal</button>
@@ -1415,27 +1513,27 @@
                     <label>Coach Admin Passcode</label>
                     <input type="password" id="coachPasswordInput" placeholder="Default: coach123" required autocomplete="current-password">
                 </div>
-                <div id="coachAuthError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Invalid Coach Passcode.</div>
+                <div id="coachAuthError" style="color: var(--danger); font-size: 0.82rem; margin-bottom: 0.6rem; display: none;">Invalid Coach Passcode.</div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Unlock Coach Workspace</button>
             </form>
 
             <!-- Guest Visitor Form -->
             <div id="guestAuthBox" style="display: none;">
-                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; line-height: 1.5;">
+                <p style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 1.15rem; line-height: 1.6;">
                     Just checking out the academy? Browse our schedule, curriculum, and coach profiles freely with read-only preview access.
                 </p>
                 <button type="button" class="btn btn-primary" style="width: 100%;" onclick="handleGuestLogin()">Explore Academy as Guest</button>
             </div>
 
-            <button type="button" id="btnAuthCancel" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1rem; display: none;" onclick="closeAuthModal()">Cancel</button>
+            <button type="button" id="btnAuthCancel" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1.15rem; display: none;" onclick="closeAuthModal()">Cancel</button>
         </div>
     </div>
 
     <!-- EDIT STUDENT MODAL -->
     <div id="editStudentModal" class="modal-overlay">
         <div class="modal-card">
-            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Edit Student Record</h3>
-            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">Modify enrollment details and tuition status.</p>
+            <h3 style="color: var(--text-bright); margin-bottom: 0.35rem;">Edit Student Record</h3>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.9rem;">Modify enrollment details and tuition status.</p>
             <form onsubmit="handleSaveEditStudent(event)">
                 <input type="hidden" id="editStudOriginalId">
                 <div class="form-group">
@@ -1470,7 +1568,7 @@
                         <input type="date" id="editStudFeeDueDate">
                     </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <div style="display: flex; gap: 0.65rem; margin-top: 1.15rem;">
                     <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
                     <button type="button" class="btn btn-secondary" onclick="closeEditStudentModal()">Cancel</button>
                 </div>
@@ -1481,8 +1579,8 @@
     <!-- EDIT COACH MODAL -->
     <div id="editCoachModal" class="modal-overlay">
         <div class="modal-card">
-            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Edit Coach Profile</h3>
-            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">Update bio, contact information, and portrait.</p>
+            <h3 style="color: var(--text-bright); margin-bottom: 0.35rem;">Edit Coach Profile</h3>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.9rem;">Update bio, contact information, and portrait.</p>
             <form onsubmit="handleSaveEditCoach(event)">
                 <input type="hidden" id="editCoachId">
                 <div class="form-row">
@@ -1513,7 +1611,7 @@
                     <label>Achievements &amp; Specialization</label>
                     <textarea id="editCoachBio" rows="3" required></textarea>
                 </div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <div style="display: flex; gap: 0.65rem; margin-top: 1.15rem;">
                     <button type="submit" class="btn btn-primary" style="flex: 1;">Save Coach</button>
                     <button type="button" class="btn btn-secondary" onclick="closeEditCoachModal()">Cancel</button>
                 </div>
@@ -1524,15 +1622,15 @@
     <!-- FEN INPUT MODAL -->
     <div id="fenModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 500px;">
-            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Load Custom Position (FEN)</h3>
-            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.35rem;">Load Custom Position (FEN)</h3>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.85rem;">
                 Paste any FEN string from a book or puzzle to immediately set the board.
             </p>
-            <div id="fenInputError" style="display: none; padding: 0.5rem; border-radius: 4px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.75rem;">
+            <div id="fenInputError" style="display: none; padding: 0.6rem; border-radius: 6px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.85rem;">
                 Invalid FEN string.
             </div>
-            <input type="text" id="fenInputBox" style="width: 100%; background: #121417; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; color: #fff; font-family: monospace; font-size: 0.85rem;" placeholder="e.g. 8/8/8/4k3/8/8/4K1P1/8 w - - 0 1">
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <input type="text" id="fenInputBox" style="width: 100%; background: #080d19; border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem; color: #fff; font-family: monospace; font-size: 0.88rem;" placeholder="e.g. 8/8/8/4k3/8/8/4K1P1/8 w - - 0 1">
+            <div style="display: flex; gap: 0.65rem; margin-top: 1.15rem;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="handleLoadFen()">Set Board Position</button>
                 <button class="btn btn-secondary" onclick="closeFenModal()">Cancel</button>
             </div>
@@ -1542,15 +1640,15 @@
     <!-- PGN IMPORT MODAL -->
     <div id="pgnImportModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 540px;">
-            <h3 style="color: var(--text-bright); margin-bottom: 0.25rem;">Import PGN Game with Sidelines</h3>
-            <p class="text-muted" style="font-size: 0.825rem; margin-bottom: 0.75rem;">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.35rem;">Import PGN Game with Sidelines</h3>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.85rem;">
                 Paste PGN containing nested variations in parentheses.
             </p>
-            <div id="pgnImportError" style="display: none; padding: 0.5rem; border-radius: 4px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.75rem;">
+            <div id="pgnImportError" style="display: none; padding: 0.6rem; border-radius: 6px; background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: #fca5a5; font-size: 0.85rem; margin-bottom: 0.85rem;">
                 Invalid PGN: Could not parse moves.
             </div>
-            <textarea id="pgnInputArea" rows="8" style="width: 100%; background: #121417; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; color: #fff; font-family: monospace; font-size: 0.825rem;" placeholder='Paste PGN here...'></textarea>
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <textarea id="pgnInputArea" rows="8" style="width: 100%; background: #080d19; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: #fff; font-family: monospace; font-size: 0.85rem;" placeholder='Paste PGN here...'></textarea>
+            <div style="display: flex; gap: 0.65rem; margin-top: 1.15rem;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="handleLoadPgn()">Load PGN</button>
                 <button class="btn btn-secondary" onclick="closePgnImportModal()">Cancel</button>
             </div>
@@ -1625,7 +1723,6 @@
         let drawnArrows = [];
         let rightClickDragStart = null;
 
-        // Temporary base64 storage for coach photo uploads
         let newCoachPhotoBase64 = "";
         let editCoachPhotoBase64 = "";
 
@@ -1852,22 +1949,22 @@
             container.innerHTML = coaches.map(c => `
                 <div class="coach-profile-card">
                     <div class="coach-avatar-wrapper">
-                        ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="coach-avatar-img">` : `<span style="font-size: 3.2rem; color: var(--accent);">♞</span>`}
+                        ${c.photo ? `<img src="${c.photo}" alt="${c.name}" class="coach-avatar-img">` : `<span style="font-size: 3.4rem; color: var(--accent);">♞</span>`}
                     </div>
                     <div class="coach-details">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.4rem;">
                             <div>
-                                <h3 style="color: var(--text-bright); font-size: 1.18rem; font-weight: 700;">${c.name}</h3>
-                                <span class="badge" style="background: rgba(245, 158, 11, 0.16); color: var(--accent-light); margin-top: 0.25rem;">${c.role}</span>
+                                <h3 style="color: var(--text-bright); font-size: 1.2rem; font-weight: 800;">${c.name}</h3>
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.18); color: var(--accent-light); margin-top: 0.3rem;">${c.role}</span>
                             </div>
                             ${currentUserRole === 'coach' ? `
-                                <div style="display: flex; gap: 0.35rem;">
+                                <div style="display: flex; gap: 0.4rem;">
                                     <button class="btn btn-secondary btn-sm" onclick="openEditCoachModal('${c.id}')">Edit</button>
                                     <button class="btn btn-danger btn-sm" onclick="deleteCoach('${c.id}')">Remove</button>
                                 </div>
                             ` : ''}
                         </div>
-                        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 0.65rem; line-height: 1.6;">${c.bio}</p>
+                        <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.75rem; line-height: 1.65;">${c.bio}</p>
                         <div class="coach-contact-bar">
                             ${c.phone ? `<a href="tel:${c.phone}">📞 Call ${c.phone}</a>` : ''}
                             ${c.phone ? `<a href="https://wa.me/${c.phone.replace(/[^0-9]/g, '')}" target="_blank">💬 WhatsApp</a>` : ''}
@@ -2206,8 +2303,8 @@
                 const c = classes[0];
                 nextClassWidget.innerHTML = `
                     <div style="margin-bottom: 0.75rem;">
-                        <h4 style="font-size: 1.05rem; color: var(--accent);">${c.topic}</h4>
-                        <p class="text-muted" style="font-size: 0.85rem;">Date: ${c.date} at ${c.time} • Coach: ${c.coach}</p>
+                        <h4 style="font-size: 1.08rem; color: var(--accent); font-weight: 700;">${c.topic}</h4>
+                        <p class="text-muted" style="font-size: 0.88rem;">Date: ${c.date} at ${c.time} • Coach: ${c.coach}</p>
                     </div>
                     ${currentUserRole === 'guest' 
                         ? `<button class="btn btn-secondary btn-sm" onclick="alert('Google Meet calls are reserved for enrolled students. Please contact coaches in the About tab.')">🔒 Enrolled Access Only</button>`
@@ -2221,44 +2318,44 @@
             if (currentUserRole === "student") {
                 const s = getActiveStudent();
                 statusWidget.innerHTML = `
-                    <div style="display: flex; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1.75rem;">
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Rating</span>
-                            <h3 style="font-size: 1.5rem; color: var(--accent);">${s ? s.rating : '—'}</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Rating</span>
+                            <h3 style="font-size: 1.6rem; color: var(--accent); font-weight: 800;">${s ? s.rating : '—'}</h3>
                         </div>
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Tuition</span>
-                            <div><span class="badge badge-${s ? s.feeStatus : 'paid'}">${s ? s.feeStatus.toUpperCase() : 'OK'}</span></div>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Tuition</span>
+                            <div style="margin-top: 0.2rem;"><span class="badge badge-${s ? s.feeStatus : 'paid'}">${s ? s.feeStatus.toUpperCase() : 'OK'}</span></div>
                         </div>
                     </div>
                 `;
             } else if (currentUserRole === "coach") {
                 statusWidget.innerHTML = `
-                    <div style="display: flex; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1.75rem;">
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Enrolled</span>
-                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${students.length}</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Enrolled</span>
+                            <h3 style="font-size: 1.6rem; color: var(--text-bright); font-weight: 800;">${students.length}</h3>
                         </div>
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Classes</span>
-                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${classes.length}</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Classes</span>
+                            <h3 style="font-size: 1.6rem; color: var(--text-bright); font-weight: 800;">${classes.length}</h3>
                         </div>
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Faculty</span>
-                            <h3 style="font-size: 1.5rem; color: var(--text-bright);">${coaches.length}</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Faculty</span>
+                            <h3 style="font-size: 1.6rem; color: var(--accent); font-weight: 800;">${coaches.length}</h3>
                         </div>
                     </div>
                 `;
             } else {
                 statusWidget.innerHTML = `
-                    <div style="display: flex; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1.75rem;">
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Headquarters</span>
-                            <h3 style="font-size: 1.15rem; color: var(--text-bright);">Fazilka</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Headquarters</span>
+                            <h3 style="font-size: 1.25rem; color: var(--text-bright); font-weight: 700;">Fazilka, Punjab</h3>
                         </div>
                         <div>
-                            <span class="text-muted" style="font-size: 0.8rem;">Master Coaches</span>
-                            <h3 style="font-size: 1.15rem; color: var(--accent);">${coaches.length} Faculty</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Master Coaches</span>
+                            <h3 style="font-size: 1.25rem; color: var(--accent); font-weight: 800;">${coaches.length} Faculty</h3>
                         </div>
                     </div>
                 `;
@@ -2269,13 +2366,13 @@
                 recentMat.innerHTML = materials.slice(0, 3).map(m => `
                     <div class="list-item-card">
                         <div>
-                            <strong style="color: var(--text-bright);">${m.title}</strong>
+                            <strong style="color: var(--text-bright); font-size: 0.95rem;">${m.title}</strong>
                             <span class="badge badge-paid" style="margin-left: 0.5rem;">${m.category}</span>
-                            <p class="text-muted" style="font-size: 0.8rem;">${m.description}</p>
+                            <p class="text-muted" style="font-size: 0.85rem; margin-top: 0.2rem;">${m.description}</p>
                         </div>
                         ${currentUserRole === 'guest'
                             ? `<button class="btn btn-secondary btn-sm" disabled title="Enroll to access full curriculum">🔒 Enrolled Only</button>`
-                            : `<a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Open</a>`}
+                            : `<a href="${m.url}" target="_blank" class="btn btn-secondary btn-sm">Open Study</a>`}
                     </div>
                 `).join("");
             } else {
@@ -2293,8 +2390,8 @@
             container.innerHTML = classes.map(c => `
                 <div class="list-item-card">
                     <div>
-                        <h4 style="font-size: 1.05rem; color: var(--text-bright); margin-bottom: 0.25rem;">${c.topic}</h4>
-                        <p class="text-muted" style="font-size: 0.85rem;">📅 ${c.date} at ${c.time} | 👨‍🏫 ${c.coach}</p>
+                        <h4 style="font-size: 1.1rem; color: var(--text-bright); margin-bottom: 0.25rem; font-weight: 700;">${c.topic}</h4>
+                        <p class="text-muted" style="font-size: 0.88rem;">📅 ${c.date} at ${c.time} | 👨‍🏫 ${c.coach}</p>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         ${currentUserRole === 'guest'
@@ -2338,10 +2435,10 @@
                 <div class="list-item-card">
                     <div>
                         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                            <h4 style="font-size: 1.05rem; color: var(--text-bright);">${m.title}</h4>
+                            <h4 style="font-size: 1.1rem; color: var(--text-bright); font-weight: 700;">${m.title}</h4>
                             <span class="badge badge-paid">${m.category}</span>
                         </div>
-                        <p class="text-muted" style="font-size: 0.85rem;">${m.description}</p>
+                        <p class="text-muted" style="font-size: 0.88rem;">${m.description}</p>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         ${currentUserRole === 'guest'
@@ -2384,16 +2481,16 @@
 
             tbody.innerHTML = students.map(s => `
                 <tr>
-                    <td><code>${s.id}</code></td>
+                    <td><code style="color: var(--accent);">${s.id}</code></td>
                     <td><strong style="color: var(--text-bright);">${s.name}</strong></td>
                     <td>${s.email}</td>
-                    <td>${s.rating}</td>
+                    <td><strong style="color: #93c5fd;">${s.rating}</strong></td>
                     <td>
                         <span class="badge badge-${s.feeStatus}">${s.feeStatus.toUpperCase()}</span>
                     </td>
                     <td>${s.feeDueDate || '—'}</td>
                     <td>
-                        <div style="display: flex; gap: 0.35rem;">
+                        <div style="display: flex; gap: 0.4rem;">
                             <button class="btn btn-secondary btn-sm" onclick="openEditStudentModal('${s.id}')">Edit</button>
                             <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">Remove</button>
                         </div>
@@ -3335,7 +3432,7 @@
 
                     const sideLabel = document.createElement("span");
                     sideLabel.style.color = "var(--accent)";
-                    sideLabel.style.fontWeight = "600";
+                    sideLabel.style.fontWeight = "700";
                     sideLabel.textContent = `(Line ${i}: `;
                     branchDiv.appendChild(sideLabel);
 
