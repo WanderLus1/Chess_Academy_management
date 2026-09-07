@@ -36,7 +36,7 @@
             --success: #22c55e;
             --danger: #ef4444;
 
-            /* Lichess Standard Wood Palette (Untouched) */
+            /* Lichess Standard Wood Palette */
             --sq-light: #f0d9b5;
             --sq-dark: #b58863;
             --sq-highlight: rgba(245, 158, 11, 0.65);
@@ -78,9 +78,7 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* -------------------------------------------------------------
-           ELEVATED TOPBAR & SEGMENTED PILL NAVIGATION
-        ------------------------------------------------------------- */
+        /* Topbar & Segmented Pill Navigation */
         header.app-header {
             background: rgba(8, 13, 25, 0.82);
             backdrop-filter: blur(18px);
@@ -135,7 +133,6 @@
             filter: drop-shadow(0 2px 10px var(--accent-glow));
         }
 
-        /* Segmented Capsule Nav Ribbon */
         .nav-tabs {
             display: flex;
             gap: 0.3rem;
@@ -206,9 +203,7 @@
         .badge-role.student { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid var(--success); }
         .badge-role.guest { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid #64748b; }
 
-        /* -------------------------------------------------------------
-           GLASSMORPHIC DIALOGS
-        ------------------------------------------------------------- */
+        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -231,7 +226,7 @@
             border-radius: 16px;
             padding: 2rem;
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 28px 65px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -311,9 +306,6 @@
             color: #bfdbfe;
         }
 
-        /* -------------------------------------------------------------
-           SAPPHIRE GLASS CARDS & PHYSICAL INSETS
-        ------------------------------------------------------------- */
         .card {
             background: linear-gradient(145deg, rgba(16, 26, 48, 0.75) 0%, rgba(9, 14, 27, 0.85) 100%);
             backdrop-filter: blur(12px);
@@ -359,9 +351,6 @@
             gap: 1.25rem;
         }
 
-        /* -------------------------------------------------------------
-           BURNISHED GOLD & SAPPHIRE SLATE BUTTONS
-        ------------------------------------------------------------- */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -429,9 +418,6 @@
             cursor: not-allowed; 
         }
 
-        /* -------------------------------------------------------------
-           TACTILE RECESSED INPUT SLOTS
-        ------------------------------------------------------------- */
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -521,12 +507,53 @@
         }
 
         /* -------------------------------------------------------------
-           CHESS MASTER FACULTY DOSSIER CARDS
+           HOMEWORK SECTION & SUBMISSION GRID
         ------------------------------------------------------------- */
-        .coaches-grid {
+        .homework-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.25rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.35rem;
+        }
+
+        .homework-card {
+            background: linear-gradient(145deg, rgba(19, 31, 56, 0.75), rgba(9, 14, 28, 0.9));
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.22s ease;
+        }
+
+        .homework-card:hover {
+            border-color: var(--border-highlight);
+            transform: translateY(-2px);
+        }
+
+        .homework-img-wrapper {
+            width: 100%;
+            height: 240px;
+            background: #090e1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .homework-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .homework-body {
+            padding: 1.15rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            flex: 1;
         }
 
         .coach-profile-card {
@@ -600,9 +627,6 @@
             transform: translateY(-1px);
         }
 
-        /* -------------------------------------------------------------
-           HRIDAY PANCHAL (LEAD ARCHITECT) SHOWCASE CARD
-        ------------------------------------------------------------- */
         .developer-card {
             background: linear-gradient(145deg, #131c31 0%, #080d1a 100%);
             border: 1px solid rgba(147, 197, 253, 0.35);
@@ -621,7 +645,6 @@
             background: linear-gradient(90deg, var(--accent), #3b82f6, var(--accent));
         }
 
-        /* Classroom Grid & Fluid Board Layout */
         .classroom-grid {
             display: grid;
             grid-template-columns: auto 400px 240px;
@@ -643,7 +666,6 @@
             width: 100%;
         }
 
-        /* Board Wrapper on Midnight Tablecloth */
         #chessboard-wrapper {
             position: relative;
             background: #1b212c;
@@ -988,6 +1010,7 @@
                 <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
                 <button class="tab-btn" onclick="switchTab('classroom')">Live Board</button>
                 <button class="tab-btn" onclick="switchTab('classes')">Classes</button>
+                <button class="tab-btn" onclick="switchTab('homework')">Homework</button>
                 <button class="tab-btn" onclick="switchTab('materials')">Materials</button>
                 <button class="tab-btn coach-only" onclick="switchTab('students')">Students</button>
                 <button class="tab-btn" onclick="switchTab('about')">About &amp; Faculty</button>
@@ -1210,7 +1233,20 @@
             <div id="classListContainer"></div>
         </section>
 
-        <!-- 4. MATERIALS TAB -->
+        <!-- 4. HOMEWORK TAB (NEW) -->
+        <section id="tab-homework" class="tab-panel">
+            <div class="card-header">
+                <div>
+                    <h2>Tactical Homework &amp; Exercises</h2>
+                    <p class="text-muted" style="font-size: 0.82rem;">Calculate positions on your board, track your solving time, and review in class.</p>
+                </div>
+                <button class="btn btn-primary btn-sm coach-only" onclick="openCreateHwModal()">+ Assign New Puzzle</button>
+            </div>
+
+            <div id="homeworkListContainer" class="homework-grid"></div>
+        </section>
+
+        <!-- 5. MATERIALS TAB -->
         <section id="tab-materials" class="tab-panel">
             <div class="card-header">
                 <h2>Curated Resources &amp; Studies</h2>
@@ -1249,7 +1285,7 @@
             <div id="materialsListContainer"></div>
         </section>
 
-        <!-- 5. STUDENTS TAB (COACH ONLY) -->
+        <!-- 6. STUDENTS TAB (COACH ONLY) -->
         <section id="tab-students" class="tab-panel">
             <div class="card-header">
                 <h2>Student Directory &amp; Tuition Tracking</h2>
@@ -1314,10 +1350,9 @@
             </div>
         </section>
 
-        <!-- 6. ABOUT TAB & FACULTY & DEVELOPER -->
+        <!-- 7. ABOUT TAB & FACULTY & DEVELOPER -->
         <section id="tab-about" class="tab-panel">
             
-            <!-- Coach-Only Academy Profile Configuration -->
             <div class="card coach-only" style="border: 1px solid var(--accent);">
                 <div class="card-header">
                     <h3 style="color: var(--accent);">⚙️ Academy Settings &amp; Security (Coach Only)</h3>
@@ -1361,7 +1396,6 @@
                 </form>
             </div>
 
-            <!-- Coach-Only: Add New Coach Form with Device Upload -->
             <div class="card coach-only">
                 <div class="card-header">
                     <h3>👨‍🏫 Add New Coach / Faculty</h3>
@@ -1399,7 +1433,6 @@
                 </form>
             </div>
 
-            <!-- Public Academy Profile -->
             <div class="card">
                 <div class="card-header">
                     <h2 id="aboutAcademyName">Mind Sharpener Chess Academy</h2>
@@ -1443,7 +1476,6 @@
                 </div>
             </div>
 
-            <!-- Coaches Faculty Roster -->
             <div class="card">
                 <div class="card-header">
                     <h2>Academy Faculty &amp; Trainers</h2>
@@ -1478,6 +1510,74 @@
 
     </main>
 
+    <!-- CREATE HOMEWORK MODAL (COACH ONLY) -->
+    <div id="createHwModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="color: var(--text-bright); margin-bottom: 0.35rem; font-size: 1.25rem;">Assign Chess Homework</h3>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1rem;">Upload a puzzle photo from your device and assign a target solving time.</p>
+            <form onsubmit="handleCreateHomework(event)">
+                <div class="form-group">
+                    <label>Puzzle Title / Instruction</label>
+                    <input type="text" id="hwFormTitle" placeholder="e.g. White to move and gain a winning advantage" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Target Solving Time</label>
+                        <input type="text" id="hwFormTarget" placeholder="e.g. 15 minutes" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Date</label>
+                        <input type="date" id="hwFormDate" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Upload Position Image (Device)</label>
+                    <input type="file" id="hwFormPhotoFile" accept="image/*" onchange="handleHwPhotoUpload(event)" required>
+                </div>
+                <div class="form-group">
+                    <label>Additional Hint / Note (Optional)</label>
+                    <textarea id="hwFormDesc" rows="2" placeholder="Look for intermediate checks and hanging pieces..."></textarea>
+                </div>
+                <div style="display: flex; gap: 0.65rem; margin-top: 1.15rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Publish Homework</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateHwModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- HOMEWORK SUBMISSION ROSTER MODAL (COACH ONLY) -->
+    <div id="hwSubmissionsModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
+                <div>
+                    <h3 style="color: var(--text-bright); font-size: 1.2rem;" id="hwModalTitle">Homework Submissions</h3>
+                    <p class="text-muted" style="font-size: 0.85rem;" id="hwModalSub">Student completion and calculation time tracking.</p>
+                </div>
+                <span id="hwModalCountBadge" class="badge badge-paid">0/0 Done</span>
+            </div>
+
+            <div class="table-responsive" style="margin-top: 0.85rem;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                            <th>Time Spent</th>
+                            <th>Completed At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hwSubmissionsTableBody"></tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeHwSubmissionsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MANDATORY AUTH / SIGN-IN GATE MODAL -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-card">
@@ -1490,7 +1590,6 @@
                 <button type="button" class="auth-switch-btn" id="btnAuthGuestTab" onclick="setAuthModalMode('guest')">Guest</button>
             </div>
 
-            <!-- Student Form -->
             <form id="studentAuthForm" onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
                     <label>Select Your Enrolled Name</label>
@@ -1507,7 +1606,6 @@
                 <button type="submit" id="btnStudentSubmit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Enter Student Portal</button>
             </form>
 
-            <!-- Coach Password Form -->
             <form id="coachAuthForm" onsubmit="handleCoachLogin(event)" style="display: none;">
                 <div class="form-group">
                     <label>Coach Admin Passcode</label>
@@ -1517,7 +1615,6 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Unlock Coach Workspace</button>
             </form>
 
-            <!-- Guest Visitor Form -->
             <div id="guestAuthBox" style="display: none;">
                 <p style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 1.15rem; line-height: 1.6;">
                     Just checking out the academy? Browse our schedule, curriculum, and coach profiles freely with read-only preview access.
@@ -1714,6 +1811,7 @@
         let classes = JSON.parse(localStorage.getItem("ca_classes")) || [];
         let materials = JSON.parse(localStorage.getItem("ca_materials")) || [];
         let coaches = JSON.parse(localStorage.getItem("ca_coaches")) || DEFAULT_COACHES;
+        let homeworkList = JSON.parse(localStorage.getItem("ca_homework")) || [];
 
         let currentUserRole = localStorage.getItem("ca_role") || null;
         let activeStudentId = localStorage.getItem("ca_active_student_id") || null;
@@ -1725,6 +1823,7 @@
 
         let newCoachPhotoBase64 = "";
         let editCoachPhotoBase64 = "";
+        let newHwPhotoBase64 = "";
 
         // Visual Board Editor State
         let isEditingBoard = false;
@@ -1753,6 +1852,7 @@
             localStorage.setItem("ca_classes", JSON.stringify(classes));
             localStorage.setItem("ca_materials", JSON.stringify(materials));
             localStorage.setItem("ca_coaches", JSON.stringify(coaches));
+            localStorage.setItem("ca_homework", JSON.stringify(homeworkList));
             if (currentUserRole) localStorage.setItem("ca_role", currentUserRole);
             if (activeStudentId) localStorage.setItem("ca_active_student_id", activeStudentId);
 
@@ -1762,6 +1862,7 @@
                 db.ref("academy/classes").set(classes);
                 db.ref("academy/materials").set(materials);
                 db.ref("academy/coaches").set(coaches);
+                db.ref("academy/homework").set(homeworkList);
             }
         }
 
@@ -1976,6 +2077,191 @@
         }
 
         /* -------------------------------------------------------------
+           HOMEWORK MANAGEMENT & SUBMISSION TRACKING (NEW)
+        ------------------------------------------------------------- */
+        function openCreateHwModal() {
+            newHwPhotoBase64 = "";
+            document.getElementById("hwFormDate").value = new Date().toISOString().split("T")[0];
+            document.getElementById("createHwModal").classList.add("active");
+        }
+
+        function closeCreateHwModal() {
+            document.getElementById("createHwModal").classList.remove("active");
+        }
+
+        function handleHwPhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                newHwPhotoBase64 = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleCreateHomework(e) {
+            e.preventDefault();
+            if (!newHwPhotoBase64) {
+                alert("Please select a position photo.");
+                return;
+            }
+
+            const newHw = {
+                id: "hw_" + Date.now(),
+                title: document.getElementById("hwFormTitle").value.trim(),
+                targetTime: document.getElementById("hwFormTarget").value.trim(),
+                date: document.getElementById("hwFormDate").value,
+                desc: document.getElementById("hwFormDesc").value.trim(),
+                photo: newHwPhotoBase64,
+                submissions: {}
+            };
+
+            homeworkList.unshift(newHw);
+            newHwPhotoBase64 = "";
+            saveData();
+            closeCreateHwModal();
+            renderHomework();
+            e.target.reset();
+        }
+
+        function deleteHomework(hwId) {
+            if (confirm("Delete this homework puzzle?")) {
+                homeworkList = homeworkList.filter(h => h.id !== hwId);
+                saveData();
+                renderHomework();
+            }
+        }
+
+        function handleMarkHomeworkSolved(hwId) {
+            if (currentUserRole !== "student" || !activeStudentId) return;
+
+            const timeInput = document.getElementById(`hwTimeInput_${hwId}`);
+            const minutes = parseInt(timeInput?.value);
+
+            if (!minutes || minutes <= 0) {
+                alert("Please enter how many minutes you spent solving this puzzle.");
+                timeInput?.focus();
+                return;
+            }
+
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (!hw) return;
+
+            if (!hw.submissions) hw.submissions = {};
+
+            const student = getActiveStudent();
+            hw.submissions[activeStudentId] = {
+                studentName: student ? student.name : "Student",
+                minutesSpent: minutes,
+                submittedAt: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            saveData();
+            renderHomework();
+            alert(`Great work! Recorded ${minutes} minutes spent on this puzzle.`);
+        }
+
+        function openHwSubmissionsModal(hwId) {
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (!hw) return;
+
+            document.getElementById("hwModalTitle").textContent = hw.title;
+            document.getElementById("hwModalSub").textContent = `Assigned: ${hw.date} • Recommended Time: ${hw.targetTime}`;
+
+            const submissions = hw.submissions || {};
+            const solvedCount = Object.keys(submissions).length;
+            document.getElementById("hwModalCountBadge").textContent = `${solvedCount}/${students.length} Completed`;
+
+            const tbody = document.getElementById("hwSubmissionsTableBody");
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No students enrolled yet.</td></tr>`;
+            } else {
+                tbody.innerHTML = students.map(s => {
+                    const sub = submissions[s.id];
+                    return `
+                        <tr>
+                            <td><code style="color: var(--accent);">${s.id}</code></td>
+                            <td><strong style="color: var(--text-bright);">${s.name}</strong></td>
+                            <td>
+                                <span class="badge ${sub ? 'badge-paid' : 'badge-overdue'}">
+                                    ${sub ? '✅ Solved' : '⏳ Pending'}
+                                </span>
+                            </td>
+                            <td>${sub ? `<strong style="color: #93c5fd;">${sub.minutesSpent} mins</strong>` : '—'}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${sub ? sub.submittedAt : '—'}</td>
+                        </tr>
+                    `;
+                }).join("");
+            }
+
+            document.getElementById("hwSubmissionsModal").classList.add("active");
+        }
+
+        function closeHwSubmissionsModal() {
+            document.getElementById("hwSubmissionsModal").classList.remove("active");
+        }
+
+        function renderHomework() {
+            const container = document.getElementById("homeworkListContainer");
+            if (!container) return;
+
+            if (homeworkList.length === 0) {
+                container.innerHTML = `<div class="card empty-state" style="grid-column: 1 / -1;">No tactical homework assigned yet.</div>`;
+                return;
+            }
+
+            container.innerHTML = homeworkList.map(hw => {
+                const submissions = hw.submissions || {};
+                const isSolvedByCurrentStudent = currentUserRole === 'student' && activeStudentId && submissions[activeStudentId];
+                const studentSubmission = isSolvedByCurrentStudent ? submissions[activeStudentId] : null;
+                const totalSolvedCount = Object.keys(submissions).length;
+
+                return `
+                    <div class="homework-card">
+                        <div class="homework-img-wrapper">
+                            <img src="${hw.photo}" alt="Chess Position" class="homework-img">
+                        </div>
+                        <div class="homework-body">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                                <h4 style="color: var(--text-bright); font-size: 1.05rem; font-weight: 700;">${hw.title}</h4>
+                                <span class="badge badge-pending">${hw.targetTime}</span>
+                            </div>
+                            <p style="font-size: 0.82rem; color: var(--text-muted);">Assigned: ${hw.date}</p>
+                            ${hw.desc ? `<p style="font-size: 0.86rem; color: #cbd5e1; line-height: 1.5;">${hw.desc}</p>` : ''}
+
+                            <!-- Dynamic Action based on Role -->
+                            <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid rgba(64,110,185,0.15);">
+                                ${currentUserRole === 'coach' ? `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4rem;">
+                                        <button class="btn btn-primary btn-sm" onclick="openHwSubmissionsModal('${hw.id}')">
+                                            Submissions (${totalSolvedCount}/${students.length})
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteHomework('${hw.id}')">Delete</button>
+                                    </div>
+                                ` : currentUserRole === 'student' ? `
+                                    ${isSolvedByCurrentStudent ? `
+                                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid var(--success); padding: 0.5rem 0.75rem; border-radius: 7px;">
+                                            <span style="color: #86efac; font-weight: 700; font-size: 0.85rem;">✅ Solved in ${studentSubmission.minutesSpent} mins</span>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">${studentSubmission.submittedAt}</div>
+                                        </div>
+                                    ` : `
+                                        <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                            <input type="number" id="hwTimeInput_${hw.id}" min="1" max="180" placeholder="Mins taken" style="width: 110px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                                            <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="handleMarkHomeworkSolved('${hw.id}')">✓ Mark Solved</button>
+                                        </div>
+                                    `}
+                                ` : `
+                                    <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">🔒 Enrolled Students Only</span>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        /* -------------------------------------------------------------
            STUDENT RECORD EDITING
         ------------------------------------------------------------- */
         function openEditStudentModal(studentId) {
@@ -2158,7 +2444,7 @@
                 roleBadge.textContent = "Coach";
                 roleBadge.className = "badge-role coach";
                 coachOnlyElements.forEach(el => el.style.display = "");
-                permStatus.textContent = "Coach controls board. Moves synchronize live across all connected devices.";
+                permStatus.textContent = "Coach controls board. Moves and flip synchronize live across all connected devices.";
                 guestBanner.style.display = "none";
                 navBtns.forEach(btn => { if (btn) btn.disabled = false; });
             } else if (currentUserRole === "student") {
@@ -2253,6 +2539,7 @@
             checkAndCleanExpiredClasses();
             renderDashboard();
             renderClasses();
+            renderHomework();
             renderMaterials();
             renderStudentsTable();
             renderCoaches();
@@ -2341,8 +2628,8 @@
                             <h3 style="font-size: 1.6rem; color: var(--text-bright); font-weight: 800;">${classes.length}</h3>
                         </div>
                         <div>
-                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Faculty</span>
-                            <h3 style="font-size: 1.6rem; color: var(--accent); font-weight: 800;">${coaches.length}</h3>
+                            <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase;">Homework</span>
+                            <h3 style="font-size: 1.6rem; color: var(--accent); font-weight: 800;">${homeworkList.length} Sets</h3>
                         </div>
                     </div>
                 `;
@@ -2977,7 +3264,7 @@
         }
 
         /* -------------------------------------------------------------
-           BROADCAST BOARD TO FIREBASE (COACH -> ALL DEVICES)
+           BROADCAST BOARD TO FIREBASE WITH SYNCHRONIZED FLIP
         ------------------------------------------------------------- */
         function broadcastBoardState() {
             if (!isFirebaseConnected || currentUserRole !== "coach") return;
@@ -2989,6 +3276,7 @@
                 to: currentNode.to || null,
                 tinted: Array.from(tintedSquares),
                 arrows: drawnArrows,
+                isFlipped: isFlipped, // Broadcasts real-time flip orientation
                 updatedAt: Date.now()
             };
 
@@ -3016,6 +3304,7 @@
 
                     tintedSquares = new Set(data.tinted || []);
                     drawnArrows = data.arrows || [];
+                    isFlipped = !!data.isFlipped; // Student/Guest mirrors Coach's flip
                     renderChessboard();
                 }
             });
@@ -3054,6 +3343,16 @@
                     classes = val;
                     localStorage.setItem("ca_classes", JSON.stringify(val));
                     renderClasses();
+                    renderDashboard();
+                }
+            });
+
+            db.ref("academy/homework").on("value", (snap) => {
+                const val = snap.val();
+                if (val && Array.isArray(val)) {
+                    homeworkList = val;
+                    localStorage.setItem("ca_homework", JSON.stringify(val));
+                    renderHomework();
                     renderDashboard();
                 }
             });
@@ -3398,6 +3697,9 @@
         function flipBoard() {
             isFlipped = !isFlipped;
             renderChessboard();
+            if (currentUserRole === "coach") {
+                broadcastBoardState(); // Instantly synchronizes flip to students & guests
+            }
         }
 
         function renderVariationTree() {
