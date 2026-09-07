@@ -307,7 +307,7 @@
         }
 
         .card {
-            background: linear-gradient(145deg, rgba(16, 26, 48, 0.75) 0%, rgba(9, 14, 27, 0.85) 100%);
+            background: linear-gradient(145deg, rgba(16, 26, 48, 0.75) 0%, rgba(9, 14, 28, 0.85) 100%);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border);
@@ -507,7 +507,7 @@
         }
 
         /* -------------------------------------------------------------
-           HOMEWORK SECTION & SUBMISSION GRID
+           HOMEWORK SECTION & LIGHTBOX EXPAND
         ------------------------------------------------------------- */
         .homework-grid {
             display: grid;
@@ -533,26 +533,49 @@
 
         .homework-img-wrapper {
             width: 100%;
-            height: 240px;
+            height: 250px;
             background: #090e1a;
             display: flex;
             align-items: center;
             justify-content: center;
             border-bottom: 1px solid var(--border);
             overflow: hidden;
+            cursor: pointer;
+            position: relative;
         }
 
         .homework-img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            transition: transform 0.25s ease;
+        }
+
+        .homework-img-wrapper:hover .homework-img {
+            transform: scale(1.03);
+        }
+
+        .zoom-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(8, 13, 25, 0.85);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-highlight);
+            color: var(--accent-light);
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 0.25rem 0.55rem;
+            border-radius: 6px;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
         .homework-body {
-            padding: 1.15rem;
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: 0.7rem;
             flex: 1;
         }
 
@@ -1233,12 +1256,12 @@
             <div id="classListContainer"></div>
         </section>
 
-        <!-- 4. HOMEWORK TAB (NEW) -->
+        <!-- 4. HOMEWORK TAB -->
         <section id="tab-homework" class="tab-panel">
             <div class="card-header">
                 <div>
                     <h2>Tactical Homework &amp; Exercises</h2>
-                    <p class="text-muted" style="font-size: 0.82rem;">Calculate positions on your board, track your solving time, and review in class.</p>
+                    <p class="text-muted" style="font-size: 0.82rem;">Tap any puzzle position to view full size. Record your calculation time before marking solved.</p>
                 </div>
                 <button class="btn btn-primary btn-sm coach-only" onclick="openCreateHwModal()">+ Assign New Puzzle</button>
             </div>
@@ -1509,6 +1532,17 @@
         </section>
 
     </main>
+
+    <!-- HIGH-RES IMAGE LIGHTBOX MODAL -->
+    <div id="imageLightboxModal" class="modal-overlay" onclick="closeImageLightbox()">
+        <div class="modal-card" style="max-width: 90vw; width: auto; background: rgba(8, 14, 28, 0.96); padding: 1.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.85rem; gap: 1rem;">
+                <h3 id="lightboxTitle" style="color: var(--text-bright); font-size: 1.15rem; font-weight: 700; margin: 0;">Position Preview</h3>
+                <button class="btn btn-secondary btn-sm" onclick="closeImageLightbox()">✕ Close</button>
+            </div>
+            <img id="lightboxImg" src="" alt="Enlarged Position" style="max-width: 85vw; max-height: 75vh; object-fit: contain; border-radius: 10px; border: 1px solid var(--border-highlight); box-shadow: 0 16px 45px rgba(0,0,0,0.85);">
+        </div>
+    </div>
 
     <!-- CREATE HOMEWORK MODAL (COACH ONLY) -->
     <div id="createHwModal" class="modal-overlay">
@@ -1934,6 +1968,27 @@
         }
 
         /* -------------------------------------------------------------
+           IMAGE LIGHTBOX (FULLSCREEN PREVIEW)
+        ------------------------------------------------------------- */
+        function openHwLightbox(hwId) {
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (!hw || !hw.photo) return;
+
+            const modal = document.getElementById("imageLightboxModal");
+            const img = document.getElementById("lightboxImg");
+            const titleEl = document.getElementById("lightboxTitle");
+
+            img.src = hw.photo;
+            titleEl.textContent = hw.title || "Tactical Position";
+            modal.classList.add("active");
+        }
+
+        function closeImageLightbox() {
+            const modal = document.getElementById("imageLightboxModal");
+            if (modal) modal.classList.remove("active");
+        }
+
+        /* -------------------------------------------------------------
            COACH PROFILE MANAGEMENT & DEVICE PHOTO UPLOAD
         ------------------------------------------------------------- */
         function handleNewCoachPhotoUpload(e) {
@@ -2077,7 +2132,7 @@
         }
 
         /* -------------------------------------------------------------
-           HOMEWORK MANAGEMENT & SUBMISSION TRACKING (NEW)
+           HOMEWORK MANAGEMENT & SUBMISSION TRACKING
         ------------------------------------------------------------- */
         function openCreateHwModal() {
             newHwPhotoBase64 = "";
@@ -2219,21 +2274,22 @@
 
                 return `
                     <div class="homework-card">
-                        <div class="homework-img-wrapper">
+                        <!-- Tapping the Image or Wrapper triggers the Fullscreen Lightbox -->
+                        <div class="homework-img-wrapper" onclick="openHwLightbox('${hw.id}')" title="Click to enlarge position">
                             <img src="${hw.photo}" alt="Chess Position" class="homework-img">
+                            <div class="zoom-badge">🔍 Tap to Enlarge</div>
                         </div>
                         <div class="homework-body">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
-                                <h4 style="color: var(--text-bright); font-size: 1.05rem; font-weight: 700;">${hw.title}</h4>
+                                <h4 style="color: var(--text-bright); font-size: 1.08rem; font-weight: 700;">${hw.title}</h4>
                                 <span class="badge badge-pending">${hw.targetTime}</span>
                             </div>
                             <p style="font-size: 0.82rem; color: var(--text-muted);">Assigned: ${hw.date}</p>
-                            ${hw.desc ? `<p style="font-size: 0.86rem; color: #cbd5e1; line-height: 1.5;">${hw.desc}</p>` : ''}
+                            ${hw.desc ? `<p style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.55;">${hw.desc}</p>` : ''}
 
-                            <!-- Dynamic Action based on Role -->
-                            <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid rgba(64,110,185,0.15);">
+                            <div style="margin-top: auto; padding-top: 0.85rem; border-top: 1px solid rgba(64,110,185,0.15);">
                                 ${currentUserRole === 'coach' ? `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.45rem;">
                                         <button class="btn btn-primary btn-sm" onclick="openHwSubmissionsModal('${hw.id}')">
                                             Submissions (${totalSolvedCount}/${students.length})
                                         </button>
@@ -2241,13 +2297,13 @@
                                     </div>
                                 ` : currentUserRole === 'student' ? `
                                     ${isSolvedByCurrentStudent ? `
-                                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid var(--success); padding: 0.5rem 0.75rem; border-radius: 7px;">
-                                            <span style="color: #86efac; font-weight: 700; font-size: 0.85rem;">✅ Solved in ${studentSubmission.minutesSpent} mins</span>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);">${studentSubmission.submittedAt}</div>
+                                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid var(--success); padding: 0.55rem 0.85rem; border-radius: 8px;">
+                                            <span style="color: #86efac; font-weight: 700; font-size: 0.86rem;">✅ Solved in ${studentSubmission.minutesSpent} mins</span>
+                                            <div style="font-size: 0.76rem; color: var(--text-muted);">${studentSubmission.submittedAt}</div>
                                         </div>
                                     ` : `
-                                        <div style="display: flex; gap: 0.4rem; align-items: center;">
-                                            <input type="number" id="hwTimeInput_${hw.id}" min="1" max="180" placeholder="Mins taken" style="width: 110px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                                        <div style="display: flex; gap: 0.45rem; align-items: center;">
+                                            <input type="number" id="hwTimeInput_${hw.id}" min="1" max="180" placeholder="Mins taken" style="width: 110px; padding: 0.42rem 0.6rem; font-size: 0.86rem;">
                                             <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="handleMarkHomeworkSolved('${hw.id}')">✓ Mark Solved</button>
                                         </div>
                                     `}
@@ -3276,7 +3332,7 @@
                 to: currentNode.to || null,
                 tinted: Array.from(tintedSquares),
                 arrows: drawnArrows,
-                isFlipped: isFlipped, // Broadcasts real-time flip orientation
+                isFlipped: isFlipped,
                 updatedAt: Date.now()
             };
 
@@ -3304,7 +3360,7 @@
 
                     tintedSquares = new Set(data.tinted || []);
                     drawnArrows = data.arrows || [];
-                    isFlipped = !!data.isFlipped; // Student/Guest mirrors Coach's flip
+                    isFlipped = !!data.isFlipped;
                     renderChessboard();
                 }
             });
@@ -3698,7 +3754,7 @@
             isFlipped = !isFlipped;
             renderChessboard();
             if (currentUserRole === "coach") {
-                broadcastBoardState(); // Instantly synchronizes flip to students & guests
+                broadcastBoardState();
             }
         }
 
@@ -3796,6 +3852,10 @@
         }
 
         window.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeImageLightbox();
+            }
+
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
             if (currentUserRole !== "coach" || isEditingBoard) return;
 
