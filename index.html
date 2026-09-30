@@ -1308,8 +1308,9 @@
                 </div>
 
                 <div class="card attendance-panel" style="margin-bottom: 0;">
-                    <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
-                        <h3>Attendance</h3>
+                    <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0;">Attendance</h3>
+                        <button class="btn btn-secondary btn-sm coach-only" onclick="resetClassAttendance()" title="Reset student attendance for a new class session">🧹 Reset</button>
                     </div>
                     <ul id="attendanceList" class="attendance-list"></ul>
                 </div>
@@ -2117,7 +2118,18 @@
         // ONLY SESSION AUTH IS PERSISTED LOCALLY
         let currentUserRole = localStorage.getItem("ca_role") || null;
         let activeStudentId = localStorage.getItem("ca_active_student_id") || null;
-        let attendedStudentIds = new Set();
+        let attendedStudentIds = new Map();
+
+        function isCoachAuthenticated() {
+            if (currentUserRole !== "coach") return false;
+            const sessionToken = sessionStorage.getItem("ca_coach_session");
+            if (!sessionToken) return false;
+            try {
+                return atob(sessionToken) === (academyConfig.adminPasscode + "_authenticated");
+            } catch (e) {
+                return false;
+            }
+        }
 
         let tintedSquares = new Set();
         let drawnArrows = [];
@@ -2482,21 +2494,27 @@
                 return;
             }
 
-            const hw = homeworkList.find(h => h.id === hwId);
-            if (!hw) return;
+            const hwIdx = homeworkList.findIndex(h => h.id === hwId);
+            if (hwIdx === -1) return;
+            const hw = homeworkList[hwIdx];
 
             if (!hw.submissions) hw.submissions = {};
 
             const student = getActiveStudent();
             const nowStr = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            hw.submissions[activeStudentId] = {
+            const submissionPayload = {
                 studentName: student ? student.name : "Student",
                 submittedAnswer: answer,
                 submittedAt: nowStr
             };
 
-            saveHomeworkToFirebase();
+            hw.submissions[activeStudentId] = submissionPayload;
+
+            // Granular child write: prevents array race conditions across multiple students!
+            if (isFirebaseConnected) {
+                db.ref(`academy/homework/${hwIdx}/submissions/${activeStudentId}`).set(submissionPayload);
+            }
             renderHomework();
         }
 
@@ -2771,6 +2789,7 @@
                 currentUserRole = "coach";
                 activeStudentId = null;
                 localStorage.setItem("ca_role", currentUserRole);
+                sessionStorage.setItem("ca_coach_session", btoa(academyConfig.adminPasscode + "_authenticated"));
                 localStorage.removeItem("ca_active_student_id");
 
                 document.getElementById("authModal").classList.remove("active");
@@ -2786,6 +2805,7 @@
             currentUserRole = "guest";
             activeStudentId = null;
             localStorage.setItem("ca_role", "guest");
+            sessionStorage.removeItem("ca_coach_session");
             localStorage.removeItem("ca_active_student_id");
 
             document.getElementById("authModal").classList.remove("active");
@@ -2794,6 +2814,12 @@
         }
 
         function applyRoleUI() {
+            // Tamper protection: if role is coach but session is missing, downgrade to guest
+            if (currentUserRole === "coach" && !isCoachAuthenticated()) {
+                currentUserRole = "guest";
+                localStorage.setItem("ca_role", "guest");
+            }
+
             const nameLabel = document.getElementById("userDisplayName");
             const roleBadge = document.getElementById("userRoleBadge");
             const coachOnlyElements = document.querySelectorAll(".coach-only");
@@ -2849,8 +2875,23 @@
 
         function recordStudentAttendance(studentId) {
             if (studentId && isFirebaseConnected) {
-                attendedStudentIds.add(studentId);
-                db.ref("academy/attendance/" + studentId).set(true);
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                attendedStudentIds.set(studentId, timeStr);
+                db.ref("academy/attendance/" + studentId).set({ joinedAt: timeStr });
+                renderAttendancePanel();
+            }
+        }
+
+        function resetClassAttendance() {
+            if (!isCoachAuthenticated()) {
+                alert("Coach authorization required to reset attendance.");
+                return;
+            }
+            if (confirm("Reset attendance for all students? All students will be marked as 'Not Joined' for the new class session.")) {
+                attendedStudentIds.clear();
+                if (isFirebaseConnected) {
+                    db.ref("academy/attendance").remove();
+                }
                 renderAttendancePanel();
             }
         }
@@ -2876,14 +2917,15 @@
 
             list.innerHTML = students.map(s => {
                 const isPresent = attendedStudentIds.has(s.id);
+                const joinTime = attendedStudentIds.get(s.id);
                 return `
                     <li class="attendance-item ${isPresent ? 'present' : 'absent'}">
                         <div>
-                            <strong>${s.name}</strong>
-                            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.id}</div>
+                            <strong>${escapeHtml(s.name)}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(s.id)}</div>
                         </div>
                         <span class="badge ${isPresent ? 'badge-paid' : 'badge-overdue'}">
-                            ${isPresent ? 'Joined' : 'Not Joined'}
+                            ${isPresent ? (joinTime ? `Joined (${escapeHtml(joinTime)})` : 'Joined') : 'Not Joined'}
                         </span>
                     </li>
                 `;
@@ -3158,8 +3200,23 @@
 
         function handleCreateStudent(e) {
             e.preventDefault();
+            const rawId = document.getElementById("studId").value.trim();
+            // Sanitize invalid Firebase key characters: . $ # [ ] /
+            const sanitizedId = rawId.replace(/[\.\$#\[\]\/]/g, "-");
+            if (!sanitizedId) {
+                alert("Please enter a valid Student ID.");
+                document.getElementById("studId").focus();
+                return;
+            }
+
+            if (students.some(s => s.id.toLowerCase() === sanitizedId.toLowerCase())) {
+                alert(`A student with ID "${sanitizedId}" already exists! Please choose a unique Student ID.`);
+                document.getElementById("studId").focus();
+                return;
+            }
+
             students.push({
-                id: document.getElementById("studId").value.trim(),
+                id: sanitizedId,
                 name: document.getElementById("studName").value.trim(),
                 email: document.getElementById("studEmail").value.trim(),
                 rating: parseInt(document.getElementById("studRating").value) || 1200,
@@ -3767,10 +3824,14 @@
 
             db.ref("academy/attendance").on("value", (snap) => {
                 const val = snap.val();
+                attendedStudentIds = new Map();
                 if (val) {
-                    attendedStudentIds = new Set(Object.keys(val));
-                    renderAttendancePanel();
+                    Object.entries(val).forEach(([sid, data]) => {
+                        const time = (typeof data === 'object' && data && data.joinedAt) ? data.joinedAt : (data === true ? "Present" : "");
+                        attendedStudentIds.set(sid, time);
+                    });
                 }
+                renderAttendancePanel();
             });
         }
 

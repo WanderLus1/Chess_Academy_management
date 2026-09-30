@@ -1,0 +1,43 @@
+{
+  "rules": {
+    "academy": {
+      ".read": true,
+      "config": {
+        ".write": "auth != null || root.child('academy/config/adminPasscode').val() == newData.child('adminPasscode').val()"
+      },
+      "students": {
+        ".write": true
+      },
+      "classes": {
+        ".write": true
+      },
+      "coaches": {
+        ".write": true
+      },
+      "materials": {
+        ".write": true
+      },
+      "liveBoard": {
+        ".write": true
+      },
+      "attendance": {
+        ".write": true,
+        "$studentId": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['joinedAt']) || newData.val() == true"
+        }
+      },
+      "homework": {
+        ".write": true,
+        "$hwIndex": {
+          "submissions": {
+            "$studentId": {
+              ".write": true,
+              ".validate": "newData.hasChildren(['studentName', 'submittedAnswer', 'submittedAt'])"
+            }
+          }
+        }
+      }
+    }
+  }
+}
