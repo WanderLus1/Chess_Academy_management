@@ -1251,7 +1251,11 @@
                                 <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
                                     <path d="M 0,0 L 6,3 L 0,6 z" fill="rgba(239, 68, 68, 0.85)" />
                                 </marker>
+                                <marker id="engineArrowHead" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto">
+                                    <path d="M 0,0 L 8,4 L 0,8 z" fill="rgba(34, 197, 94, 0.7)" />
+                                </marker>
                             </defs>
+                            <g id="engineArrowGroup"></g>
                             <g id="arrowGroup"></g>
                         </svg>
 
@@ -1272,7 +1276,7 @@
                         <button class="btn btn-secondary btn-sm coach-only" id="btnClearBoardAnnotations" onclick="clearLiveBoardAnnotations()" title="Clear all arrows & highlights (Shortcut: C or Esc)">🧹 Clear</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="toggleBoardEditor()">Edit Board</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="openFenModal()">Paste FEN</button>
-                        <button class="btn btn-secondary btn-sm coach-only" onclick="fetchStockfishEval()">Engine Eval</button>
+                        <button class="btn btn-secondary btn-sm coach-only" id="btnEngineToggle" onclick="toggleEngineAutoEval()" title="Toggle continuous Stockfish analysis with best-move arrow">⚙️ Engine</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="openPgnImportModal()">Import PGN</button>
                         <button class="btn btn-secondary btn-sm coach-only" onclick="promoteCurrentLine()">Promote</button>
                         <button class="btn btn-danger btn-sm coach-only" onclick="deleteCurrentBranch()">Delete</button>
@@ -2122,10 +2126,15 @@
 
         function isCoachAuthenticated() {
             if (currentUserRole !== "coach") return false;
-            const sessionToken = sessionStorage.getItem("ca_coach_session");
-            if (!sessionToken) return false;
+            const token = localStorage.getItem("ca_coach_token") || sessionStorage.getItem("ca_coach_session");
+            if (!token) return false;
             try {
-                return atob(sessionToken) === (academyConfig.adminPasscode + "_authenticated");
+                const decoded = atob(token);
+                if (isFirebaseLoaded.config) {
+                    return decoded === (academyConfig.adminPasscode + "_authenticated");
+                }
+                // Pre-load phase before Firebase config arrives: accept valid token format
+                return decoded.endsWith("_authenticated") && decoded.length > "_authenticated".length;
             } catch (e) {
                 return false;
             }
@@ -2134,6 +2143,12 @@
         let tintedSquares = new Set();
         let drawnArrows = [];
         let rightClickDragStart = null;
+
+        // Engine Auto-Evaluation State (coach-only, local-only)
+        let engineAutoEvalEnabled = false;
+        let engineBestMoveArrow = null; // { fromR, fromF, toR, toF } or null
+        let engineEvalAbortController = null;
+        let lastEngineEvalFen = null;
 
         let newCoachPhotoBase64 = "";
         let editCoachPhotoBase64 = "";
@@ -2252,6 +2267,9 @@
             const newPass = document.getElementById("cfgAdminPasscode").value.trim();
             if (newPass) {
                 academyConfig.adminPasscode = newPass;
+                const token = btoa(newPass + "_authenticated");
+                localStorage.setItem("ca_coach_token", token);
+                sessionStorage.setItem("ca_coach_session", token);
                 alert("Academy Profile and Admin Passcode updated.");
             } else {
                 alert("Academy profile updated.");
@@ -2774,6 +2792,8 @@
             activeStudentId = selectedId;
             localStorage.setItem("ca_role", currentUserRole);
             localStorage.setItem("ca_active_student_id", activeStudentId);
+            localStorage.removeItem("ca_coach_token");
+            sessionStorage.removeItem("ca_coach_session");
 
             document.getElementById("authModal").classList.remove("active");
             applyRoleUI();
@@ -2788,8 +2808,10 @@
             if (password === academyConfig.adminPasscode) {
                 currentUserRole = "coach";
                 activeStudentId = null;
+                const token = btoa(academyConfig.adminPasscode + "_authenticated");
                 localStorage.setItem("ca_role", currentUserRole);
-                sessionStorage.setItem("ca_coach_session", btoa(academyConfig.adminPasscode + "_authenticated"));
+                localStorage.setItem("ca_coach_token", token);
+                sessionStorage.setItem("ca_coach_session", token);
                 localStorage.removeItem("ca_active_student_id");
 
                 document.getElementById("authModal").classList.remove("active");
@@ -2805,6 +2827,7 @@
             currentUserRole = "guest";
             activeStudentId = null;
             localStorage.setItem("ca_role", "guest");
+            localStorage.removeItem("ca_coach_token");
             sessionStorage.removeItem("ca_coach_session");
             localStorage.removeItem("ca_active_student_id");
 
@@ -2818,6 +2841,8 @@
             if (currentUserRole === "coach" && !isCoachAuthenticated()) {
                 currentUserRole = "guest";
                 localStorage.setItem("ca_role", "guest");
+                localStorage.removeItem("ca_coach_token");
+                sessionStorage.removeItem("ca_coach_session");
             }
 
             const nameLabel = document.getElementById("userDisplayName");
@@ -2866,6 +2891,14 @@
             }
 
             if (currentUserRole !== "coach") {
+                // Reset engine auto-eval state when leaving coach role
+                engineAutoEvalEnabled = false;
+                engineBestMoveArrow = null;
+                lastEngineEvalFen = null;
+                if (engineEvalAbortController) { engineEvalAbortController.abort(); engineEvalAbortController = null; }
+                const engBtn = document.getElementById("btnEngineToggle");
+                if (engBtn) { engBtn.classList.remove("btn-primary"); engBtn.classList.add("btn-secondary"); engBtn.textContent = "⚙️ Engine"; }
+
                 const activeTab = document.querySelector(".tab-btn.active");
                 if (activeTab && activeTab.textContent.trim().includes("Students")) {
                     switchTab("dashboard");
@@ -3266,6 +3299,142 @@
         let rootNode = createRootNode();
         let currentNode = rootNode;
 
+        function findNodeById(node, targetId) {
+            if (!node || targetId === undefined || targetId === null) return null;
+            if (node.id === targetId) return node;
+            for (const child of node.children) {
+                const found = findNodeById(child, targetId);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function findNodeByFen(node, targetFen) {
+            if (!node || !targetFen) return null;
+            const norm = (f) => f ? f.split(" ").slice(0, 2).join(" ") : "";
+            if (norm(node.fen) === norm(targetFen)) return node;
+            for (const child of node.children) {
+                const found = findNodeByFen(child, targetFen);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function parsePgnToTree(rawPgn, customStartFen = null) {
+            if (!rawPgn || !rawPgn.trim()) {
+                return { rootNode: createRootNode(customStartFen || START_FEN), error: null };
+            }
+
+            try {
+                // Check for FEN tag in PGN
+                const fenMatch = rawPgn.match(/\[FEN\s+"([^"]+)"\]/i);
+                const startFen = fenMatch ? fenMatch[1] : (customStartFen || START_FEN);
+
+                let cleaned = rawPgn.replace(/\[.*?\]/g, " ");
+                cleaned = cleaned.replace(/\{[^}]*\}/g, " ");
+                cleaned = cleaned.replace(/\$\d+/g, " ");
+                cleaned = cleaned.replace(/\(/g, " ( ").replace(/\)/g, " ) ");
+                cleaned = cleaned.replace(/\d+\s*\.{1,3}/g, " ");
+                cleaned = cleaned.replace(/(1-0|0-1|1\/2-1\/2|\*)/g, " ");
+
+                const tokens = cleaned.trim().split(/\s+/).filter(t => t.length > 0 && t !== "...");
+                const newRoot = createRootNode(startFen);
+                let currentParseNode = newRoot;
+                let scopeStack = [];
+                let localCounter = 1;
+
+                for (let i = 0; i < tokens.length; i++) {
+                    const tok = tokens[i];
+
+                    if (tok === "(") {
+                        if (!currentParseNode.parent) throw new Error("Variation syntax error");
+                        scopeStack.push({
+                            parent: currentParseNode.parent,
+                            returnTo: currentParseNode
+                        });
+                        currentParseNode = currentParseNode.parent;
+                        continue;
+                    }
+
+                    if (tok === ")") {
+                        if (scopeStack.length === 0) throw new Error("Mismatched parentheses");
+                        const scope = scopeStack.pop();
+                        currentParseNode = scope.returnTo;
+                        continue;
+                    }
+
+                    const tempGame = new Chess(currentParseNode.fen);
+                    const moveResult = tempGame.move(tok, { sloppy: true });
+
+                    if (!moveResult) {
+                        throw new Error(`Illegal or unresolvable move: ${tok}`);
+                    }
+
+                    const fromCoords = squareToCoords(moveResult.from);
+                    const toCoords = squareToCoords(moveResult.to);
+
+                    let targetNode = currentParseNode.children.find(ch => 
+                        ch.from.r === fromCoords.r && ch.from.c === fromCoords.c &&
+                        ch.to.r === toCoords.r && ch.to.c === toCoords.c
+                    );
+
+                    if (!targetNode) {
+                        const isWhiteTurn = currentParseNode.fen.split(" ")[1] === 'w';
+                        const mNum = isWhiteTurn ? currentParseNode.moveNumber + 1 : currentParseNode.moveNumber;
+
+                        targetNode = {
+                            id: localCounter++,
+                            parent: currentParseNode,
+                            children: [],
+                            fen: tempGame.fen(),
+                            notation: moveResult.san,
+                            from: fromCoords,
+                            to: toCoords,
+                            moveNumber: mNum === 0 ? 1 : mNum
+                        };
+                        currentParseNode.children.push(targetNode);
+                    }
+
+                    currentParseNode = targetNode;
+                }
+
+                nodeIdCounter = Math.max(nodeIdCounter, localCounter + 1);
+                return { rootNode: newRoot, error: null };
+            } catch (err) {
+                return { rootNode: null, error: err.message };
+            }
+        }
+
+        function initLocalBoard() {
+            const savedPgn = localStorage.getItem("ca_board_pgn");
+            const savedStartFen = localStorage.getItem("ca_board_start_fen") || START_FEN;
+            const savedNodeId = localStorage.getItem("ca_board_node_id");
+
+            if (savedPgn) {
+                const parsed = parsePgnToTree(savedPgn, savedStartFen);
+                if (parsed.rootNode) {
+                    rootNode = parsed.rootNode;
+                    let matched = null;
+                    if (savedNodeId) {
+                        matched = findNodeById(rootNode, parseInt(savedNodeId));
+                    }
+                    if (!matched) {
+                        let walk = rootNode;
+                        while (walk.children && walk.children.length > 0) {
+                            walk = walk.children[0];
+                        }
+                        matched = walk;
+                    }
+                    currentNode = matched;
+                    return;
+                }
+            }
+            if (savedStartFen && savedStartFen !== START_FEN) {
+                rootNode = createRootNode(savedStartFen);
+                currentNode = rootNode;
+            }
+        }
+
         let selectedSquare = null;
         let isFlipped = false;
         let draggedFrom = null;
@@ -3412,6 +3581,7 @@
             renderVariationTree();
             updatePGNDisplay();
             updateSidelineBranchPopup();
+            triggerAutoEngineEval();
         }
 
         function updateSidelineBranchPopup() {
@@ -3557,10 +3727,59 @@
         }
 
         /* -------------------------------------------------------------
-           STOCKFISH ASSISTANT EVALUATOR
+           STOCKFISH ASSISTANT EVALUATOR (Toggle + Auto-Eval + Arrow)
         ------------------------------------------------------------- */
-        async function fetchStockfishEval() {
+        let engineEvalDebounceTimer = null;
+
+        function toggleEngineAutoEval() {
             if (currentUserRole !== "coach") return;
+
+            engineAutoEvalEnabled = !engineAutoEvalEnabled;
+            const btn = document.getElementById("btnEngineToggle");
+            const box = document.getElementById("coachEngineBox");
+
+            if (engineAutoEvalEnabled) {
+                btn.classList.remove("btn-secondary");
+                btn.classList.add("btn-primary");
+                btn.textContent = "⚙️ Engine ✓";
+                box.style.display = "block";
+                lastEngineEvalFen = null;
+                fetchStockfishEval(); // Instant fetch on toggle
+            } else {
+                btn.classList.remove("btn-primary");
+                btn.classList.add("btn-secondary");
+                btn.textContent = "⚙️ Engine";
+                box.style.display = "none";
+                engineBestMoveArrow = null;
+                lastEngineEvalFen = null;
+                if (engineEvalDebounceTimer) {
+                    clearTimeout(engineEvalDebounceTimer);
+                    engineEvalDebounceTimer = null;
+                }
+                if (engineEvalAbortController) {
+                    engineEvalAbortController.abort();
+                    engineEvalAbortController = null;
+                }
+                renderEngineArrow(); // clear the green arrow
+            }
+        }
+
+        function triggerAutoEngineEval() {
+            if (!engineAutoEvalEnabled || currentUserRole !== "coach" || isEditingBoard) return;
+            // Skip if FEN hasn't changed since last eval
+            if (lastEngineEvalFen === currentNode.fen) return;
+            if (engineEvalDebounceTimer) {
+                clearTimeout(engineEvalDebounceTimer);
+            }
+            engineEvalDebounceTimer = setTimeout(() => {
+                if (!engineAutoEvalEnabled || currentUserRole !== "coach" || isEditingBoard) return;
+                if (lastEngineEvalFen === currentNode.fen) return;
+                fetchStockfishEval();
+            }, 180);
+        }
+
+        async function fetchStockfishEval() {
+            if (currentUserRole !== "coach" || isEditingBoard) return;
 
             const box = document.getElementById("coachEngineBox");
             const evalBadge = document.getElementById("engineEvalBadge");
@@ -3569,14 +3788,33 @@
 
             box.style.display = "block";
             evalBadge.textContent = "Calculating...";
+            evalBadge.style.background = "#111a2e";
+            evalBadge.style.color = "#fff";
             bestMoveEl.textContent = "Best Move: Querying Stockfish...";
             contEl.textContent = "Line: ...";
 
+            // Clear previous arrow while calculating new position
+            engineBestMoveArrow = null;
+            renderEngineArrow();
+
+            // Abort any in-flight request
+            if (engineEvalAbortController) {
+                engineEvalAbortController.abort();
+            }
+            engineEvalAbortController = new AbortController();
+
+            const fenAtRequest = currentNode.fen;
+
             try {
-                const currentFen = encodeURIComponent(currentNode.fen);
+                const currentFen = encodeURIComponent(fenAtRequest);
                 const url = `https://stockfish.online/api/s/v2.php?fen=${currentFen}&depth=12`;
-                const response = await fetch(url);
+                const response = await fetch(url, { signal: engineEvalAbortController.signal });
                 const data = await response.json();
+
+                // If position changed while waiting, discard stale result
+                if (currentNode.fen !== fenAtRequest) return;
+
+                lastEngineEvalFen = fenAtRequest;
 
                 if (data.success) {
                     const evalScore = data.evaluation !== null && data.evaluation !== undefined ? (data.evaluation > 0 ? `+${data.evaluation}` : `${data.evaluation}`) : (data.mate ? `#${data.mate}` : "0.00");
@@ -3591,27 +3829,83 @@
                         bestUci = data.data.includes(" ") ? data.data.split(" ")[1] : data.data;
                     }
 
-                    if (bestUci && bestUci.length >= 4) {
-                        const tempEngineGame = new Chess(currentNode.fen);
+                    if (bestUci && bestUci !== "(none)" && bestUci.length >= 4) {
+                        const tempEngineGame = new Chess(fenAtRequest);
                         const moveRes = tempEngineGame.move({
                             from: bestUci.slice(0, 2),
                             to: bestUci.slice(2, 4),
                             promotion: bestUci.length > 4 ? bestUci[4] : 'q'
                         });
-                        bestMoveEl.textContent = `Best Move: ${moveRes ? moveRes.san : bestUci}`;
+                        bestMoveEl.textContent = `Best Move: ${moveRes ? `${moveRes.san} (${bestUci})` : bestUci}`;
+
+                        // Set engine arrow coordinates using squareToCoords
+                        const fromCoords = squareToCoords(bestUci.slice(0, 2));
+                        const toCoords = squareToCoords(bestUci.slice(2, 4));
+                        engineBestMoveArrow = {
+                            fromR: fromCoords.r,
+                            fromF: fromCoords.c,
+                            toR: toCoords.r,
+                            toF: toCoords.c
+                        };
+                        renderEngineArrow();
                     } else {
                         bestMoveEl.textContent = `Best Move: ${data.bestmove || data.data || "N/A"}`;
+                        engineBestMoveArrow = null;
+                        renderEngineArrow();
                     }
 
-                    contEl.textContent = `Line: ${data.continuation || "None"}`;
+                    // Convert continuation from UCI to SAN for readability
+                    if (data.continuation) {
+                        const sanLine = uciContinuationToSan(fenAtRequest, data.continuation);
+                        contEl.textContent = `Line: ${sanLine || data.continuation}`;
+                    } else {
+                        contEl.textContent = "Line: None";
+                    }
                 } else {
                     evalBadge.textContent = "Unavailable";
                     bestMoveEl.textContent = "Could not fetch engine analysis.";
+                    engineBestMoveArrow = null;
+                    renderEngineArrow();
                 }
             } catch (err) {
+                if (err.name === 'AbortError') return; // intentional abort, ignore
                 console.warn("Stockfish query error:", err);
                 evalBadge.textContent = "Offline";
                 bestMoveEl.textContent = "Network check: Engine API unreachable.";
+                engineBestMoveArrow = null;
+                renderEngineArrow();
+            }
+        }
+
+        // Convert a UCI continuation string (e.g. "e2e4 e7e5 g1f3") to SAN (e.g. "1. e4 e5 2. Nf3")
+        function uciContinuationToSan(startFen, uciString) {
+            try {
+                const tempGame = new Chess(startFen);
+                const uciMoves = uciString.trim().split(/\s+/);
+                const sanMoves = [];
+                for (const uci of uciMoves) {
+                    if (uci.length < 4) break;
+                    const moveRes = tempGame.move({
+                        from: uci.slice(0, 2),
+                        to: uci.slice(2, 4),
+                        promotion: uci.length > 4 ? uci[4] : undefined
+                    });
+                    if (!moveRes) break;
+                    const moveNum = tempGame.fen().split(" ")[5];
+                    const isBlack = moveRes.color === 'b';
+                    if (!isBlack) {
+                        sanMoves.push(`${moveNum}. ${moveRes.san}`);
+                    } else {
+                        if (sanMoves.length === 0) {
+                            sanMoves.push(`${parseInt(moveNum) - 1}...${moveRes.san}`);
+                        } else {
+                            sanMoves.push(moveRes.san);
+                        }
+                    }
+                }
+                return sanMoves.join(" ");
+            } catch (e) {
+                return null;
             }
         }
 
@@ -3685,6 +3979,45 @@
                 line.setAttribute("marker-end", "url(#arrowHead)");
                 svgGroup.appendChild(line);
             });
+
+            // Render engine best-move arrow (green, coach-only, local-only)
+            renderEngineArrow(sqSize);
+        }
+
+        function renderEngineArrow(sqSize) {
+            const engGroup = document.getElementById("engineArrowGroup");
+            if (!engGroup) return;
+            engGroup.innerHTML = "";
+
+            if (!engineAutoEvalEnabled || !engineBestMoveArrow || currentUserRole !== "coach") return;
+
+            if (!sqSize) {
+                const boardEl = document.getElementById("chessboard");
+                const rect = boardEl.getBoundingClientRect();
+                sqSize = rect.width / 8;
+            }
+
+            const a = engineBestMoveArrow;
+            const startCol = isFlipped ? 7 - a.fromF : a.fromF;
+            const startRow = isFlipped ? 7 - a.fromR : a.fromR;
+            const endCol = isFlipped ? 7 - a.toF : a.toF;
+            const endRow = isFlipped ? 7 - a.toR : a.toR;
+
+            const x1 = startCol * sqSize + sqSize / 2;
+            const y1 = startRow * sqSize + sqSize / 2;
+            const x2 = endCol * sqSize + sqSize / 2;
+            const y2 = endRow * sqSize + sqSize / 2;
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("stroke", "rgba(34, 197, 94, 0.55)");
+            line.setAttribute("stroke-width", "8");
+            line.setAttribute("stroke-linecap", "round");
+            line.setAttribute("marker-end", "url(#engineArrowHead)");
+            engGroup.appendChild(line);
         }
 
         function clearAnnotations() {
@@ -3698,8 +4031,26 @@
         function broadcastBoardState() {
             if (!isFirebaseConnected || currentUserRole !== "coach") return;
 
+            const pgnString = generatePgnRecursive(rootNode).trim();
+            if (pgnString) {
+                localStorage.setItem("ca_board_pgn", pgnString);
+            } else {
+                localStorage.removeItem("ca_board_pgn");
+            }
+            if (rootNode.fen && rootNode.fen !== START_FEN) {
+                localStorage.setItem("ca_board_start_fen", rootNode.fen);
+            } else {
+                localStorage.removeItem("ca_board_start_fen");
+            }
+            if (currentNode && currentNode.id !== undefined) {
+                localStorage.setItem("ca_board_node_id", currentNode.id);
+            }
+
             const livePayload = {
                 fen: currentNode.fen,
+                startFen: rootNode.fen,
+                pgn: pgnString,
+                nodeId: currentNode.id || 0,
                 notation: currentNode.notation,
                 from: currentNode.from || null,
                 to: currentNode.to || null,
@@ -3723,33 +4074,56 @@
                 const data = snapshot.val();
                 if (!data) return;
 
-                // Only update board if FEN actually changed or is initial fetch
-                if (data.fen !== currentNode.fen && !isEditingBoard) {
-                    currentNode = {
-                        id: -99,
-                        parent: null,
-                        children: [],
-                        fen: data.fen,
-                        notation: data.notation || "",
-                        from: data.from || null,
-                        to: data.to || null,
-                        moveNumber: 0
-                    };
+                if (!isEditingBoard) {
+                    const startFen = data.startFen || START_FEN;
+                    const incomingPgn = (data.pgn || "").trim();
+                    const currentPgn = generatePgnRecursive(rootNode).trim();
+
+                    // Rebuild game tree if incoming PGN has moves and differs from current
+                    const pgnMismatch = incomingPgn && incomingPgn !== currentPgn;
+                    const emptyTreeWithIncoming = incomingPgn && rootNode.children.length === 0;
+
+                    if (pgnMismatch || emptyTreeWithIncoming) {
+                        const parsed = parsePgnToTree(incomingPgn, startFen);
+                        if (parsed.rootNode) {
+                            rootNode = parsed.rootNode;
+                            localStorage.setItem("ca_board_pgn", incomingPgn);
+                            if (startFen !== START_FEN) localStorage.setItem("ca_board_start_fen", startFen);
+                        }
+                    } else if (!incomingPgn && data.fen && rootNode.children.length === 0 && rootNode.fen !== data.fen) {
+                        rootNode = createRootNode(data.fen);
+                    }
+
+                    // Locate active node in the game tree
+                    let targetNode = null;
+                    if (data.nodeId !== undefined && data.nodeId !== null) {
+                        targetNode = findNodeById(rootNode, data.nodeId);
+                    }
+                    if (!targetNode && data.fen) {
+                        targetNode = findNodeByFen(rootNode, data.fen);
+                    }
+
+                    if (targetNode) {
+                        currentNode = targetNode;
+                    } else if (data.fen && data.fen !== currentNode.fen) {
+                        currentNode = {
+                            id: -99,
+                            parent: null,
+                            children: [],
+                            fen: data.fen,
+                            notation: data.notation || "",
+                            from: data.from || null,
+                            to: data.to || null,
+                            moveNumber: 0
+                        };
+                    }
 
                     tintedSquares = new Set(data.tinted || []);
                     drawnArrows = data.arrows || [];
-                    isFlipped = !!data.isFlipped;
-                    renderChessboard();
-                } else if (!isEditingBoard) {
-                    // Update annotations/flip if FEN is identical
-                    tintedSquares = new Set(data.tinted || []);
-                    drawnArrows = data.arrows || [];
-                    if (isFlipped !== !!data.isFlipped) {
+                    if (data.isFlipped !== undefined) {
                         isFlipped = !!data.isFlipped;
-                        renderChessboard();
-                    } else {
-                        renderArrows();
                     }
+                    renderChessboard();
                 }
             });
 
@@ -3759,6 +4133,16 @@
                 if (val) {
                     academyConfig = Object.assign({}, DEFAULT_CONFIG, val);
                     applyBranding();
+                }
+                // Verify coach token against the confirmed database passcode
+                if (currentUserRole === "coach" && !isCoachAuthenticated()) {
+                    console.warn("Passcode changed in database. Downgrading to guest.");
+                    currentUserRole = "guest";
+                    localStorage.setItem("ca_role", "guest");
+                    localStorage.removeItem("ca_coach_token");
+                    sessionStorage.removeItem("ca_coach_session");
+                    applyRoleUI();
+                    renderAll();
                 }
             });
 
@@ -3999,89 +4383,20 @@
                 return;
             }
 
-            try {
-                let cleaned = rawPgn.replace(/\[.*?\]/g, " ");
-                cleaned = cleaned.replace(/\{[^}]*\}/g, " ");
-                cleaned = cleaned.replace(/\$\d+/g, " ");
-                cleaned = cleaned.replace(/\(/g, " ( ").replace(/\)/g, " ) ");
-                cleaned = cleaned.replace(/\d+\s*\.{1,3}/g, " ");
-                cleaned = cleaned.replace(/(1-0|0-1|1\/2-1\/2|\*)/g, " ");
-
-                const tokens = cleaned.trim().split(/\s+/).filter(t => t.length > 0 && t !== "...");
-                if (tokens.length === 0) throw new Error("No moves found.");
-
-                nodeIdCounter = 1;
-                const newRoot = createRootNode();
-                let currentParseNode = newRoot;
-                let scopeStack = [];
-
-                for (let i = 0; i < tokens.length; i++) {
-                    const tok = tokens[i];
-
-                    if (tok === "(") {
-                        if (!currentParseNode.parent) throw new Error("Variation syntax error");
-                        scopeStack.push({
-                            parent: currentParseNode.parent,
-                            returnTo: currentParseNode
-                        });
-                        currentParseNode = currentParseNode.parent;
-                        continue;
-                    }
-
-                    if (tok === ")") {
-                        if (scopeStack.length === 0) throw new Error("Mismatched parentheses");
-                        const scope = scopeStack.pop();
-                        currentParseNode = scope.returnTo;
-                        continue;
-                    }
-
-                    const tempGame = new Chess(currentParseNode.fen);
-                    const moveResult = tempGame.move(tok, { sloppy: true });
-
-                    if (!moveResult) {
-                        throw new Error(`Illegal or unresolvable move: ${tok}`);
-                    }
-
-                    const fromCoords = squareToCoords(moveResult.from);
-                    const toCoords = squareToCoords(moveResult.to);
-
-                    let targetNode = currentParseNode.children.find(ch => 
-                        ch.from.r === fromCoords.r && ch.from.c === fromCoords.c &&
-                        ch.to.r === toCoords.r && ch.to.c === toCoords.c
-                    );
-
-                    if (!targetNode) {
-                        const isWhiteTurn = currentParseNode.fen.split(" ")[1] === 'w';
-                        const mNum = isWhiteTurn ? currentParseNode.moveNumber + 1 : currentParseNode.moveNumber;
-
-                        targetNode = {
-                            id: nodeIdCounter++,
-                            parent: currentParseNode,
-                            children: [],
-                            fen: tempGame.fen(),
-                            notation: moveResult.san,
-                            from: fromCoords,
-                            to: toCoords,
-                            moveNumber: mNum === 0 ? 1 : mNum
-                        };
-                        currentParseNode.children.push(targetNode);
-                    }
-
-                    currentParseNode = targetNode;
-                }
-
-                rootNode = newRoot;
-                currentNode = rootNode;
-                clearAnnotations();
-                closePgnImportModal();
-                renderChessboard();
-                broadcastBoardState();
-
-            } catch (err) {
-                console.error("PGN Parsing Error:", err);
+            const parsed = parsePgnToTree(rawPgn);
+            if (parsed.error) {
+                console.error("PGN Parsing Error:", parsed.error);
                 errorBanner.style.display = "block";
-                errorBanner.textContent = `Invalid PGN: ${err.message}`;
+                errorBanner.textContent = `Invalid PGN: ${parsed.error}`;
+                return;
             }
+
+            rootNode = parsed.rootNode;
+            currentNode = rootNode;
+            clearAnnotations();
+            closePgnImportModal();
+            renderChessboard();
+            broadcastBoardState();
         }
 
         /* -------------------------------------------------------------
@@ -4164,6 +4479,9 @@
             if (confirm("Reset chessboard and erase entire game tree?")) {
                 rootNode = createRootNode();
                 currentNode = rootNode;
+                localStorage.removeItem("ca_board_pgn");
+                localStorage.removeItem("ca_board_start_fen");
+                localStorage.removeItem("ca_board_node_id");
                 clearAnnotations();
                 renderChessboard();
                 broadcastBoardState();
@@ -4328,8 +4646,10 @@
         });
 
         document.addEventListener("DOMContentLoaded", () => {
+            initLocalBoard();
             applyBranding();
             applyRoleUI();
+            renderChessboard();
             setupLiveBoardListener();
             setInterval(checkAndCleanExpiredClasses, 60000);
 
