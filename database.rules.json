@@ -20,6 +20,14 @@
       "liveBoard": {
         ".write": true
       },
+      "chat": {
+        ".read": true,
+        ".write": true,
+        "$studentId": {
+          ".read": true,
+          ".write": true
+        }
+      },
       "attendance": {
         ".write": true,
         "$studentId": {
