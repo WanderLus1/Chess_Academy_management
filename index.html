@@ -908,6 +908,63 @@
             color: var(--accent);
         }
 
+        .chat-answer-card {
+            background: #111a2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            transition: all 0.15s ease;
+        }
+
+        .chat-answer-card:hover {
+            border-color: rgba(245, 158, 11, 0.5);
+            background: #131f38;
+        }
+
+        .chat-answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+        }
+
+        .chat-answer-student {
+            font-weight: 700;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .chat-answer-text {
+            font-size: 0.9rem;
+            color: #f8fafc;
+            line-height: 1.35;
+            word-break: break-word;
+            padding: 0.1rem 0;
+        }
+
+        .chat-answer-actions {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            margin-top: 0.15rem;
+            align-items: center;
+        }
+
+        .chat-answer-reply-preview {
+            background: rgba(15, 23, 42, 0.85);
+            border-left: 2px solid var(--accent);
+            padding: 0.3rem 0.55rem;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            color: #cbd5e1;
+            margin-top: 0.2rem;
+        }
+
         .chat-tab-badge {
             background: #ef4444;
             color: #ffffff;
@@ -1456,7 +1513,7 @@
                     <div id="coachQuickChips" class="chat-chips-bar" style="display: none;">
                         <button type="button" class="chat-chip" onclick="applyCoachQuickReply('✅ Correct! Excellent find.')">✅ Correct</button>
                         <button type="button" class="chat-chip" onclick="applyCoachQuickReply('❌ Not quite, try again!')">❌ Try again</button>
-                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('💡 Look closely at the King.')">💡 Hint: King</button>
+                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('💡 Look closer at the tactics.')">💡 Hint</button>
                         <button type="button" class="chat-chip" onclick="applyCoachQuickReply('👍 Good idea, but there is better.')">👍 Almost</button>
                     </div>
 
@@ -4562,108 +4619,206 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        let coachChatFilterMode = "all"; // "all" for live unified feed, or specific studentId for 1-on-1 thread
+
+        function setCoachChatFilter(mode) {
+            coachChatFilterMode = mode;
+            renderCoachChatView();
+        }
+
+        function replyDirectToStudent(studentId, replyText) {
+            if (currentUserRole !== "coach" || !studentId) return;
+            const coachName = coaches[0]?.name || "Coach";
+            const payload = {
+                senderRole: "coach",
+                senderName: coachName,
+                senderId: "coach",
+                text: replyText,
+                timestamp: Date.now()
+            };
+            db.ref("academy/chat/" + studentId).push(payload);
+        }
+
         function renderCoachChatView() {
             const container = document.getElementById("classroomChatMessages");
             const tabsBar = document.getElementById("coachStudentTabsBar");
             const chatInput = document.getElementById("classroomChatInput");
+            const headerTitle = document.getElementById("chatHeaderTitle");
+            const headerSubtitle = document.getElementById("chatHeaderSubtitle");
+            const coachChips = document.getElementById("coachQuickChips");
             if (!container || !tabsBar) return;
 
             const allChat = currentChatSnapshot || {};
             const chatStudentIds = Object.keys(allChat);
 
             const studentMap = new Map();
-            students.forEach(s => studentMap.set(s.id, { id: s.id, name: s.name, count: 0, latestTime: 0 }));
+            students.forEach(s => studentMap.set(s.id, { id: s.id, name: s.name, count: 0, latestTime: 0, latestCoachReply: null }));
+
+            let totalStudentAnswers = 0;
+            const allStudentAnswers = [];
 
             chatStudentIds.forEach(sid => {
                 const msgs = allChat[sid] || {};
                 const msgKeys = Object.keys(msgs);
                 let latestTime = 0;
                 let studName = null;
-                msgKeys.forEach(mk => {
-                    const m = msgs[mk];
+                let latestCoachReply = null;
+
+                const studMsgList = msgKeys.map(mk => Object.assign({ id: mk, studentId: sid }, msgs[mk]));
+                studMsgList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+                studMsgList.forEach(m => {
                     if (m.timestamp && m.timestamp > latestTime) latestTime = m.timestamp;
-                    if (m.senderName && m.senderRole === "student") studName = m.senderName;
+                    if (m.senderRole === "student") {
+                        if (m.senderName) studName = m.senderName;
+                        totalStudentAnswers++;
+                        allStudentAnswers.push(m);
+                    } else if (m.senderRole === "coach") {
+                        latestCoachReply = m;
+                    }
                 });
+
                 const existing = studentMap.get(sid) || { id: sid, name: studName || "Student " + sid, count: 0, latestTime: 0 };
-                existing.count = msgKeys.length;
+                existing.count = studMsgList.filter(m => m.senderRole === "student").length;
                 existing.latestTime = latestTime;
+                existing.latestCoachReply = latestCoachReply;
                 studentMap.set(sid, existing);
             });
 
-            const sortedStudents = Array.from(studentMap.values()).filter(s => s.count > 0 || students.some(st => st.id === s.id));
-            sortedStudents.sort((a, b) => b.latestTime - a.latestTime);
+            // Sort unified answer feed chronologically
+            allStudentAnswers.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-            if (sortedStudents.length === 0) {
-                tabsBar.innerHTML = `<span class="text-muted" style="font-size: 0.74rem; padding: 0.2rem 0.5rem;">No students registered yet.</span>`;
-                container.innerHTML = `
-                    <div class="text-muted" style="text-align: center; margin: auto; font-size: 0.85rem; padding: 1.5rem;">
-                        No student messages yet. Incoming moves and answers will appear here in real-time.
-                    </div>
-                `;
-                return;
-            }
+            const waitingStudents = students.filter(s => !studentMap.has(s.id) || studentMap.get(s.id).count === 0);
+            const studentsWithMessages = Array.from(studentMap.values()).filter(s => s.count > 0);
+            studentsWithMessages.sort((a, b) => b.latestTime - a.latestTime);
 
-            if (!activeChatStudentId || !studentMap.has(activeChatStudentId)) {
-                activeChatStudentId = sortedStudents[0].id;
-            }
+            // Render Tabs Bar
+            let tabsHtml = `
+                <button type="button" class="chat-tab-btn ${coachChatFilterMode === 'all' ? 'active' : ''}" onclick="setCoachChatFilter('all')">
+                    ⚡ Live Feed <span class="chat-tab-badge" style="background:#2563eb;">${totalStudentAnswers}</span>
+                </button>
+            `;
 
-            tabsBar.innerHTML = sortedStudents.map(s => {
-                const isActive = s.id === activeChatStudentId;
-                const badge = s.count > 0 ? `<span class="chat-tab-badge">${s.count}</span>` : "";
+            tabsHtml += studentsWithMessages.map(s => {
+                const isActive = coachChatFilterMode === s.id;
                 return `
-                    <button type="button" class="chat-tab-btn ${isActive ? 'active' : ''}" onclick="selectCoachChatStudent('${escapeHtml(s.id)}')">
-                        ${escapeHtml(s.name)} ${badge}
+                    <button type="button" class="chat-tab-btn ${isActive ? 'active' : ''}" onclick="setCoachChatFilter('${escapeHtml(s.id)}')">
+                        ${escapeHtml(s.name)} <span class="chat-tab-badge">${s.count}</span>
                     </button>
                 `;
             }).join("");
 
-            const activeStudentObj = studentMap.get(activeChatStudentId);
-            const activeStudentName = activeStudentObj ? activeStudentObj.name : "Student";
-            if (chatInput) {
-                chatInput.placeholder = `Reply to ${activeStudentName}...`;
+            if (waitingStudents.length > 0 && coachChatFilterMode === 'all') {
+                const waitingNames = waitingStudents.slice(0, 3).map(s => escapeHtml(s.name)).join(", ");
+                const moreCount = waitingStudents.length > 3 ? ` +${waitingStudents.length - 3}` : "";
+                tabsHtml += `<span class="text-muted" style="font-size:0.72rem; padding:0.2rem 0.5rem; align-self:center; white-space:nowrap;">⏳ Waiting: ${waitingNames}${moreCount}</span>`;
             }
 
-            const currentMsgs = allChat[activeChatStudentId] || {};
-            const msgList = Object.keys(currentMsgs).map(k => Object.assign({ id: k }, currentMsgs[k]));
-            msgList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            tabsBar.innerHTML = tabsHtml;
 
-            if (msgList.length === 0) {
-                container.innerHTML = `
-                    <div class="text-muted" style="text-align: center; margin: auto; font-size: 0.85rem; padding: 1.5rem;">
-                        <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">💬</div>
-                        No messages from <strong>${escapeHtml(activeStudentName)}</strong> yet.<br>
-                        You can send them a hint or question below.
-                    </div>
-                `;
+            // 1. UNIFIED LIVE ANSWER FEED MODE
+            if (coachChatFilterMode === "all") {
+                if (headerTitle) headerTitle.textContent = "Live Answers Feed";
+                if (headerSubtitle) headerSubtitle.textContent = `${totalStudentAnswers} answer${totalStudentAnswers === 1 ? '' : 's'} • 1-click feedback below`;
+                if (coachChips) coachChips.style.display = "none";
+                if (chatInput) chatInput.placeholder = "Broadcast hint to all students...";
+
+                if (allStudentAnswers.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-muted" style="text-align: center; margin: auto; font-size: 0.85rem; padding: 1.5rem;">
+                            <div style="font-size: 1.8rem; margin-bottom: 0.4rem;">🎯</div>
+                            <strong>Live Classroom Answer Feed</strong><br>
+                            When students type their moves or puzzle answers, they appear here live with 1-click feedback.
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = allStudentAnswers.map(ans => {
+                    const studentObj = studentMap.get(ans.studentId);
+                    const studentName = ans.senderName || (studentObj ? studentObj.name : "Student");
+                    const timeStr = ans.timestamp ? new Date(ans.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+                    
+                    const coachReply = studentObj ? studentObj.latestCoachReply : null;
+                    const replyPreview = (coachReply && coachReply.timestamp > ans.timestamp) 
+                        ? `<div class="chat-answer-reply-preview">↳ Coach replied: <em>"${escapeHtml(coachReply.text)}"</em></div>` 
+                        : "";
+
+                    return `
+                        <div class="chat-answer-card">
+                            <div class="chat-answer-header">
+                                <span class="chat-answer-student">👤 ${escapeHtml(studentName)}</span>
+                                <span class="text-muted" style="font-size:0.7rem;">${timeStr}</span>
+                            </div>
+                            <div class="chat-answer-text">${escapeHtml(ans.text || "")}</div>
+                            ${replyPreview}
+                            <div class="chat-answer-actions">
+                                <button type="button" class="chat-chip" onclick="replyDirectToStudent('${escapeHtml(ans.studentId)}', '✅ Correct! Excellent find.')">✅ Correct</button>
+                                <button type="button" class="chat-chip" onclick="replyDirectToStudent('${escapeHtml(ans.studentId)}', '❌ Not quite, try again!')">❌ Try again</button>
+                                <button type="button" class="chat-chip" onclick="replyDirectToStudent('${escapeHtml(ans.studentId)}', '💡 Look closer at the tactics.')">💡 Hint</button>
+                                <button type="button" class="chat-chip" onclick="setCoachChatFilter('${escapeHtml(ans.studentId)}')">💬 Thread</button>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                container.scrollTop = container.scrollHeight;
                 return;
             }
 
-            container.innerHTML = msgList.map(msg => {
-                const isStudent = msg.senderRole === "student";
-                const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
-                const bubbleClass = isStudent ? "chat-bubble chat-bubble-student" : "chat-bubble chat-bubble-coach";
-                const senderLabel = isStudent ? (msg.senderName || activeStudentName) : "You (Coach)";
+            // 2. DEDICATED 1-ON-1 THREAD MODE
+            const activeStudentObj = studentMap.get(coachChatFilterMode) || students.find(s => s.id === coachChatFilterMode);
+            const activeStudentName = activeStudentObj ? activeStudentObj.name : "Student";
 
-                return `
-                    <div class="${bubbleClass}">
-                        <div style="font-weight: 600; font-size: 0.76rem; margin-bottom: 2px; color: ${isStudent ? '#e0f2fe' : 'var(--accent)'};">
-                            ${senderLabel}
-                        </div>
-                        <div>${escapeHtml(msg.text || "")}</div>
-                        <div class="chat-bubble-meta">
-                            <span></span>
-                            <span>${timeStr}</span>
-                        </div>
+            if (headerTitle) headerTitle.textContent = "Thread: " + activeStudentName;
+            if (headerSubtitle) headerSubtitle.textContent = "Private conversation with student";
+            if (coachChips) coachChips.style.display = "flex";
+            if (chatInput) chatInput.placeholder = `Reply privately to ${activeStudentName}...`;
+
+            const currentMsgs = allChat[coachChatFilterMode] || {};
+            const msgList = Object.keys(currentMsgs).map(k => Object.assign({ id: k }, currentMsgs[k]));
+            msgList.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            let threadHtml = `
+                <div style="margin-bottom: 0.5rem;">
+                    <button type="button" class="chat-chip" onclick="setCoachChatFilter('all')" style="background:#1e3a8a; color:#fff; border-color:#3b82f6;">
+                        ← Back to All Answers Feed
+                    </button>
+                </div>
+            `;
+
+            if (msgList.length === 0) {
+                threadHtml += `
+                    <div class="text-muted" style="text-align: center; margin: auto; font-size: 0.85rem; padding: 1.5rem;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">💬</div>
+                        No messages with <strong>${escapeHtml(activeStudentName)}</strong> yet.<br>
+                        You can send them a direct hint or question below.
                     </div>
                 `;
-            }).join("");
+            } else {
+                threadHtml += msgList.map(msg => {
+                    const isStudent = msg.senderRole === "student";
+                    const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+                    const bubbleClass = isStudent ? "chat-bubble chat-bubble-student" : "chat-bubble chat-bubble-coach";
+                    const senderLabel = isStudent ? (msg.senderName || activeStudentName) : "You (Coach)";
 
+                    return `
+                        <div class="${bubbleClass}">
+                            <div style="font-weight: 600; font-size: 0.76rem; margin-bottom: 2px; color: ${isStudent ? '#e0f2fe' : 'var(--accent)'};">
+                                ${senderLabel}
+                            </div>
+                            <div>${escapeHtml(msg.text || "")}</div>
+                            <div class="chat-bubble-meta">
+                                <span></span>
+                                <span>${timeStr}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            }
+
+            container.innerHTML = threadHtml;
             container.scrollTop = container.scrollHeight;
-        }
-
-        function selectCoachChatStudent(studentId) {
-            activeChatStudentId = studentId;
-            renderCoachChatView();
         }
 
         function handleChatInputKey(e) {
@@ -4701,10 +4856,6 @@
                 db.ref("academy/chat/" + targetStudentId).push(payload);
                 inputEl.value = "";
             } else if (currentUserRole === "coach") {
-                if (!activeChatStudentId) {
-                    alert("Please select a student to reply to.");
-                    return;
-                }
                 const coachName = coaches[0]?.name || "Coach";
                 const payload = {
                     senderRole: "coach",
@@ -4713,22 +4864,34 @@
                     text: text,
                     timestamp: Date.now()
                 };
-                db.ref("academy/chat/" + activeChatStudentId).push(payload);
+
+                if (coachChatFilterMode !== "all") {
+                    db.ref("academy/chat/" + coachChatFilterMode).push(payload);
+                } else {
+                    const allChat = currentChatSnapshot || {};
+                    let targetIds = Object.keys(allChat);
+                    if (targetIds.length === 0) {
+                        targetIds = students.map(s => s.id);
+                    }
+                    if (targetIds.length === 0) {
+                        alert("No students available to receive broadcast.");
+                        return;
+                    }
+                    targetIds.forEach(sid => {
+                        db.ref("academy/chat/" + sid).push(payload);
+                    });
+                }
                 inputEl.value = "";
             }
         }
 
         function applyCoachQuickReply(replyText) {
-            if (currentUserRole !== "coach" || !activeChatStudentId) return;
-            const coachName = coaches[0]?.name || "Coach";
-            const payload = {
-                senderRole: "coach",
-                senderName: coachName,
-                senderId: "coach",
-                text: replyText,
-                timestamp: Date.now()
-            };
-            db.ref("academy/chat/" + activeChatStudentId).push(payload);
+            if (currentUserRole !== "coach") return;
+            if (coachChatFilterMode === "all") {
+                alert("Click the quick feedback button directly under the student's answer in the feed.");
+                return;
+            }
+            replyDirectToStudent(coachChatFilterMode, replyText);
         }
 
         function clearClassroomChat() {
@@ -4736,6 +4899,7 @@
             if (confirm("Clear all classroom student answers and messages?")) {
                 db.ref("academy/chat").remove().then(() => {
                     currentChatSnapshot = {};
+                    coachChatFilterMode = "all";
                     renderCoachChatView();
                 });
             }
