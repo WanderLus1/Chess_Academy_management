@@ -45,6 +45,64 @@
             --sq-tint-red: rgba(239, 68, 68, 0.65);
         }
 
+        /* THEME: GLASS (FROSTED GLASSMORPHISM) */
+        html[data-theme="glass"] {
+            --bg-main: #070b14;
+            --bg-card: rgba(18, 26, 44, 0.52);
+            --bg-card-solid: rgba(22, 33, 56, 0.72);
+            --bg-card-hover: rgba(30, 45, 75, 0.65);
+            --border: rgba(255, 255, 255, 0.16);
+            --border-highlight: rgba(125, 211, 252, 0.48);
+            --text-primary: #f1f5f9;
+            --text-bright: #ffffff;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --accent-gradient: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0284c7 100%);
+            --accent-glow: rgba(56, 189, 248, 0.35);
+            --accent-light: #bae6fd;
+            --shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+        }
+
+        html[data-theme="glass"] body {
+            background-color: #070b14;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.2) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.2) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(7, 11, 20, 0.88) 0%, #04060b 100%);
+        }
+
+        html[data-theme="glass"] .card,
+        html[data-theme="glass"] .chat-card,
+        html[data-theme="glass"] .developer-card,
+        html[data-theme="glass"] .modal-content,
+        html[data-theme="glass"] header.app-header {
+            background: rgba(18, 26, 44, 0.52) !important;
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+        }
+
+        html[data-theme="glass"] .chat-messages {
+            background: rgba(10, 15, 28, 0.5) !important;
+        }
+
+        html[data-theme="glass"] .tree-container {
+            background: rgba(10, 15, 28, 0.6) !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+        }
+
+        html[data-theme="glass"] .chat-header {
+            background: rgba(15, 22, 38, 0.6) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+
+        html[data-theme="glass"] .chat-input-bar {
+            background: rgba(15, 22, 38, 0.6) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -771,57 +829,83 @@
 
         .classroom-grid {
             display: grid;
-            grid-template-columns: minmax(360px, 540px) 1.15fr 1fr;
-            gap: 1.35rem;
+            grid-template-columns: minmax(280px, 1fr) minmax(360px, 560px) minmax(280px, 1fr);
+            gap: 1.25rem;
             align-items: start;
         }
 
-        .classroom-right-col {
-            display: flex;
-            flex-direction: column;
-            gap: 0.85rem;
-            width: 100%;
-        }
-
-        @media (min-width: 1440px) {
-            .classroom-grid {
-                grid-template-columns: 540px 1.1fr 1.35fr;
-                gap: 1.35rem;
-            }
-            .classroom-right-col {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1rem;
-            }
-            .classroom-right-col .card {
-                height: 580px;
-                display: flex;
-                flex-direction: column;
-            }
-            .classroom-right-col .tree-container,
-            .classroom-right-col .attendance-list {
-                flex: 1;
-                max-height: 500px;
-            }
-        }
-
-        @media (max-width: 1100px) {
-            .classroom-grid {
-                grid-template-columns: 1fr;
-                gap: 1.15rem;
-            }
-        }
-
-        /* LIVE CLASSROOM CHATBOX */
-        .chat-card {
-            display: flex;
-            flex-direction: column;
+        .chat-card,
+        #cardNotationTree {
             height: 580px;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             border: 1px solid var(--border);
             border-radius: var(--radius);
             background: var(--card-bg);
             box-shadow: var(--shadow);
+            margin-bottom: 0;
+        }
+
+        #cardNotationTree .tree-container {
+            flex: 1;
+            height: auto;
+            max-height: none;
+        }
+
+        @media (max-width: 1024px) {
+            .classroom-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1.15rem;
+            }
+            .board-container {
+                order: 1;
+                width: 100%;
+            }
+            #cardNotationTree {
+                order: 2;
+                width: 100%;
+                height: 280px;
+            }
+            #classroomChatCard {
+                display: none;
+            }
+            #classroomChatCard.mobile-overlay-open {
+                display: flex !important;
+                position: fixed;
+                top: 60px;
+                left: 10px;
+                right: 10px;
+                bottom: 15px;
+                z-index: 1050;
+                height: auto !important;
+                max-height: calc(100vh - 75px);
+                border-radius: 14px;
+                border: 2px solid var(--accent);
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 40px var(--accent-glow);
+                animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            #mobileChatTriggerBar {
+                display: block;
+                width: 100%;
+                margin-top: 0.65rem;
+            }
+            .chat-close-mobile-btn {
+                display: inline-flex !important;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            #mobileChatTriggerBar {
+                display: none !important;
+            }
+            .chat-close-mobile-btn {
+                display: none !important;
+            }
+            #classroomChatCard {
+                display: flex !important;
+            }
         }
 
         .chat-header {
@@ -1251,28 +1335,6 @@
             box-shadow: 0 4px 18px rgba(0,0,0,0.5);
         }
 
-        .attendance-list {
-            list-style: none;
-            font-size: 0.88rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.45rem;
-            max-height: 280px;
-            overflow-y: auto;
-        }
-
-        .attendance-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.55rem 0.75rem;
-            border-radius: 7px;
-            background: rgba(6, 11, 22, 0.85);
-            border: 1px solid var(--border);
-        }
-
-        .attendance-item.present { border-left: 3px solid var(--success); }
-        .attendance-item.absent { border-left: 3px solid var(--danger); opacity: 0.85; }
 
         .list-item-card {
             background: rgba(10, 16, 30, 0.75);
@@ -1329,6 +1391,14 @@
             }
         }
     </style>
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem("ca_theme") || "academy";
+                document.documentElement.setAttribute("data-theme", t);
+            } catch(e) {}
+        })();
+    </script>
 </head>
 <body>
 
@@ -1343,6 +1413,13 @@
                 </div>
 
                 <div class="auth-widget">
+                    <div class="theme-picker-wrapper" style="display: inline-flex; align-items: center; gap: 0.35rem; margin-right: 0.35rem;">
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 600;">Theme:</span>
+                        <select id="themeSelect" onchange="changeTheme(this.value)" style="background: rgba(15, 23, 42, 0.85); color: var(--text-bright); border: 1px solid var(--border-highlight); border-radius: 6px; padding: 0.2rem 0.45rem; font-size: 0.78rem; font-weight: 600; cursor: pointer;">
+                            <option value="academy">🏛️ Academy</option>
+                            <option value="glass">🔮 Glass</option>
+                        </select>
+                    </div>
                     <span id="userDisplayName" style="font-weight: 700; color: var(--text-bright);">Guest</span>
                     <span id="userRoleBadge" class="badge-role guest">Guest</span>
                     <button class="btn btn-secondary btn-sm" onclick="openAuthModal(false)">Switch / Sign In</button>
@@ -1418,12 +1495,55 @@
             <div class="card-header">
                 <div>
                     <h2>Live Classroom Board</h2>
-                    <p class="text-muted" id="boardPermissionStatus" style="font-size: 0.82rem;">Tap or drag pieces to move. Board synchronizes live across devices.</p>
+                    <p class="text-muted" id="boardPermissionStatus" style="display: none;"></p>
                 </div>
                 <div id="turnIndicator" class="badge" style="background: rgba(7, 12, 22, 0.9); border: 1px solid var(--border-highlight); color:#fff; font-size: 0.82rem;">Turn: White</div>
             </div>
 
             <div class="classroom-grid">
+                <!-- LEFT COLUMN: LIVE CLASSROOM CHAT -->
+                <div class="card chat-card" id="classroomChatCard" style="margin-bottom: 0;">
+                    <div class="chat-header">
+                        <div style="display: flex; align-items: center; gap: 0.45rem;">
+                            <span style="font-size: 1.15rem;">💬</span>
+                            <div>
+                                <h3 id="chatHeaderTitle" style="margin: 0; font-size: 0.95rem; font-weight: 700;">Live Chat</h3>
+                                <div id="chatHeaderSubtitle" class="text-muted" style="font-size: 0.72rem;">Direct to Coach</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <div id="chatHeaderControls" style="display: flex; align-items: center; gap: 0.4rem;">
+                                <!-- Populated dynamically based on user role -->
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm chat-close-mobile-btn" onclick="toggleMobileChat(false)" title="Close chat overlay">✕ Close (View Board)</button>
+                        </div>
+                    </div>
+
+                    <!-- Coach student switch tabs (Visible to Coach) -->
+                    <div id="coachStudentTabsBar" class="chat-chips-bar" style="display: none;"></div>
+
+                    <!-- Messages scroll stream -->
+                    <div id="classroomChatMessages" class="chat-messages">
+                        <div class="text-muted" style="text-align: center; margin: auto; font-size: 0.85rem; padding: 1.5rem;">
+                            Loading classroom chat...
+                        </div>
+                    </div>
+
+                    <!-- Coach quick feedback chips (Visible to Coach) -->
+                    <div id="coachQuickChips" class="chat-chips-bar" style="display: none;">
+                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('✅ Correct! Excellent find.')">✅ Correct</button>
+                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('❌ Not quite, try again!')">❌ Try again</button>
+                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('👍 Good idea, but there is better.')">👍 Almost</button>
+                    </div>
+
+                    <!-- Chat input bar -->
+                    <div id="chatInputBar" class="chat-input-bar">
+                        <input type="text" id="classroomChatInput" placeholder="Type answer or move (e.g. 1...Nf6)..." maxlength="300" onkeydown="handleChatInputKey(event)" style="flex: 1; background: #0c1222; border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 0.75rem; color: #fff; font-size: 0.86rem;">
+                        <button type="button" id="btnSendChat" class="btn btn-primary btn-sm" onclick="sendClassroomChatMessage()">Send</button>
+                    </div>
+                </div>
+
+                <!-- MIDDLE COLUMN: CHESSBOARD -->
                 <div class="board-container">
 
                     <!-- IN-BOARD POSITION EDITOR PALETTE (COACH ONLY) -->
@@ -1511,64 +1631,23 @@
                         <div id="engineBestMove" style="font-size: 0.88rem; color: #fff; margin-bottom: 0.25rem;">Best Move: Calculating...</div>
                         <div id="engineContinuation" class="text-muted" style="font-size: 0.8rem;">Line: ...</div>
                     </div>
-                </div>
 
-                <!-- MIDDLE COLUMN: LIVE CLASSROOM CHAT (Directly beside the board) -->
-                <div class="card chat-card" id="classroomChatCard" style="margin-bottom: 0;">
-                    <div class="chat-header">
-                        <div style="display: flex; align-items: center; gap: 0.45rem;">
-                            <span style="font-size: 1.15rem;">💬</span>
-                            <div>
-                                <h3 id="chatHeaderTitle" style="margin: 0; font-size: 0.95rem; font-weight: 700;">Live Chat</h3>
-                                <div id="chatHeaderSubtitle" class="text-muted" style="font-size: 0.72rem;">Direct to Coach</div>
-                            </div>
-                        </div>
-                        <div id="chatHeaderControls" style="display: flex; align-items: center; gap: 0.4rem;">
-                            <!-- Populated dynamically based on user role -->
-                        </div>
-                    </div>
-
-                    <!-- Coach student switch tabs (Visible to Coach) -->
-                    <div id="coachStudentTabsBar" class="chat-chips-bar" style="display: none;"></div>
-
-                    <!-- Messages scroll stream -->
-                    <div id="classroomChatMessages" class="chat-messages">
-                        <div class="text-muted" style="text-align: center; margin: auto; font-size: 0.85rem; padding: 1.5rem;">
-                            Loading classroom chat...
-                        </div>
-                    </div>
-
-                    <!-- Coach quick feedback chips (Visible to Coach) -->
-                    <div id="coachQuickChips" class="chat-chips-bar" style="display: none;">
-                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('✅ Correct! Excellent find.')">✅ Correct</button>
-                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('❌ Not quite, try again!')">❌ Try again</button>
-                        <button type="button" class="chat-chip" onclick="applyCoachQuickReply('👍 Good idea, but there is better.')">👍 Almost</button>
-                    </div>
-
-                    <!-- Chat input bar -->
-                    <div id="chatInputBar" class="chat-input-bar">
-                        <input type="text" id="classroomChatInput" placeholder="Type answer or move (e.g. 1...Nf6)..." maxlength="300" onkeydown="handleChatInputKey(event)" style="flex: 1; background: #0c1222; border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 0.75rem; color: #fff; font-size: 0.86rem;">
-                        <button type="button" id="btnSendChat" class="btn btn-primary btn-sm" onclick="sendClassroomChatMessage()">Send</button>
+                    <!-- MOBILE CHAT TRIGGER (Visible on Mobile Directly Below Board) -->
+                    <div id="mobileChatTriggerBar">
+                        <button type="button" id="btnOpenMobileChat" class="btn btn-primary" onclick="toggleMobileChat(true)" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.95rem; font-weight: 700; gap: 0.5rem;">
+                            <span>💬 Chat with Coach / Submit Answer</span>
+                            <span id="mobileChatUnreadBadge" class="badge" style="display: none; background: #ef4444; color: #fff; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 999px;">New</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: NOTATION & ATTENDANCE -->
-                <div class="classroom-right-col">
-                    <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
-                            <h3>Notation &amp; Variations</h3>
-                            <span id="stepCounter" class="text-muted" style="font-size: 0.82rem;">Game Tree</span>
-                        </div>
-                        <div id="moveHistoryTree" class="tree-container"></div>
+                <!-- RIGHT COLUMN: NOTATION & VARIATIONS -->
+                <div class="card" id="cardNotationTree" style="margin-bottom: 0;">
+                    <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
+                        <h3>Notation &amp; Variations</h3>
+                        <span id="stepCounter" class="text-muted" style="font-size: 0.82rem;">Game Tree</span>
                     </div>
-
-                    <div class="card attendance-panel" style="margin-bottom: 0;">
-                        <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem; display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="margin: 0;">Attendance</h3>
-                            <button class="btn btn-secondary btn-sm coach-only" onclick="resetClassAttendance()" title="Reset student attendance for a new class session">🧹 Reset</button>
-                        </div>
-                        <ul id="attendanceList" class="attendance-list"></ul>
-                    </div>
+                    <div id="moveHistoryTree" class="tree-container"></div>
                 </div>
             </div>
         </section>
@@ -1874,9 +1953,7 @@
                     </div>
                     <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6;">Lead Architect</span>
                 </div>
-                <p id="devBio" style="font-size: 0.9rem; color: #94a3b8; line-height: 1.65; margin-bottom: 1.15rem;">
-                    Architected high-concurrency real-time board synchronization, custom non-destructive PGN tree parsing, and interactive cloud analysis for Mind Sharpener Chess Academy.
-                </p>
+
                 <div style="display: flex; gap: 0.85rem; flex-wrap: wrap;">
                     <a id="devLinkedinLink" href="https://www.linkedin.com/in/hriday-panchal-b85997370/" target="_blank" class="btn btn-primary btn-sm">
                         <span>LinkedIn Profile</span>
@@ -3116,7 +3193,7 @@
                 roleBadge.textContent = "Coach";
                 roleBadge.className = "badge-role coach";
                 coachOnlyElements.forEach(el => el.style.display = "");
-                permStatus.textContent = "Coach controls board. Moves and flip synchronize live across all connected devices.";
+                if (permStatus) permStatus.textContent = "";
                 guestBanner.style.display = "none";
                 navBtns.forEach(btn => { if (btn) btn.disabled = false; });
             } else if (currentUserRole === "student") {
@@ -3125,7 +3202,7 @@
                 roleBadge.textContent = "Student";
                 roleBadge.className = "badge-role student";
                 coachOnlyElements.forEach(el => el.style.display = "none");
-                permStatus.textContent = "Live classroom board (Read-only). Follow along with coach analysis.";
+                if (permStatus) permStatus.textContent = "";
                 guestBanner.style.display = "none";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
                 document.getElementById("editorPaletteBar").style.display = "none";
@@ -3135,7 +3212,7 @@
                 roleBadge.textContent = "Guest";
                 roleBadge.className = "badge-role guest";
                 coachOnlyElements.forEach(el => el.style.display = "none");
-                permStatus.textContent = "Preview Mode (Read-only). Synchronized live analysis is active during student sessions.";
+                if (permStatus) permStatus.textContent = "";
                 guestBanner.style.display = "flex";
                 navBtns.forEach(btn => { if (btn) btn.disabled = true; });
                 document.getElementById("editorPaletteBar").style.display = "none";
@@ -3160,63 +3237,16 @@
             setupClassroomChatListener();
         }
 
-        function recordStudentAttendance(studentId) {
-            if (studentId && isFirebaseConnected) {
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                attendedStudentIds.set(studentId, timeStr);
-                db.ref("academy/attendance/" + studentId).set({ joinedAt: timeStr });
-                renderAttendancePanel();
-            }
-        }
-
-        function resetClassAttendance() {
-            if (!isCoachAuthenticated()) {
-                alert("Coach authorization required to reset attendance.");
-                return;
-            }
-            if (confirm("Reset attendance for all students? All students will be marked as 'Not Joined' for the new class session.")) {
-                attendedStudentIds.clear();
-                if (isFirebaseConnected) {
-                    db.ref("academy/attendance").remove();
-                }
-                renderAttendancePanel();
-            }
-        }
+        function recordStudentAttendance() {}
+        function resetClassAttendance() {}
+        function renderAttendancePanel() {}
 
         function handleClassJoinClick(meetUrl) {
-            if (currentUserRole === "student") {
-                const s = getActiveStudent();
-                if (s) recordStudentAttendance(s.id);
-                window.open(meetUrl, "_blank");
-            } else if (currentUserRole === "coach") {
+            if (currentUserRole === "student" || currentUserRole === "coach") {
                 window.open(meetUrl, "_blank");
             } else {
                 alert("Live Google Meet sessions are reserved for enrolled students. Please contact our coaches in the About tab to enroll.");
             }
-        }
-
-        function renderAttendancePanel() {
-            const list = document.getElementById("attendanceList");
-            if (students.length === 0) {
-                list.innerHTML = `<li class="empty-state">No students enrolled.</li>`;
-                return;
-            }
-
-            list.innerHTML = students.map(s => {
-                const isPresent = attendedStudentIds.has(s.id);
-                const joinTime = attendedStudentIds.get(s.id);
-                return `
-                    <li class="attendance-item ${isPresent ? 'present' : 'absent'}">
-                        <div>
-                            <strong>${escapeHtml(s.name)}</strong>
-                            <div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(s.id)}</div>
-                        </div>
-                        <span class="badge ${isPresent ? 'badge-paid' : 'badge-overdue'}">
-                            ${isPresent ? (joinTime ? `Joined (${escapeHtml(joinTime)})` : 'Joined') : 'Not Joined'}
-                        </span>
-                    </li>
-                `;
-            }).join("");
         }
 
         function switchTab(tabId) {
@@ -3266,7 +3296,7 @@
                 }
             } else if (currentUserRole === "coach") {
                 greeting.textContent = `${coaches[0]?.name || "Coach"} — Workspace`;
-                sub.textContent = "Academy operations, scheduling and classroom management.";
+                sub.textContent = "";
                 const overdue = students.filter(s => s.feeStatus === "overdue").length;
                 if (overdue > 0) {
                     alertBanner.style.display = "flex";
@@ -4497,18 +4527,6 @@
                 renderCoaches();
             });
 
-            db.ref("academy/attendance").on("value", (snap) => {
-                const val = snap.val();
-                attendedStudentIds = new Map();
-                if (val) {
-                    Object.entries(val).forEach(([sid, data]) => {
-                        const time = (typeof data === 'object' && data && data.joinedAt) ? data.joinedAt : (data === true ? "Present" : "");
-                        attendedStudentIds.set(sid, time);
-                    });
-                }
-                renderAttendancePanel();
-            });
-
             // Initialize Live Classroom Chat listener
             setupClassroomChatListener();
             if (currentUserRole === "coach") {
@@ -4645,6 +4663,15 @@
             }).join("");
 
             container.scrollTop = container.scrollHeight;
+
+            const chatCard = document.getElementById("classroomChatCard");
+            const unreadBadge = document.getElementById("mobileChatUnreadBadge");
+            if (unreadBadge && chatCard && !chatCard.classList.contains("mobile-overlay-open")) {
+                const lastMsg = msgList[msgList.length - 1];
+                if (lastMsg && lastMsg.senderRole === "coach") {
+                    unreadBadge.style.display = "inline-block";
+                }
+            }
         }
 
         let coachChatFilterMode = "all"; // "all" for live unified feed, or specific studentId for 1-on-1 thread
@@ -4954,6 +4981,37 @@
                     }
                 });
             });
+        }
+
+        /* -------------------------------------------------------------
+           MOBILE CHAT DRAWER & THEME CONTROLS
+        ------------------------------------------------------------- */
+        function toggleMobileChat(open) {
+            const chatCard = document.getElementById("classroomChatCard");
+            if (!chatCard) return;
+            if (open) {
+                chatCard.classList.add("mobile-overlay-open");
+                const badge = document.getElementById("mobileChatUnreadBadge");
+                if (badge) badge.style.display = "none";
+                const input = document.getElementById("classroomChatInput");
+                if (input) setTimeout(() => input.focus(), 150);
+            } else {
+                chatCard.classList.remove("mobile-overlay-open");
+            }
+        }
+
+        function changeTheme(theme) {
+            if (theme !== "academy" && theme !== "glass") {
+                theme = "academy";
+            }
+            document.documentElement.setAttribute("data-theme", theme);
+            try {
+                localStorage.setItem("ca_theme", theme);
+            } catch (e) {}
+            const sel = document.getElementById("themeSelect");
+            if (sel && sel.value !== theme) {
+                sel.value = theme;
+            }
         }
 
         /* -------------------------------------------------------------
@@ -5396,6 +5454,10 @@
         });
 
         document.addEventListener("DOMContentLoaded", () => {
+            const currentTheme = document.documentElement.getAttribute("data-theme") || "academy";
+            const themeSel = document.getElementById("themeSelect");
+            if (themeSel) themeSel.value = currentTheme;
+
             initLocalBoard();
             applyBranding();
             applyRoleUI();
