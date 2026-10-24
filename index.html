@@ -132,6 +132,18 @@
             border-radius: 12px !important;
         }
 
+        html[data-theme="glass"] .speaker-bar {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+        }
+
+        html[data-theme="glass"] #boardAccessBanner {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border: 1px solid rgba(74, 222, 128, 0.4) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
         html[data-theme="glass"] .chat-header {
             background: rgba(255, 255, 255, 0.06) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -297,6 +309,18 @@
             background: #060a16 !important;
             border: 2px solid #ffffff !important;
             border-radius: 6px !important;
+        }
+
+        html[data-theme="bold"] .speaker-bar {
+            background: #060a16 !important;
+            border-bottom: 2px solid #ffffff !important;
+        }
+
+        html[data-theme="bold"] #boardAccessBanner {
+            background: #060a16 !important;
+            border: 2px solid #ffe600 !important;
+            color: #ffe600 !important;
+            box-shadow: 3px 3px 0px #ffffff !important;
         }
 
         html[data-theme="bold"] .chat-header {
@@ -1171,7 +1195,9 @@
                 animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             }
             #mobileChatTriggerBar {
-                display: block;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
                 width: 100%;
                 margin-top: 0.65rem;
             }
@@ -1190,6 +1216,108 @@
             #classroomChatCard {
                 display: flex !important;
             }
+        }
+
+        /* Active Speaker Bar (Google Meet Style) */
+        .speaker-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10, 16, 32, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 0.42rem 0.85rem;
+            font-size: 0.82rem;
+            gap: 0.5rem;
+        }
+
+        .speaker-status {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .speaker-pulse-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #64748b;
+            display: inline-block;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .speaker-pulse-dot.active {
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e, 0 0 18px rgba(34, 197, 94, 0.6);
+            animation: pulseSpeaker 1.2s infinite;
+        }
+
+        @keyframes pulseSpeaker {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .voice-mic-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 700;
+            transition: all 0.18s ease;
+        }
+
+        .voice-mic-btn.active {
+            background: #22c55e !important;
+            color: #061109 !important;
+            border-color: #4ade80 !important;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.5) !important;
+        }
+
+        .voice-mic-btn.muted {
+            background: rgba(239, 68, 68, 0.16) !important;
+            color: #fca5a5 !important;
+            border: 1px solid rgba(239, 68, 68, 0.4) !important;
+        }
+
+        /* Board Move Delegation / Co-Pilot Banner */
+        #boardAccessBanner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(16, 185, 129, 0.08));
+            border: 1px solid #22c55e;
+            color: #86efac;
+            padding: 0.42rem 0.85rem;
+            border-radius: 8px;
+            margin-bottom: 0.65rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            animation: fadeInSlide 0.2s ease;
+        }
+
+        /* Student Roster Presence Dots */
+        .presence-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .presence-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+        }
+        .presence-dot.offline {
+            background: #ef4444;
+            opacity: 0.6;
         }
 
         .chat-header {
@@ -1879,6 +2007,22 @@
             <div class="classroom-grid">
                 <!-- LEFT COLUMN: LIVE CLASSROOM CHAT -->
                 <div class="card chat-card" id="classroomChatCard" style="margin-bottom: 0;">
+                    <!-- ACTIVE SPEAKER BAR (GOOGLE MEET STYLE) -->
+                    <div id="classroomSpeakerBar" class="speaker-bar">
+                        <div class="speaker-status">
+                            <span class="speaker-pulse-dot" id="speakerDot"></span>
+                            <span id="speakerLabel">Quiet</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <button type="button" id="btnVoiceMicDesktop" class="btn btn-secondary btn-sm voice-mic-btn" onclick="toggleVoiceMute()" title="Toggle Microphone">
+                                <span id="desktopMicIcon">🔇</span> <span id="desktopMicText">Mic Off</span>
+                            </button>
+                            <button type="button" id="btnRosterToggle" class="btn btn-secondary btn-sm coach-only" onclick="openStudentRosterModal()" style="display: none; padding: 0.25rem 0.55rem; font-size: 0.76rem;" title="View Active Students">
+                                👥 Students (<span id="activeOnlineCount">0</span>)
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="chat-header">
                         <div style="display: flex; align-items: center; gap: 0.45rem;">
                             <span style="font-size: 1.15rem;">💬</span>
@@ -1921,6 +2065,12 @@
 
                 <!-- MIDDLE COLUMN: CHESSBOARD -->
                 <div class="board-container">
+
+                    <!-- STUDENT BOARD MOVE DELEGATION / CO-PILOT BANNER -->
+                    <div id="boardAccessBanner">
+                        <span id="boardAccessText">♟️ Board Access: Coach &amp; Student</span>
+                        <button type="button" id="btnRevokeBoardAccess" class="btn btn-danger btn-sm coach-only" onclick="revokeStudentBoardAccess()" style="display: none; padding: 0.2rem 0.55rem; font-size: 0.75rem;">✕ No Board</button>
+                    </div>
 
                     <!-- IN-BOARD POSITION EDITOR PALETTE (COACH ONLY) -->
                     <div id="editorPaletteBar">
@@ -2008,11 +2158,14 @@
                         <div id="engineContinuation" class="text-muted" style="font-size: 0.8rem;">Line: ...</div>
                     </div>
 
-                    <!-- MOBILE CHAT TRIGGER (Visible on Mobile Directly Below Board) -->
-                    <div id="mobileChatTriggerBar">
-                        <button type="button" id="btnOpenMobileChat" class="btn btn-primary" onclick="toggleMobileChat(true)" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.95rem; font-weight: 700; gap: 0.5rem;">
-                            <span>💬 Chat with Coach / Submit Answer</span>
-                            <span id="mobileChatUnreadBadge" class="badge" style="display: none; background: #ef4444; color: #fff; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 999px;">New</span>
+                    <!-- MOBILE TWIN MINI-BARS: CHAT & MIC (Visible on Mobile Directly Below Board) -->
+                    <div id="mobileChatTriggerBar" class="mobile-twin-bars">
+                        <button type="button" id="btnOpenMobileChat" class="btn btn-primary" onclick="toggleMobileChat(true)" style="width: 100%; justify-content: center; padding: 0.55rem 0.5rem; font-size: 0.88rem; font-weight: 700; gap: 0.35rem;">
+                            <span>💬 Chat</span>
+                            <span id="mobileChatUnreadBadge" class="badge" style="display: none; background: #ef4444; color: #fff; font-size: 0.68rem; padding: 0.1rem 0.35rem; border-radius: 999px;">New</span>
+                        </button>
+                        <button type="button" id="btnVoiceMicMobile" class="btn btn-secondary voice-mic-btn" onclick="toggleVoiceMute()" style="width: 100%; justify-content: center; padding: 0.55rem 0.5rem; font-size: 0.88rem; font-weight: 700; gap: 0.35rem;">
+                            <span id="mobileMicIcon">🔇</span> <span id="mobileMicText">Mic Off</span>
                         </button>
                     </div>
                 </div>
@@ -2501,6 +2654,22 @@
         </div>
     </div>
 
+    <!-- ACTIVE STUDENTS ROSTER & PRESENCE MODAL (COACH ONLY) -->
+    <div id="studentRosterModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 480px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h3 style="color: var(--text-bright); margin: 0; font-size: 1.15rem;">Active Students &amp; Board Access</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeStudentRosterModal()">✕ Close</button>
+            </div>
+            <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.85rem;">
+                🟢 At Live Board &bull; 🔴 Offline / Other Tab &bull; Delegate board move permission
+            </p>
+            <div id="rosterStudentsList" style="display: flex; flex-direction: column; gap: 0.55rem; max-height: 55vh; overflow-y: auto;">
+                <!-- Populated dynamically via renderStudentRoster() -->
+            </div>
+        </div>
+    </div>
+
     <!-- EDIT STUDENT MODAL -->
     <div id="editStudentModal" class="modal-overlay">
         <div class="modal-card">
@@ -2863,6 +3032,22 @@
         let isEditingBoard = false;
         let selectedPalettePiece = null;
         let editorBoardMatrix = null;
+
+        // BOARD MOVE DELEGATION (COACH + DELEGATED STUDENT CO-PILOT)
+        let currentBoardAccessStudentId = null;
+        let currentBoardAccessStudentName = "";
+
+        function isBoardInteractable() {
+            if (isEditingBoard) return currentUserRole === "coach";
+            if (currentUserRole === "coach") return true;
+            if (currentUserRole === "student" && currentBoardAccessStudentId && String(currentBoardAccessStudentId) === String(activeStudentId)) {
+                return true;
+            }
+            return false;
+        }
+
+        // REAL-TIME PRESENCE (GREEN/RED DOTS)
+        let activePresenceMap = {};
 
         // GRANULAR WRITE ROUTINES (Each writes strictly to its own Firebase path)
         function saveConfigToFirebase() {
@@ -3635,6 +3820,11 @@
                 }
             }
 
+            const rosterBtn = document.getElementById("btnRosterToggle");
+            if (rosterBtn) rosterBtn.style.display = (currentUserRole === "coach") ? "inline-flex" : "none";
+            updateBoardAccessBannerUI();
+            updateMyPresence();
+
             setupClassroomChatListener();
         }
 
@@ -3662,6 +3852,13 @@
             const buttons = Array.from(document.querySelectorAll(".nav-tabs .tab-btn"));
             const match = buttons.find(b => b.getAttribute("onclick")?.includes(tabId));
             if (match) match.classList.add("active");
+
+            if (isFirebaseConnected && currentUserRole === "student" && activeStudentId) {
+                try {
+                    db.ref(`academy/presence/${activeStudentId}/atBoard`).set(tabId === "classroom");
+                    db.ref(`academy/presence/${activeStudentId}/lastSeen`).set(Date.now());
+                } catch(e) {}
+            }
         }
 
         function renderAll() {
@@ -4308,7 +4505,7 @@
                         img.alt = pieceChar;
                         img.className = "piece-img";
 
-                        if (currentUserRole === "coach" && !isEditingBoard) {
+                        if (isBoardInteractable() && !isEditingBoard) {
                             img.draggable = true;
                             img.ondragstart = (e) => handleDragStart(e, r, f);
                         } else {
@@ -4317,15 +4514,15 @@
                         square.appendChild(img);
                     }
 
-                    if (currentUserRole === "coach") {
-                        if (isEditingBoard) {
-                            square.onclick = () => handleEditorSquareClick(r, f);
-                        } else {
-                            square.ondragover = (e) => { e.preventDefault(); square.classList.add("dragover"); };
-                            square.ondragleave = () => square.classList.remove("dragover");
-                            square.ondrop = (e) => handleDrop(e, r, f);
-                            square.onclick = () => handleSquareClick(r, f);
+                    if (isEditingBoard && currentUserRole === "coach") {
+                        square.onclick = () => handleEditorSquareClick(r, f);
+                    } else if (isBoardInteractable()) {
+                        square.ondragover = (e) => { e.preventDefault(); square.classList.add("dragover"); };
+                        square.ondragleave = () => square.classList.remove("dragover");
+                        square.ondrop = (e) => handleDrop(e, r, f);
+                        square.onclick = () => handleSquareClick(r, f);
 
+                        if (currentUserRole === "coach") {
                             square.onmousedown = (e) => handleMouseDown(e, r, f);
                             square.onmouseup = (e) => handleMouseUp(e, r, f);
                         }
@@ -4793,7 +4990,7 @@
         let broadcastPgnTimer = null;
 
         function broadcastBoardState(isFullReset = false) {
-            if (!isFirebaseConnected || currentUserRole !== "coach") return;
+            if (!isFirebaseConnected || !isBoardInteractable()) return;
 
             const pgnString = generatePgnRecursive(rootNode).trim();
 
@@ -4811,6 +5008,8 @@
                 tinted: Array.from(tintedSquares),
                 arrows: drawnArrows,
                 isFlipped: isFlipped,
+                boardAccessStudentId: currentBoardAccessStudentId,
+                boardAccessStudentName: currentBoardAccessStudentName,
                 updatedAt: Date.now()
             };
 
@@ -4941,6 +5140,14 @@
                 drawnArrows = data.arrows || [];
                 if (data.isFlipped !== undefined) {
                     isFlipped = !!data.isFlipped;
+                }
+
+                const prevAccessId = currentBoardAccessStudentId;
+                currentBoardAccessStudentId = data.boardAccessStudentId || null;
+                currentBoardAccessStudentName = data.boardAccessStudentName || "";
+                updateBoardAccessBannerUI();
+                if (prevAccessId !== currentBoardAccessStudentId) {
+                    renderStudentRoster();
                 }
 
                 renderChessboard();
@@ -5512,6 +5719,595 @@
             }
         }
 
+        function openMobileChat() {
+            toggleMobileChat(true);
+        }
+
+        function closeMobileChat() {
+            toggleMobileChat(false);
+        }
+
+        /* -------------------------------------------------------------
+           BOARD MOVE DELEGATION (COACH + SPARRING STUDENT)
+        ------------------------------------------------------------- */
+        function grantStudentBoardAccess(studentId) {
+            if (currentUserRole !== "coach" || !isFirebaseConnected) return;
+            const student = (students || []).find(s => String(s.id) === String(studentId));
+            const name = student ? student.name : "Student";
+            currentBoardAccessStudentId = studentId;
+            currentBoardAccessStudentName = name;
+            db.ref("academy/liveBoard").update({
+                boardAccessStudentId: studentId,
+                boardAccessStudentName: name
+            });
+            updateBoardAccessBannerUI();
+            renderStudentRoster();
+            renderChessboard();
+            showToast(`♟️ Board move access granted to ${name}`, "success");
+        }
+
+        function revokeStudentBoardAccess() {
+            if (currentUserRole !== "coach" || !isFirebaseConnected) return;
+            const prevName = currentBoardAccessStudentName;
+            currentBoardAccessStudentId = null;
+            currentBoardAccessStudentName = "";
+            db.ref("academy/liveBoard").update({
+                boardAccessStudentId: null,
+                boardAccessStudentName: ""
+            });
+            updateBoardAccessBannerUI();
+            renderStudentRoster();
+            renderChessboard();
+            if (prevName) showToast(`Board access revoked from ${prevName}`, "info");
+        }
+
+        function updateBoardAccessBannerUI() {
+            const banner = document.getElementById("boardAccessBanner");
+            const textEl = document.getElementById("boardAccessText");
+            const revokeBtn = document.getElementById("btnRevokeBoardAccess");
+            if (!banner || !textEl || !revokeBtn) return;
+
+            if (!currentBoardAccessStudentId) {
+                banner.style.display = "none";
+                revokeBtn.style.display = "none";
+                return;
+            }
+
+            banner.style.display = "flex";
+            if (currentUserRole === "coach") {
+                textEl.innerHTML = `♟️ Playing on board with: <strong>${escapeHtml(currentBoardAccessStudentName || "Student")}</strong>`;
+                revokeBtn.style.display = "inline-flex";
+            } else if (currentUserRole === "student" && String(activeStudentId) === String(currentBoardAccessStudentId)) {
+                textEl.innerHTML = `♟️ <strong>You have Board Access!</strong> Play your moves on the board.`;
+                revokeBtn.style.display = "none";
+            } else {
+                textEl.innerHTML = `♟️ <strong>${escapeHtml(currentBoardAccessStudentName || "Student")}</strong> has board move access with Coach`;
+                revokeBtn.style.display = "none";
+            }
+        }
+
+        /* -------------------------------------------------------------
+           ACTIVE STUDENT ROSTER & LIVE PRESENCE (GREEN/RED DOTS)
+        ------------------------------------------------------------- */
+        function initPresenceSystem() {
+            if (!isFirebaseConnected) return;
+
+            db.ref(".info/connected").on("value", (snap) => {
+                if (snap.val() === true) {
+                    updateMyPresence();
+                }
+            });
+
+            db.ref("academy/presence").on("value", (snap) => {
+                activePresenceMap = snap.val() || {};
+                updateRosterCount();
+                const modal = document.getElementById("studentRosterModal");
+                if (modal && modal.classList.contains("active")) {
+                    renderStudentRoster();
+                }
+            });
+        }
+
+        function updateMyPresence() {
+            if (!isFirebaseConnected) return;
+            if (currentUserRole === "student" && activeStudentId) {
+                const student = getActiveStudent();
+                const pRef = db.ref(`academy/presence/${activeStudentId}`);
+                pRef.onDisconnect().remove();
+
+                const activeTabEl = document.querySelector(".nav-tabs .tab-btn.active");
+                const isAtBoard = activeTabEl ? activeTabEl.getAttribute("onclick")?.includes("classroom") : false;
+
+                pRef.set({
+                    id: activeStudentId,
+                    name: student ? student.name : "Student",
+                    role: "student",
+                    atBoard: !!isAtBoard,
+                    lastSeen: Date.now()
+                });
+            } else if (currentUserRole !== "student") {
+                const prevStudentId = localStorage.getItem("ca_active_student_id");
+                if (prevStudentId) {
+                    try { db.ref(`academy/presence/${prevStudentId}`).remove(); } catch(e) {}
+                }
+            }
+        }
+
+        function updateRosterCount() {
+            const countEl = document.getElementById("activeOnlineCount");
+            if (!countEl) return;
+            const onlineAtBoardCount = Object.values(activePresenceMap).filter(p => p && p.atBoard).length;
+            countEl.textContent = onlineAtBoardCount;
+        }
+
+        function openStudentRosterModal() {
+            if (currentUserRole !== "coach") return;
+            renderStudentRoster();
+            const modal = document.getElementById("studentRosterModal");
+            if (modal) modal.classList.add("active");
+        }
+
+        function closeStudentRosterModal() {
+            const modal = document.getElementById("studentRosterModal");
+            if (modal) modal.classList.remove("active");
+        }
+
+        function renderStudentRoster() {
+            const listEl = document.getElementById("rosterStudentsList");
+            if (!listEl) return;
+
+            if (!students || students.length === 0) {
+                listEl.innerHTML = `<div class="text-muted" style="text-align: center; padding: 1.25rem 0.5rem; font-size: 0.88rem;">No students registered yet.</div>`;
+                return;
+            }
+
+            const sorted = [...students].sort((a, b) => {
+                const presA = activePresenceMap[a.id];
+                const presB = activePresenceMap[b.id];
+                const scoreA = presA?.atBoard ? 2 : (presA ? 1 : 0);
+                const scoreB = presB?.atBoard ? 2 : (presB ? 1 : 0);
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                return (a.name || "").localeCompare(b.name || "");
+            });
+
+            listEl.innerHTML = sorted.map(s => {
+                const pres = activePresenceMap[s.id];
+                const isAtBoard = pres && pres.atBoard;
+                const hasAccess = String(currentBoardAccessStudentId) === String(s.id);
+
+                let dotClass = "offline";
+                let statusText = "Offline";
+                if (isAtBoard) {
+                    dotClass = "online";
+                    statusText = "At Live Board";
+                } else if (pres) {
+                    dotClass = "offline";
+                    statusText = "Online (Other Tab)";
+                }
+
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0.75rem; background: rgba(15, 23, 42, 0.65); border: 1px solid var(--border); border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
+                            <span class="presence-dot ${dotClass}" title="${statusText}"></span>
+                            <div style="min-width: 0;">
+                                <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${escapeHtml(s.name)}
+                                </div>
+                                <div style="font-size: 0.74rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
+                                    <span style="color: ${isAtBoard ? '#4ade80' : 'var(--text-muted)'}; font-weight: ${isAtBoard ? '600' : 'normal'};">${statusText}</span>
+                                    <span>&bull;</span>
+                                    <span>Rating: ${s.rating || 1200}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            ${hasAccess ? `
+                                <button type="button" class="btn btn-danger btn-sm" onclick="revokeStudentBoardAccess()" style="padding: 0.28rem 0.6rem; font-size: 0.76rem; font-weight: 700; white-space: nowrap;">
+                                    ❌ No Board
+                                </button>
+                            ` : `
+                                <button type="button" class="btn btn-primary btn-sm" onclick="grantStudentBoardAccess('${s.id}')" style="padding: 0.28rem 0.6rem; font-size: 0.76rem; font-weight: 700; white-space: nowrap;">
+                                    ♟️ Allow Board
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        /* -------------------------------------------------------------
+           WEBRTC LIVE AUDIO & GOOGLE MEET-STYLE SPEAKER BAR
+        ------------------------------------------------------------- */
+        let isMicMuted = true;
+        let localVoiceStream = null;
+        let voiceAudioCtx = null;
+        let voiceAnalyser = null;
+        let voiceVolInterval = null;
+        let myVoiceId = "v_" + Math.random().toString(36).substr(2, 9);
+        let voicePeerConnections = {};
+        let isSpeakingState = false;
+        let silenceTimer = null;
+
+        const RTC_CONFIG = {
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" }
+            ]
+        };
+
+        function getMyDisplayName() {
+            if (currentUserRole === "coach") return (coaches[0]?.name || "Coach Raghav");
+            if (currentUserRole === "student") {
+                const s = getActiveStudent();
+                return s ? s.name : "Student";
+            }
+            return "Visitor";
+        }
+
+        function initVoiceSystem() {
+            if (!isFirebaseConnected) return;
+
+            listenToActiveSpeakers();
+
+            // Register our presence in the audio room
+            const myPeerRef = db.ref(`academy/liveVoice/peers/${myVoiceId}`);
+            myPeerRef.onDisconnect().remove();
+            myPeerRef.set({
+                id: myVoiceId,
+                name: getMyDisplayName(),
+                role: currentUserRole || "guest",
+                joinedAt: Date.now()
+            });
+
+            // Listen to peers
+            db.ref("academy/liveVoice/peers").on("value", (snap) => {
+                const peers = snap.val() || {};
+                syncVoicePeers(peers);
+            });
+
+            // Listen to WebRTC signals
+            db.ref(`academy/liveVoice/signals/${myVoiceId}`).on("child_added", async (snap) => {
+                const data = snap.val();
+                if (!data || !data.from) return;
+                const fromPeerId = data.from;
+                snap.ref.remove();
+                await handleIncomingVoiceSignal(fromPeerId, data);
+            });
+
+            // Clean up on disconnect / unload
+            window.addEventListener("beforeunload", () => {
+                try {
+                    db.ref(`academy/liveVoice/peers/${myVoiceId}`).remove();
+                    db.ref(`academy/liveVoice/speakers/${myVoiceId}`).remove();
+                    db.ref(`academy/liveVoice/signals/${myVoiceId}`).remove();
+                } catch(e) {}
+            });
+        }
+
+        function syncVoicePeers(peers) {
+            Object.keys(peers).forEach(peerId => {
+                if (peerId !== myVoiceId && !voicePeerConnections[peerId]) {
+                    const isInitiator = myVoiceId < peerId;
+                    if (isInitiator) {
+                        initiateVoiceCall(peerId);
+                    } else {
+                        createPeerConnection(peerId);
+                    }
+                }
+            });
+
+            // Clean up disconnected peers
+            Object.keys(voicePeerConnections).forEach(peerId => {
+                if (!peers[peerId]) {
+                    cleanupVoicePeer(peerId);
+                }
+            });
+        }
+
+        function createPeerConnection(remotePeerId) {
+            if (voicePeerConnections[remotePeerId]) {
+                return voicePeerConnections[remotePeerId];
+            }
+
+            const pc = new RTCPeerConnection(RTC_CONFIG);
+            voicePeerConnections[remotePeerId] = pc;
+
+            if (localVoiceStream) {
+                localVoiceStream.getAudioTracks().forEach(track => {
+                    pc.addTrack(track, localVoiceStream);
+                });
+            }
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate && isFirebaseConnected) {
+                    db.ref(`academy/liveVoice/signals/${remotePeerId}`).push({
+                        from: myVoiceId,
+                        type: "candidate",
+                        candidate: JSON.stringify(event.candidate)
+                    });
+                }
+            };
+
+            pc.ontrack = (event) => {
+                let audioEl = document.getElementById(`audio_peer_${remotePeerId}`);
+                if (!audioEl) {
+                    audioEl = document.createElement("audio");
+                    audioEl.id = `audio_peer_${remotePeerId}`;
+                    audioEl.autoplay = true;
+                    audioEl.playsInline = true;
+                    audioEl.style.display = "none";
+                    document.body.appendChild(audioEl);
+                }
+                if (event.streams && event.streams[0]) {
+                    audioEl.srcObject = event.streams[0];
+                } else {
+                    audioEl.srcObject = new MediaStream([event.track]);
+                }
+                audioEl.play().catch(() => {});
+            };
+
+            pc.onconnectionstatechange = () => {
+                if (pc.connectionState === "disconnected" || pc.connectionState === "failed" || pc.connectionState === "closed") {
+                    cleanupVoicePeer(remotePeerId);
+                }
+            };
+
+            return pc;
+        }
+
+        async function initiateVoiceCall(remotePeerId) {
+            const pc = createPeerConnection(remotePeerId);
+            try {
+                const offer = await pc.createOffer({ offerToReceiveAudio: true });
+                await pc.setLocalDescription(offer);
+                if (isFirebaseConnected) {
+                    db.ref(`academy/liveVoice/signals/${remotePeerId}`).push({
+                        from: myVoiceId,
+                        type: "offer",
+                        sdp: JSON.stringify(offer)
+                    });
+                }
+            } catch(e) {
+                console.warn("Error initiating voice call to " + remotePeerId, e);
+            }
+        }
+
+        async function handleIncomingVoiceSignal(fromPeerId, data) {
+            let pc = voicePeerConnections[fromPeerId];
+            if (!pc) {
+                pc = createPeerConnection(fromPeerId);
+            }
+
+            try {
+                if (data.type === "offer" && data.sdp) {
+                    await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.sdp)));
+                    if (localVoiceStream) {
+                        localVoiceStream.getAudioTracks().forEach(track => {
+                            const senders = pc.getSenders();
+                            if (!senders.some(s => s.track && s.track.kind === track.kind)) {
+                                pc.addTrack(track, localVoiceStream);
+                            }
+                        });
+                    }
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    if (isFirebaseConnected) {
+                        db.ref(`academy/liveVoice/signals/${fromPeerId}`).push({
+                            from: myVoiceId,
+                            type: "answer",
+                            sdp: JSON.stringify(answer)
+                        });
+                    }
+                } else if (data.type === "answer" && data.sdp) {
+                    if (pc.signalingState !== "stable") {
+                        await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.sdp)));
+                    }
+                } else if (data.type === "candidate" && data.candidate) {
+                    await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(data.candidate)));
+                }
+            } catch(e) {
+                console.warn("Error handling voice signal from " + fromPeerId, e);
+            }
+        }
+
+        function cleanupVoicePeer(peerId) {
+            const pc = voicePeerConnections[peerId];
+            if (pc) {
+                try { pc.close(); } catch(e) {}
+                delete voicePeerConnections[peerId];
+            }
+            const audioEl = document.getElementById(`audio_peer_${peerId}`);
+            if (audioEl) audioEl.remove();
+        }
+
+        async function toggleVoiceMute() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast("Voice requires a modern browser and HTTPS connection.", "warning");
+                return;
+            }
+
+            try {
+                if (!localVoiceStream) {
+                    localVoiceStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    setupAudioVolumeDetector(localVoiceStream);
+                    isMicMuted = false;
+
+                    Object.keys(voicePeerConnections).forEach(async (peerId) => {
+                        const pc = voicePeerConnections[peerId];
+                        if (pc) {
+                            localVoiceStream.getAudioTracks().forEach(track => pc.addTrack(track, localVoiceStream));
+                            try {
+                                const offer = await pc.createOffer();
+                                await pc.setLocalDescription(offer);
+                                if (isFirebaseConnected) {
+                                    db.ref(`academy/liveVoice/signals/${peerId}`).push({
+                                        from: myVoiceId,
+                                        type: "offer",
+                                        sdp: JSON.stringify(offer)
+                                    });
+                                }
+                            } catch(e) {}
+                        }
+                    });
+
+                    updateVoiceMicButtons(true);
+                    showToast("Microphone unmuted 🎙️", "success");
+                } else {
+                    isMicMuted = !isMicMuted;
+                    localVoiceStream.getAudioTracks().forEach(track => {
+                        track.enabled = !isMicMuted;
+                    });
+
+                    if (isMicMuted) {
+                        if (isSpeakingState) {
+                            isSpeakingState = false;
+                            if (isFirebaseConnected) {
+                                db.ref(`academy/liveVoice/speakers/${myVoiceId}`).remove();
+                            }
+                        }
+                        updateVoiceMicButtons(false);
+                        showToast("Microphone muted 🔇", "info");
+                    } else {
+                        if (voiceAudioCtx && voiceAudioCtx.state === "suspended") {
+                            voiceAudioCtx.resume();
+                        }
+                        updateVoiceMicButtons(true);
+                        showToast("Microphone unmuted 🎙️", "success");
+                    }
+                }
+            } catch(err) {
+                console.error("Microphone access error:", err);
+                showToast("Microphone access denied. Please grant microphone permission in your browser.", "danger");
+                updateVoiceMicButtons(false);
+            }
+        }
+
+        function updateVoiceMicButtons(isActive) {
+            const deskBtn = document.getElementById("btnVoiceMicDesktop");
+            const mobBtn = document.getElementById("btnVoiceMicMobile");
+            const deskIcon = document.getElementById("desktopMicIcon");
+            const deskText = document.getElementById("desktopMicText");
+            const mobIcon = document.getElementById("mobileMicIcon");
+            const mobText = document.getElementById("mobileMicText");
+
+            if (isActive) {
+                if (deskIcon) deskIcon.textContent = "🎙️";
+                if (deskText) deskText.textContent = "Mic On";
+                if (deskBtn) {
+                    deskBtn.classList.remove("btn-secondary", "muted");
+                    deskBtn.classList.add("btn-success", "active");
+                }
+                if (mobIcon) mobIcon.textContent = "🎙️";
+                if (mobText) mobText.textContent = "Mic On";
+                if (mobBtn) {
+                    mobBtn.classList.remove("btn-secondary", "muted");
+                    mobBtn.classList.add("btn-success", "active");
+                }
+            } else {
+                if (deskIcon) deskIcon.textContent = "🔇";
+                if (deskText) deskText.textContent = "Mic Off";
+                if (deskBtn) {
+                    deskBtn.classList.remove("btn-success", "active");
+                    deskBtn.classList.add("btn-secondary", "muted");
+                }
+                if (mobIcon) mobIcon.textContent = "🔇";
+                if (mobText) mobText.textContent = "Mic Off";
+                if (mobBtn) {
+                    mobBtn.classList.remove("btn-success", "active");
+                    mobBtn.classList.add("btn-secondary", "muted");
+                }
+            }
+        }
+
+        function setupAudioVolumeDetector(stream) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!voiceAudioCtx) {
+                    voiceAudioCtx = new AudioCtx();
+                }
+                if (voiceAudioCtx.state === "suspended") {
+                    voiceAudioCtx.resume();
+                }
+
+                const source = voiceAudioCtx.createMediaStreamSource(stream);
+                voiceAnalyser = voiceAudioCtx.createAnalyser();
+                voiceAnalyser.fftSize = 256;
+                voiceAnalyser.smoothingTimeConstant = 0.4;
+                source.connect(voiceAnalyser);
+
+                const dataArray = new Uint8Array(voiceAnalyser.frequencyBinCount);
+
+                if (voiceVolInterval) clearInterval(voiceVolInterval);
+                voiceVolInterval = setInterval(() => {
+                    if (isMicMuted || !voiceAnalyser || !isFirebaseConnected) {
+                        if (isSpeakingState) {
+                            isSpeakingState = false;
+                            db.ref(`academy/liveVoice/speakers/${myVoiceId}`).remove();
+                        }
+                        return;
+                    }
+
+                    voiceAnalyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        sum += dataArray[i];
+                    }
+                    const average = sum / dataArray.length;
+
+                    if (average > 14) {
+                        if (silenceTimer) clearTimeout(silenceTimer);
+                        silenceTimer = null;
+                        if (!isSpeakingState) {
+                            isSpeakingState = true;
+                        }
+                        db.ref(`academy/liveVoice/speakers/${myVoiceId}`).set({
+                            name: getMyDisplayName(),
+                            role: currentUserRole || "guest",
+                            timestamp: Date.now()
+                        });
+                    } else if (isSpeakingState && !silenceTimer) {
+                        silenceTimer = setTimeout(() => {
+                            isSpeakingState = false;
+                            if (isFirebaseConnected) {
+                                db.ref(`academy/liveVoice/speakers/${myVoiceId}`).remove();
+                            }
+                            silenceTimer = null;
+                        }, 650);
+                    }
+                }, 120);
+            } catch(err) {
+                console.warn("Audio analyser initialization notice:", err);
+            }
+        }
+
+        function listenToActiveSpeakers() {
+            if (!isFirebaseConnected) return;
+
+            db.ref("academy/liveVoice/speakers").on("value", (snap) => {
+                const data = snap.val() || {};
+                const now = Date.now();
+                const activeSpeakers = Object.values(data).filter(s => s && s.name && (now - (s.timestamp || 0) < 2500));
+
+                const dot = document.getElementById("speakerDot");
+                const label = document.getElementById("speakerLabel");
+                if (!dot || !label) return;
+
+                if (activeSpeakers.length === 0) {
+                    dot.classList.remove("active");
+                    label.textContent = "Quiet";
+                } else if (activeSpeakers.length === 1) {
+                    dot.classList.add("active");
+                    label.textContent = `Speaking: ${activeSpeakers[0].name}`;
+                } else {
+                    dot.classList.add("active");
+                    const others = activeSpeakers.length - 1;
+                    label.textContent = `Speaking: ${activeSpeakers[0].name} + ${others} other${others > 1 ? "s" : ""}`;
+                }
+            });
+        }
+
         /* -------------------------------------------------------------
            CHESS.JS MOVE EXECUTION
         ------------------------------------------------------------- */
@@ -5569,7 +6365,7 @@
         }
 
         function handleDragStart(e, r, c) {
-            if (currentUserRole !== "coach" || isEditingBoard) return;
+            if (!isBoardInteractable() || isEditingBoard) return;
             draggedFrom = { r, c };
             selectedSquare = { r, c };
             e.dataTransfer.setData("text/plain", `${r},${c}`);
@@ -5579,7 +6375,7 @@
         function handleDrop(e, toR, toC) {
             e.preventDefault();
             document.querySelectorAll(".square").forEach(sq => sq.classList.remove("dragover"));
-            if (currentUserRole !== "coach" || !draggedFrom || isEditingBoard) return;
+            if (!isBoardInteractable() || !draggedFrom || isEditingBoard) return;
 
             const fromSq = coordsToSquare(draggedFrom.r, draggedFrom.c);
             const toSq = coordsToSquare(toR, toC);
@@ -5601,7 +6397,7 @@
         }
 
         function handleSquareClick(r, c) {
-            if (currentUserRole !== "coach" || isEditingBoard) return;
+            if (!isBoardInteractable() || isEditingBoard) return;
 
             const matrix = fenToMatrix(currentNode.fen);
             const clickedPiece = matrix[r][c];
@@ -5961,6 +6757,8 @@
             applyRoleUI();
             renderChessboard();
             setupLiveBoardListener();
+            initPresenceSystem();
+            initVoiceSystem();
             setInterval(checkAndCleanExpiredClasses, 60000);
 
             if (!currentUserRole) {
