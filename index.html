@@ -3859,6 +3859,10 @@
                     db.ref(`academy/presence/${activeStudentId}/lastSeen`).set(Date.now());
                 } catch(e) {}
             }
+
+            if (tabId === "classroom") {
+                playAllRemoteAudios();
+            }
         }
 
         function renderAll() {
@@ -5922,18 +5926,38 @@
         let isMicMuted = true;
         let localVoiceStream = null;
         let voiceAudioCtx = null;
+        let remoteAudioCtx = null;
         let voiceAnalyser = null;
         let voiceVolInterval = null;
         let myVoiceId = "v_" + Math.random().toString(36).substr(2, 9);
         let voicePeerConnections = {};
+        let peerCandidateQueues = {};
         let isSpeakingState = false;
         let silenceTimer = null;
 
         const RTC_CONFIG = {
             iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:stun1.l.google.com:19302" }
-            ]
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:stun2.l.google.com:19302" },
+                { urls: "stun:openrelay.metered.ca:80" },
+                {
+                    urls: "turn:openrelay.metered.ca:80",
+                    username: "openrelayproject",
+                    credential: "openrelayproject"
+                },
+                {
+                    urls: "turn:openrelay.metered.ca:443",
+                    username: "openrelayproject",
+                    credential: "openrelayproject"
+                },
+                {
+                    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                    username: "openrelayproject",
+                    credential: "openrelayproject"
+                }
+            ],
+            iceCandidatePoolSize: 4
         };
 
         function getMyDisplayName() {
@@ -5944,6 +5968,27 @@
             }
             return "Visitor";
         }
+
+        function playAllRemoteAudios() {
+            try {
+                if (remoteAudioCtx && remoteAudioCtx.state === "suspended") {
+                    remoteAudioCtx.resume().catch(() => {});
+                }
+                if (voiceAudioCtx && voiceAudioCtx.state === "suspended") {
+                    voiceAudioCtx.resume().catch(() => {});
+                }
+                document.querySelectorAll("audio[id^='audio_peer_']").forEach(el => {
+                    el.muted = false;
+                    el.volume = 1.0;
+                    const p = el.play();
+                    if (p !== undefined) p.catch(() => {});
+                });
+            } catch(e) {}
+        }
+
+        document.addEventListener("click", playAllRemoteAudios);
+        document.addEventListener("touchstart", playAllRemoteAudios);
+        document.addEventListener("keydown", playAllRemoteAudios);
 
         function initVoiceSystem() {
             if (!isFirebaseConnected) return;
@@ -6005,6 +6050,44 @@
             });
         }
 
+        function setupRemoteAudio(remotePeerId, stream) {
+            let audioEl = document.getElementById(`audio_peer_${remotePeerId}`);
+            if (!audioEl) {
+                audioEl = document.createElement("audio");
+                audioEl.id = `audio_peer_${remotePeerId}`;
+                audioEl.autoplay = true;
+                audioEl.playsInline = true;
+                // Offscreen styling instead of display:none so mobile browser media pipeline doesn't disable audio output
+                audioEl.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0.01;pointer-events:none;";
+                document.body.appendChild(audioEl);
+            }
+            audioEl.srcObject = stream;
+            audioEl.volume = 1.0;
+            audioEl.muted = false;
+
+            // Direct Web Audio routing for guaranteed audible output
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    if (!remoteAudioCtx) remoteAudioCtx = new AudioCtx();
+                    if (remoteAudioCtx.state === "suspended") {
+                        remoteAudioCtx.resume().catch(() => {});
+                    }
+                    const source = remoteAudioCtx.createMediaStreamSource(stream);
+                    source.connect(remoteAudioCtx.destination);
+                }
+            } catch(e) {
+                console.warn("Web Audio output routing notice:", e);
+            }
+
+            const p = audioEl.play();
+            if (p !== undefined) {
+                p.catch(err => {
+                    console.warn("Audio play wait interaction:", err);
+                });
+            }
+        }
+
         function createPeerConnection(remotePeerId) {
             if (voicePeerConnections[remotePeerId]) {
                 return voicePeerConnections[remotePeerId];
@@ -6012,11 +6095,17 @@
 
             const pc = new RTCPeerConnection(RTC_CONFIG);
             voicePeerConnections[remotePeerId] = pc;
+            peerCandidateQueues[remotePeerId] = [];
 
-            if (localVoiceStream) {
-                localVoiceStream.getAudioTracks().forEach(track => {
-                    pc.addTrack(track, localVoiceStream);
-                });
+            // Pre-allocate audio transceiver for sendrecv
+            try {
+                if (localVoiceStream && localVoiceStream.getAudioTracks()[0]) {
+                    pc.addTransceiver(localVoiceStream.getAudioTracks()[0], { direction: "sendrecv", streams: [localVoiceStream] });
+                } else {
+                    pc.addTransceiver("audio", { direction: "sendrecv" });
+                }
+            } catch(e) {
+                console.warn("addTransceiver notice:", e);
             }
 
             pc.onicecandidate = (event) => {
@@ -6024,31 +6113,29 @@
                     db.ref(`academy/liveVoice/signals/${remotePeerId}`).push({
                         from: myVoiceId,
                         type: "candidate",
-                        candidate: JSON.stringify(event.candidate)
+                        candidate: JSON.stringify(event.candidate.toJSON ? event.candidate.toJSON() : event.candidate)
                     });
                 }
             };
 
             pc.ontrack = (event) => {
-                let audioEl = document.getElementById(`audio_peer_${remotePeerId}`);
-                if (!audioEl) {
-                    audioEl = document.createElement("audio");
-                    audioEl.id = `audio_peer_${remotePeerId}`;
-                    audioEl.autoplay = true;
-                    audioEl.playsInline = true;
-                    audioEl.style.display = "none";
-                    document.body.appendChild(audioEl);
+                console.log("WebRTC audio track received from peer:", remotePeerId);
+                const stream = event.streams && event.streams[0] ? event.streams[0] : new MediaStream([event.track]);
+                setupRemoteAudio(remotePeerId, stream);
+            };
+
+            pc.oniceconnectionstatechange = () => {
+                console.log(`ICE Connection state with ${remotePeerId}:`, pc.iceConnectionState);
+                if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+                    playAllRemoteAudios();
                 }
-                if (event.streams && event.streams[0]) {
-                    audioEl.srcObject = event.streams[0];
-                } else {
-                    audioEl.srcObject = new MediaStream([event.track]);
-                }
-                audioEl.play().catch(() => {});
             };
 
             pc.onconnectionstatechange = () => {
-                if (pc.connectionState === "disconnected" || pc.connectionState === "failed" || pc.connectionState === "closed") {
+                console.log(`Connection state with ${remotePeerId}:`, pc.connectionState);
+                if (pc.connectionState === "connected") {
+                    playAllRemoteAudios();
+                } else if (pc.connectionState === "disconnected" || pc.connectionState === "failed" || pc.connectionState === "closed") {
                     cleanupVoicePeer(remotePeerId);
                 }
             };
@@ -6056,16 +6143,44 @@
             return pc;
         }
 
+        async function addIceCandidateSafely(peerId, pc, candidateData) {
+            if (!peerCandidateQueues[peerId]) peerCandidateQueues[peerId] = [];
+            if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) {
+                peerCandidateQueues[peerId].push(candidateData);
+                return;
+            }
+            try {
+                const cand = typeof candidateData === "string" ? JSON.parse(candidateData) : candidateData;
+                await pc.addIceCandidate(new RTCIceCandidate(cand));
+            } catch(e) {
+                console.warn("ICE candidate add notice:", e);
+            }
+        }
+
+        async function flushCandidateQueue(peerId, pc) {
+            const queue = peerCandidateQueues[peerId] || [];
+            peerCandidateQueues[peerId] = [];
+            for (const candData of queue) {
+                try {
+                    const cand = typeof candData === "string" ? JSON.parse(candData) : candData;
+                    await pc.addIceCandidate(new RTCIceCandidate(cand));
+                } catch(e) {
+                    console.warn("ICE candidate flush notice:", e);
+                }
+            }
+        }
+
         async function initiateVoiceCall(remotePeerId) {
             const pc = createPeerConnection(remotePeerId);
             try {
-                const offer = await pc.createOffer({ offerToReceiveAudio: true });
+                if (pc.signalingState !== "stable") return;
+                const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 if (isFirebaseConnected) {
                     db.ref(`academy/liveVoice/signals/${remotePeerId}`).push({
                         from: myVoiceId,
                         type: "offer",
-                        sdp: JSON.stringify(offer)
+                        sdp: JSON.stringify(pc.localDescription)
                     });
                 }
             } catch(e) {
@@ -6081,30 +6196,36 @@
 
             try {
                 if (data.type === "offer" && data.sdp) {
-                    await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.sdp)));
-                    if (localVoiceStream) {
-                        localVoiceStream.getAudioTracks().forEach(track => {
-                            const senders = pc.getSenders();
-                            if (!senders.some(s => s.track && s.track.kind === track.kind)) {
-                                pc.addTrack(track, localVoiceStream);
-                            }
-                        });
+                    const desc = new RTCSessionDescription(JSON.parse(data.sdp));
+                    await pc.setRemoteDescription(desc);
+                    await flushCandidateQueue(fromPeerId, pc);
+
+                    if (localVoiceStream && localVoiceStream.getAudioTracks()[0]) {
+                        const track = localVoiceStream.getAudioTracks()[0];
+                        const sender = pc.getSenders().find(s => s.track === null || (s.track && s.track.kind === "audio"));
+                        if (sender) {
+                            await sender.replaceTrack(track);
+                        }
                     }
+
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
+
                     if (isFirebaseConnected) {
                         db.ref(`academy/liveVoice/signals/${fromPeerId}`).push({
                             from: myVoiceId,
                             type: "answer",
-                            sdp: JSON.stringify(answer)
+                            sdp: JSON.stringify(pc.localDescription)
                         });
                     }
                 } else if (data.type === "answer" && data.sdp) {
-                    if (pc.signalingState !== "stable") {
-                        await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.sdp)));
+                    if (pc.signalingState === "have-local-offer") {
+                        const desc = new RTCSessionDescription(JSON.parse(data.sdp));
+                        await pc.setRemoteDescription(desc);
+                        await flushCandidateQueue(fromPeerId, pc);
                     }
                 } else if (data.type === "candidate" && data.candidate) {
-                    await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(data.candidate)));
+                    await addIceCandidateSafely(fromPeerId, pc, data.candidate);
                 }
             } catch(e) {
                 console.warn("Error handling voice signal from " + fromPeerId, e);
@@ -6117,6 +6238,7 @@
                 try { pc.close(); } catch(e) {}
                 delete voicePeerConnections[peerId];
             }
+            delete peerCandidateQueues[peerId];
             const audioEl = document.getElementById(`audio_peer_${peerId}`);
             if (audioEl) audioEl.remove();
         }
@@ -6127,27 +6249,35 @@
                 return;
             }
 
+            playAllRemoteAudios();
+
             try {
                 if (!localVoiceStream) {
-                    localVoiceStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    localVoiceStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        },
+                        video: false
+                    });
+
                     setupAudioVolumeDetector(localVoiceStream);
                     isMicMuted = false;
 
+                    const audioTrack = localVoiceStream.getAudioTracks()[0];
+                    audioTrack.enabled = true;
+
+                    // Instantly attach active microphone track to existing transceivers
                     Object.keys(voicePeerConnections).forEach(async (peerId) => {
                         const pc = voicePeerConnections[peerId];
                         if (pc) {
-                            localVoiceStream.getAudioTracks().forEach(track => pc.addTrack(track, localVoiceStream));
-                            try {
-                                const offer = await pc.createOffer();
-                                await pc.setLocalDescription(offer);
-                                if (isFirebaseConnected) {
-                                    db.ref(`academy/liveVoice/signals/${peerId}`).push({
-                                        from: myVoiceId,
-                                        type: "offer",
-                                        sdp: JSON.stringify(offer)
-                                    });
-                                }
-                            } catch(e) {}
+                            const sender = pc.getSenders().find(s => s.track === null || (s.track && s.track.kind === "audio"));
+                            if (sender) {
+                                await sender.replaceTrack(audioTrack);
+                            } else {
+                                pc.addTrack(audioTrack, localVoiceStream);
+                            }
                         }
                     });
 
@@ -6155,9 +6285,10 @@
                     showToast("Microphone unmuted 🎙️", "success");
                 } else {
                     isMicMuted = !isMicMuted;
-                    localVoiceStream.getAudioTracks().forEach(track => {
-                        track.enabled = !isMicMuted;
-                    });
+                    const audioTrack = localVoiceStream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        audioTrack.enabled = !isMicMuted;
+                    }
 
                     if (isMicMuted) {
                         if (isSpeakingState) {
