@@ -5926,7 +5926,7 @@
         let isMicMuted = true;
         let localVoiceStream = null;
         let voiceAudioCtx = null;
-        let remoteAudioCtx = null;
+        let silentAudioTrack = null;
         let voiceAnalyser = null;
         let voiceVolInterval = null;
         let myVoiceId = "v_" + Math.random().toString(36).substr(2, 9);
@@ -5969,11 +5969,37 @@
             return "Visitor";
         }
 
+        // Creates a silent audio track to guarantee bidirectional a=sendrecv SDP negotiation
+        function getSilentAudioTrack() {
+            try {
+                if (silentAudioTrack && silentAudioTrack.readyState === "live") {
+                    return silentAudioTrack;
+                }
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return null;
+                if (!voiceAudioCtx) {
+                    voiceAudioCtx = new AudioCtx();
+                }
+                if (voiceAudioCtx.state === "suspended") {
+                    voiceAudioCtx.resume().catch(() => {});
+                }
+                const osc = voiceAudioCtx.createOscillator();
+                const dst = voiceAudioCtx.createMediaStreamDestination();
+                const gain = voiceAudioCtx.createGain();
+                gain.gain.value = 0; // Pure silence
+                osc.connect(gain);
+                gain.connect(dst);
+                osc.start();
+                silentAudioTrack = dst.stream.getAudioTracks()[0];
+                return silentAudioTrack;
+            } catch(e) {
+                console.warn("Silent track creation notice:", e);
+                return null;
+            }
+        }
+
         function playAllRemoteAudios() {
             try {
-                if (remoteAudioCtx && remoteAudioCtx.state === "suspended") {
-                    remoteAudioCtx.resume().catch(() => {});
-                }
                 if (voiceAudioCtx && voiceAudioCtx.state === "suspended") {
                     voiceAudioCtx.resume().catch(() => {});
                 }
@@ -6057,28 +6083,15 @@
                 audioEl.id = `audio_peer_${remotePeerId}`;
                 audioEl.autoplay = true;
                 audioEl.playsInline = true;
-                // Offscreen styling instead of display:none so mobile browser media pipeline doesn't disable audio output
-                audioEl.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0.01;pointer-events:none;";
+                audioEl.setAttribute("playsinline", "true");
+                audioEl.setAttribute("webkit-playsinline", "true");
+                // Position offscreen so mobile and bluetooth routing keep the audio pipeline active
+                audioEl.style.cssText = "position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;";
                 document.body.appendChild(audioEl);
             }
             audioEl.srcObject = stream;
             audioEl.volume = 1.0;
             audioEl.muted = false;
-
-            // Direct Web Audio routing for guaranteed audible output
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    if (!remoteAudioCtx) remoteAudioCtx = new AudioCtx();
-                    if (remoteAudioCtx.state === "suspended") {
-                        remoteAudioCtx.resume().catch(() => {});
-                    }
-                    const source = remoteAudioCtx.createMediaStreamSource(stream);
-                    source.connect(remoteAudioCtx.destination);
-                }
-            } catch(e) {
-                console.warn("Web Audio output routing notice:", e);
-            }
 
             const p = audioEl.play();
             if (p !== undefined) {
@@ -6097,15 +6110,14 @@
             voicePeerConnections[remotePeerId] = pc;
             peerCandidateQueues[remotePeerId] = [];
 
-            // Pre-allocate audio transceiver for sendrecv
+            // Attach a valid audio track from millisecond 0 so SDP negotiates full bidirectional a=sendrecv
             try {
-                if (localVoiceStream && localVoiceStream.getAudioTracks()[0]) {
-                    pc.addTransceiver(localVoiceStream.getAudioTracks()[0], { direction: "sendrecv", streams: [localVoiceStream] });
-                } else {
-                    pc.addTransceiver("audio", { direction: "sendrecv" });
+                const myTrack = (localVoiceStream && localVoiceStream.getAudioTracks()[0]) || getSilentAudioTrack();
+                if (myTrack) {
+                    pc.addTrack(myTrack, new MediaStream([myTrack]));
                 }
             } catch(e) {
-                console.warn("addTransceiver notice:", e);
+                console.warn("Audio track initial attachment notice:", e);
             }
 
             pc.onicecandidate = (event) => {
@@ -6119,8 +6131,8 @@
             };
 
             pc.ontrack = (event) => {
-                console.log("WebRTC audio track received from peer:", remotePeerId);
-                const stream = event.streams && event.streams[0] ? event.streams[0] : new MediaStream([event.track]);
+                console.log("WebRTC audio stream received from peer:", remotePeerId);
+                const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
                 setupRemoteAudio(remotePeerId, stream);
             };
 
@@ -6128,6 +6140,8 @@
                 console.log(`ICE Connection state with ${remotePeerId}:`, pc.iceConnectionState);
                 if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
                     playAllRemoteAudios();
+                } else if (pc.iceConnectionState === "failed") {
+                    try { pc.restartIce(); } catch(e) {}
                 }
             };
 
@@ -6200,11 +6214,15 @@
                     await pc.setRemoteDescription(desc);
                     await flushCandidateQueue(fromPeerId, pc);
 
-                    if (localVoiceStream && localVoiceStream.getAudioTracks()[0]) {
-                        const track = localVoiceStream.getAudioTracks()[0];
-                        const sender = pc.getSenders().find(s => s.track === null || (s.track && s.track.kind === "audio"));
-                        if (sender) {
-                            await sender.replaceTrack(track);
+                    // Ensure local track is attached before generating answer
+                    const myTrack = (localVoiceStream && localVoiceStream.getAudioTracks()[0]) || getSilentAudioTrack();
+                    if (myTrack) {
+                        const senders = pc.getSenders();
+                        const s = senders.find(x => x.track && x.track.kind === "audio");
+                        if (s) {
+                            await s.replaceTrack(myTrack);
+                        } else {
+                            pc.addTrack(myTrack, new MediaStream([myTrack]));
                         }
                     }
 
@@ -6268,13 +6286,14 @@
                     const audioTrack = localVoiceStream.getAudioTracks()[0];
                     audioTrack.enabled = true;
 
-                    // Instantly attach active microphone track to existing transceivers
+                    // Instantly replace track on existing bidirectional sendrecv peer connections
                     Object.keys(voicePeerConnections).forEach(async (peerId) => {
                         const pc = voicePeerConnections[peerId];
                         if (pc) {
-                            const sender = pc.getSenders().find(s => s.track === null || (s.track && s.track.kind === "audio"));
-                            if (sender) {
-                                await sender.replaceTrack(audioTrack);
+                            const senders = pc.getSenders();
+                            const s = senders.find(x => x.track && x.track.kind === "audio");
+                            if (s) {
+                                await s.replaceTrack(audioTrack);
                             } else {
                                 pc.addTrack(audioTrack, localVoiceStream);
                             }
