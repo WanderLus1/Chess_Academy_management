@@ -3826,6 +3826,7 @@
             updateMyPresence();
 
             setupClassroomChatListener();
+            initVoiceSystem();
         }
 
         function recordStudentAttendance() {}
@@ -4202,8 +4203,30 @@
             return null;
         }
 
+        function fensMatch(a, b) {
+            if (!a || !b) return false;
+            if (a === b) return true;
+            const pa = String(a).trim().split(/\s+/);
+            const pb = String(b).trim().split(/\s+/);
+            return pa[0] === pb[0] && pa[1] === pb[1] &&
+                (pa[2] || "-") === (pb[2] || "-") &&
+                (pa[3] || "-") === (pb[3] || "-");
+        }
+
+        function findNodeByFenExact(node, targetFen) {
+            if (!node || !targetFen) return null;
+            if (fensMatch(node.fen, targetFen)) return node;
+            for (const child of node.children) {
+                const found = findNodeByFenExact(child, targetFen);
+                if (found) return found;
+            }
+            return null;
+        }
+
         function findNodeByFen(node, targetFen) {
             if (!node || !targetFen) return null;
+            const exact = findNodeByFenExact(node, targetFen);
+            if (exact) return exact;
             const norm = (f) => f ? f.split(" ").slice(0, 2).join(" ") : "";
             if (norm(node.fen) === norm(targetFen)) return node;
             for (const child of node.children) {
@@ -4211,6 +4234,120 @@
                 if (found) return found;
             }
             return null;
+        }
+
+        function maxTreeNodeId(node) {
+            if (!node) return 0;
+            let maxId = node.id || 0;
+            for (const child of node.children || []) {
+                maxId = Math.max(maxId, maxTreeNodeId(child));
+            }
+            return maxId;
+        }
+
+        function persistAppliedLiveBoard(data) {
+            try {
+                const pgnString = (data.pgn || "").trim();
+                if (pgnString) localStorage.setItem("ca_board_pgn", pgnString);
+                else localStorage.removeItem("ca_board_pgn");
+                const startFen = data.startFen || START_FEN;
+                if (startFen && startFen !== START_FEN) localStorage.setItem("ca_board_start_fen", startFen);
+                else localStorage.removeItem("ca_board_start_fen");
+                if (data.nodeId !== undefined && data.nodeId !== null) {
+                    localStorage.setItem("ca_board_node_id", data.nodeId);
+                }
+            } catch (e) {}
+        }
+
+        function rebuildTreeFromLivePgn(data) {
+            const startFen = data.startFen || START_FEN;
+            if (data.pgn && String(data.pgn).trim()) {
+                const parsed = parsePgnToTree(data.pgn, startFen);
+                if (parsed.rootNode) {
+                    rootNode = parsed.rootNode;
+                    nodeIdCounter = Math.max(nodeIdCounter, maxTreeNodeId(rootNode) + 1);
+                    return true;
+                }
+            }
+            rootNode = createRootNode(startFen);
+            currentNode = rootNode;
+            return false;
+        }
+
+        function graftLiveMoveIfPossible(data) {
+            if (!data.from || !data.to || !data.fen) return null;
+            let parentNode = null;
+            if (data.parentId !== undefined && data.parentId !== null) {
+                parentNode = findNodeById(rootNode, data.parentId);
+            }
+            if (!parentNode) return null;
+
+            const existingChild = parentNode.children.find(ch =>
+                ch.from && ch.to &&
+                ch.from.r === data.from.r && ch.from.c === data.from.c &&
+                ch.to.r === data.to.r && ch.to.c === data.to.c &&
+                fensMatch(ch.fen, data.fen)
+            );
+            if (existingChild) {
+                if (data.nodeId !== undefined) existingChild.id = data.nodeId;
+                return existingChild;
+            }
+
+            const isWhiteTurn = parentNode.fen.split(" ")[1] === "w";
+            const mNum = isWhiteTurn ? parentNode.moveNumber + 1 : parentNode.moveNumber;
+            const newNode = {
+                id: data.nodeId !== undefined ? data.nodeId : nodeIdCounter++,
+                parent: parentNode,
+                children: [],
+                fen: data.fen,
+                notation: data.notation || "",
+                from: data.from,
+                to: data.to,
+                moveNumber: data.moveNumber || (mNum === 0 ? 1 : mNum)
+            };
+            parentNode.children.push(newNode);
+            nodeIdCounter = Math.max(nodeIdCounter, (newNode.id || 0) + 1);
+            return newNode;
+        }
+
+        function resolveLiveCurrentNode(data) {
+            let target = data.fen ? findNodeByFenExact(rootNode, data.fen) : null;
+            if (!target && data.nodeId !== undefined && data.nodeId !== null) {
+                const byId = findNodeById(rootNode, data.nodeId);
+                if (byId && (!data.fen || fensMatch(byId.fen, data.fen))) {
+                    target = byId;
+                }
+            }
+            if (!target && data.fen) {
+                target = findNodeByFen(rootNode, data.fen);
+            }
+            if (!target) {
+                target = graftLiveMoveIfPossible(data);
+            }
+            if (target) {
+                currentNode = target;
+            } else if (data.fen) {
+                currentNode = {
+                    id: data.nodeId !== undefined ? data.nodeId : 0,
+                    parent: null,
+                    children: [],
+                    fen: data.fen,
+                    notation: data.notation || "",
+                    from: data.from || null,
+                    to: data.to || null,
+                    moveNumber: data.moveNumber || 0
+                };
+            } else {
+                currentNode = rootNode;
+            }
+            if (data.fen && currentNode && !fensMatch(currentNode.fen, data.fen)) {
+                currentNode = Object.assign({}, currentNode, {
+                    fen: data.fen,
+                    notation: data.notation || currentNode.notation || "",
+                    from: data.from || currentNode.from,
+                    to: data.to || currentNode.to
+                });
+            }
         }
 
         function parsePgnToTree(rawPgn, customStartFen = null) {
@@ -4989,7 +5126,7 @@
         }
 
         /* -------------------------------------------------------------
-           BROADCAST BOARD TO FIREBASE (COACH -> ALL DEVICES)
+           BROADCAST BOARD TO FIREBASE (COACH OR DELEGATED STUDENT)
         ------------------------------------------------------------- */
         let broadcastPgnTimer = null;
 
@@ -5038,107 +5175,28 @@
         }
 
         /* -------------------------------------------------------------
-           REAL-TIME LISTENERS: FIREBASE IS THE SINGLE SOURCE OF TRUTH
+           REAL-TIME LISTENERS: FIREBASE liveBoard WINS OVER LOCAL TREE
         ------------------------------------------------------------- */
         function setupLiveBoardListener() {
             if (!isFirebaseConnected) return;
 
-            // Live Board Listener: High-concurrency zero-lag synchronization
             db.ref("academy/liveBoard").on("value", (snapshot) => {
                 const data = snapshot.val();
                 if (!data || isEditingBoard) return;
 
                 const startFen = data.startFen || START_FEN;
                 const currentRootFen = rootNode.fen || START_FEN;
-
-                // 1. Starting FEN change or explicit full reset (e.g. coach imported a whole PGN or reset board)
                 const startFenChanged = startFen !== currentRootFen;
-                if (startFenChanged || data.isFullReset) {
-                    rootNode = createRootNode(startFen);
-                    currentNode = rootNode;
-                    try {
-                        localStorage.setItem("ca_board_start_fen", startFen);
-                    } catch(e) {}
-                    if (data.pgn) {
-                        const parsed = parsePgnToTree(data.pgn, startFen);
-                        if (parsed.rootNode) rootNode = parsed.rootNode;
-                    }
+                const exactOnTree = data.fen ? findNodeByFenExact(rootNode, data.fen) : null;
+                const needRebuild = startFenChanged || !!data.isFullReset ||
+                    (!exactOnTree && !!(data.pgn && String(data.pgn).trim()));
+
+                if (needRebuild) {
+                    rebuildTreeFromLivePgn(data);
                 }
 
-                // 2. FAST PATH - NAVIGATION: Check if target node already exists anywhere in the tree
-                let targetNode = null;
-                if (data.nodeId !== undefined && data.nodeId !== null) {
-                    targetNode = findNodeById(rootNode, data.nodeId);
-                }
-                if (!targetNode && data.fen) {
-                    targetNode = findNodeByFen(rootNode, data.fen);
-                }
-
-                if (targetNode) {
-                    currentNode = targetNode;
-                } else if (data.from && data.to && data.fen) {
-                    // 3. FAST PATH - INCREMENTAL MOVE GRAFTING (Zero-delay jamming fix)
-                    let parentNode = null;
-                    if (data.parentId !== undefined && data.parentId !== null) {
-                        parentNode = findNodeById(rootNode, data.parentId);
-                    }
-                    if (!parentNode) {
-                        parentNode = currentNode;
-                    }
-
-                    // Check if parentNode already has matching child
-                    const existingChild = parentNode.children.find(ch => 
-                        ch.from && ch.to &&
-                        ch.from.r === data.from.r && ch.from.c === data.from.c &&
-                        ch.to.r === data.to.r && ch.to.c === data.to.c &&
-                        ch.fen === data.fen
-                    );
-
-                    if (existingChild) {
-                        if (data.nodeId !== undefined) existingChild.id = data.nodeId;
-                        currentNode = existingChild;
-                    } else {
-                        // Directly append child node in O(1) time
-                        const isWhiteTurn = parentNode.fen.split(" ")[1] === 'w';
-                        const mNum = isWhiteTurn ? parentNode.moveNumber + 1 : parentNode.moveNumber;
-
-                        const newNode = {
-                            id: data.nodeId !== undefined ? data.nodeId : nodeIdCounter++,
-                            parent: parentNode,
-                            children: [],
-                            fen: data.fen,
-                            notation: data.notation || "",
-                            from: data.from,
-                            to: data.to,
-                            moveNumber: data.moveNumber || (mNum === 0 ? 1 : mNum)
-                        };
-                        parentNode.children.push(newNode);
-                        currentNode = newNode;
-                        nodeIdCounter = Math.max(nodeIdCounter, (newNode.id || 0) + 1);
-                    }
-                } else if (rootNode.children.length === 0 && data.pgn) {
-                    // 4. Initial load on empty student tree with PGN
-                    const parsed = parsePgnToTree(data.pgn, startFen);
-                    if (parsed.rootNode) {
-                        rootNode = parsed.rootNode;
-                        if (data.nodeId !== undefined) {
-                            targetNode = findNodeById(rootNode, data.nodeId);
-                        }
-                        currentNode = targetNode || rootNode;
-                    }
-                } else if (data.fen && data.fen !== currentNode.fen) {
-                    // Fallback anchor
-                    currentNode = {
-                        id: data.nodeId !== undefined ? data.nodeId : -99,
-                        parent: rootNode,
-                        children: [],
-                        fen: data.fen,
-                        notation: data.notation || "",
-                        from: data.from || null,
-                        to: data.to || null,
-                        moveNumber: 0
-                    };
-                }
+                resolveLiveCurrentNode(data);
+                persistAppliedLiveBoard(data);
 
                 tintedSquares = new Set(data.tinted || []);
                 drawnArrows = data.arrows || [];

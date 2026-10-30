@@ -45,6 +45,12 @@
             }
           }
         }
+      },
+      "presence": {
+        ".write": true
+      },
+      "liveVoice": {
+        ".write": true
       }
     }
   }
