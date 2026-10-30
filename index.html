@@ -6035,6 +6035,34 @@
             return "Visitor";
         }
 
+        function showToast(message, type = "info") {
+            try {
+                let container = document.getElementById("mscaToastContainer");
+                if (!container) {
+                    container = document.createElement("div");
+                    container.id = "mscaToastContainer";
+                    container.style.cssText = "position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;";
+                    document.body.appendChild(container);
+                }
+                const toast = document.createElement("div");
+                const bg = type === "danger" ? "rgba(220,38,38,0.92)" : type === "warning" ? "rgba(217,119,6,0.92)" : type === "success" ? "rgba(16,185,129,0.92)" : "rgba(30,41,59,0.92)";
+                toast.style.cssText = `background:${bg};color:#fff;padding:0.6rem 1.1rem;border-radius:8px;font-size:0.88rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.18);transition:opacity 0.25s ease,transform 0.25s ease;opacity:0;transform:translateY(-8px);pointer-events:auto;max-width:90vw;text-align:center;`;
+                toast.textContent = message;
+                container.appendChild(toast);
+                requestAnimationFrame(() => {
+                    toast.style.opacity = "1";
+                    toast.style.transform = "translateY(0)";
+                });
+                setTimeout(() => {
+                    toast.style.opacity = "0";
+                    toast.style.transform = "translateY(-8px)";
+                    setTimeout(() => toast.remove(), 260);
+                }, 2800);
+            } catch(e) {
+                console.log(message);
+            }
+        }
+
         // Global user interaction unblocks audio playback on mobile browsers
         function playAllRemoteAudios() {
             try {
