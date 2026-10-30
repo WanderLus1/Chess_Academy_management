@@ -12,6 +12,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+    <!-- PeerJS WebRTC Library for Group Voice Call -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
     <style>
         :root {
             /* Midnight Sapphire & Abyssal Navy Base */
@@ -5979,43 +5982,48 @@
         }
 
         /* -------------------------------------------------------------
-           WEBRTC LIVE AUDIO & GOOGLE MEET-STYLE SPEAKER BAR
+           PEERJS LIVE AUDIO MESH & GOOGLE MEET-STYLE SPEAKER BAR
         ------------------------------------------------------------- */
         let isMicMuted = true;
         let localVoiceStream = null;
         let voiceAudioCtx = null;
-        let silentAudioTrack = null;
         let voiceAnalyser = null;
         let voiceVolInterval = null;
-        let myVoiceId = "v_" + Math.random().toString(36).substr(2, 9);
-        let voicePeerConnections = {};
-        let peerCandidateQueues = {};
         let isSpeakingState = false;
         let silenceTimer = null;
+        let isVoiceInitialized = false;
 
-        const RTC_CONFIG = {
-            iceServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:stun1.l.google.com:19302" },
-                { urls: "stun:stun2.l.google.com:19302" },
-                { urls: "stun:openrelay.metered.ca:80" },
-                {
-                    urls: "turn:openrelay.metered.ca:80",
-                    username: "openrelayproject",
-                    credential: "openrelayproject"
-                },
-                {
-                    urls: "turn:openrelay.metered.ca:443",
-                    username: "openrelayproject",
-                    credential: "openrelayproject"
-                },
-                {
-                    urls: "turn:openrelay.metered.ca:443?transport=tcp",
-                    username: "openrelayproject",
-                    credential: "openrelayproject"
-                }
-            ],
-            iceCandidatePoolSize: 4
+        // Persistent voice ID for this session
+        let myVoiceId = "msca_" + Math.random().toString(36).substr(2, 9);
+        let myPeer = null;
+        let activeCalls = {};
+
+        // Free Google STUN & OpenRelay TURN servers for 4G/Mobile NAT traversal
+        const PEER_CONFIG = {
+            config: {
+                iceServers: [
+                    { urls: "stun:stun.l.google.com:19302" },
+                    { urls: "stun:stun1.l.google.com:19302" },
+                    { urls: "stun:stun2.l.google.com:19302" },
+                    { urls: "stun:openrelay.metered.ca:80" },
+                    {
+                        urls: "turn:openrelay.metered.ca:80",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    }
+                ],
+                iceCandidatePoolSize: 4
+            }
         };
 
         function getMyDisplayName() {
@@ -6027,35 +6035,7 @@
             return "Visitor";
         }
 
-        // Creates a silent audio track to guarantee bidirectional a=sendrecv SDP negotiation
-        function getSilentAudioTrack() {
-            try {
-                if (silentAudioTrack && silentAudioTrack.readyState === "live") {
-                    return silentAudioTrack;
-                }
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (!AudioCtx) return null;
-                if (!voiceAudioCtx) {
-                    voiceAudioCtx = new AudioCtx();
-                }
-                if (voiceAudioCtx.state === "suspended") {
-                    voiceAudioCtx.resume().catch(() => {});
-                }
-                const osc = voiceAudioCtx.createOscillator();
-                const dst = voiceAudioCtx.createMediaStreamDestination();
-                const gain = voiceAudioCtx.createGain();
-                gain.gain.value = 0; // Pure silence
-                osc.connect(gain);
-                gain.connect(dst);
-                osc.start();
-                silentAudioTrack = dst.stream.getAudioTracks()[0];
-                return silentAudioTrack;
-            } catch(e) {
-                console.warn("Silent track creation notice:", e);
-                return null;
-            }
-        }
-
+        // Global user interaction unblocks audio playback on mobile browsers
         function playAllRemoteAudios() {
             try {
                 if (voiceAudioCtx && voiceAudioCtx.state === "suspended") {
@@ -6074,67 +6054,32 @@
         document.addEventListener("touchstart", playAllRemoteAudios);
         document.addEventListener("keydown", playAllRemoteAudios);
 
-        function initVoiceSystem() {
-            if (!isFirebaseConnected) return;
-
-            listenToActiveSpeakers();
-
-            // Register our presence in the audio room
-            const myPeerRef = db.ref(`academy/liveVoice/peers/${myVoiceId}`);
-            myPeerRef.onDisconnect().remove();
-            myPeerRef.set({
-                id: myVoiceId,
-                name: getMyDisplayName(),
-                role: currentUserRole || "guest",
-                joinedAt: Date.now()
-            });
-
-            // Listen to peers
-            db.ref("academy/liveVoice/peers").on("value", (snap) => {
-                const peers = snap.val() || {};
-                syncVoicePeers(peers);
-            });
-
-            // Listen to WebRTC signals
-            db.ref(`academy/liveVoice/signals/${myVoiceId}`).on("child_added", async (snap) => {
-                const data = snap.val();
-                if (!data || !data.from) return;
-                const fromPeerId = data.from;
-                snap.ref.remove();
-                await handleIncomingVoiceSignal(fromPeerId, data);
-            });
-
-            // Clean up on disconnect / unload
-            window.addEventListener("beforeunload", () => {
-                try {
-                    db.ref(`academy/liveVoice/peers/${myVoiceId}`).remove();
-                    db.ref(`academy/liveVoice/speakers/${myVoiceId}`).remove();
-                    db.ref(`academy/liveVoice/signals/${myVoiceId}`).remove();
-                } catch(e) {}
-            });
+        // Pre-create or retrieve a local media stream (silent track if mic not yet granted)
+        function getOrCreateLocalMediaStream() {
+            if (localVoiceStream) return localVoiceStream;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return null;
+                if (!voiceAudioCtx) {
+                    voiceAudioCtx = new AudioCtx();
+                }
+                if (voiceAudioCtx.state === "suspended") {
+                    voiceAudioCtx.resume().catch(() => {});
+                }
+                const osc = voiceAudioCtx.createOscillator();
+                const dst = voiceAudioCtx.createMediaStreamDestination();
+                const gain = voiceAudioCtx.createGain();
+                gain.gain.value = 0; // Absolute silence
+                osc.connect(gain);
+                gain.connect(dst);
+                osc.start();
+                return dst.stream;
+            } catch(e) {
+                return null;
+            }
         }
 
-        function syncVoicePeers(peers) {
-            Object.keys(peers).forEach(peerId => {
-                if (peerId !== myVoiceId && !voicePeerConnections[peerId]) {
-                    const isInitiator = myVoiceId < peerId;
-                    if (isInitiator) {
-                        initiateVoiceCall(peerId);
-                    } else {
-                        createPeerConnection(peerId);
-                    }
-                }
-            });
-
-            // Clean up disconnected peers
-            Object.keys(voicePeerConnections).forEach(peerId => {
-                if (!peers[peerId]) {
-                    cleanupVoicePeer(peerId);
-                }
-            });
-        }
-
-        function setupRemoteAudio(remotePeerId, stream) {
+        function playPeerAudio(remotePeerId, stream) {
             let audioEl = document.getElementById(`audio_peer_${remotePeerId}`);
             if (!audioEl) {
                 audioEl = document.createElement("audio");
@@ -6143,7 +6088,6 @@
                 audioEl.playsInline = true;
                 audioEl.setAttribute("playsinline", "true");
                 audioEl.setAttribute("webkit-playsinline", "true");
-                // Position offscreen so mobile and bluetooth routing keep the audio pipeline active
                 audioEl.style.cssText = "position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;";
                 document.body.appendChild(audioEl);
             }
@@ -6154,169 +6098,128 @@
             const p = audioEl.play();
             if (p !== undefined) {
                 p.catch(err => {
-                    console.warn("Audio play wait interaction:", err);
+                    console.warn("Peer audio playback wait for user gesture:", err);
                 });
             }
         }
 
-        function createPeerConnection(remotePeerId) {
-            if (voicePeerConnections[remotePeerId]) {
-                return voicePeerConnections[remotePeerId];
+        function removePeerAudio(remotePeerId) {
+            const audioEl = document.getElementById(`audio_peer_${remotePeerId}`);
+            if (audioEl) audioEl.remove();
+            if (activeCalls[remotePeerId]) {
+                try { activeCalls[remotePeerId].close(); } catch(e) {}
+                delete activeCalls[remotePeerId];
             }
+        }
 
-            const pc = new RTCPeerConnection(RTC_CONFIG);
-            voicePeerConnections[remotePeerId] = pc;
-            peerCandidateQueues[remotePeerId] = [];
+        function handleIncomingOrOutgoingCall(call) {
+            const remotePeerId = call.peer;
+            activeCalls[remotePeerId] = call;
 
-            // Attach a valid audio track from millisecond 0 so SDP negotiates full bidirectional a=sendrecv
+            call.on("stream", (remoteStream) => {
+                console.log("Audio stream received from peer:", remotePeerId);
+                playPeerAudio(remotePeerId, remoteStream);
+            });
+
+            call.on("close", () => {
+                removePeerAudio(remotePeerId);
+            });
+
+            call.on("error", (err) => {
+                console.warn("Call error with peer " + remotePeerId, err);
+                removePeerAudio(remotePeerId);
+            });
+        }
+
+        function initVoiceSystem() {
+            if (!isFirebaseConnected) return;
+            if (isVoiceInitialized) return; // Prevent duplicate setups
+            isVoiceInitialized = true;
+
+            listenToActiveSpeakers();
+
+            // Initialize PeerJS
             try {
-                const myTrack = (localVoiceStream && localVoiceStream.getAudioTracks()[0]) || getSilentAudioTrack();
-                if (myTrack) {
-                    pc.addTrack(myTrack, new MediaStream([myTrack]));
+                if (typeof Peer === "undefined") {
+                    console.warn("PeerJS library not yet loaded, retrying in 500ms...");
+                    isVoiceInitialized = false;
+                    setTimeout(initVoiceSystem, 500);
+                    return;
                 }
-            } catch(e) {
-                console.warn("Audio track initial attachment notice:", e);
-            }
 
-            pc.onicecandidate = (event) => {
-                if (event.candidate && isFirebaseConnected) {
-                    db.ref(`academy/liveVoice/signals/${remotePeerId}`).push({
-                        from: myVoiceId,
-                        type: "candidate",
-                        candidate: JSON.stringify(event.candidate.toJSON ? event.candidate.toJSON() : event.candidate)
+                myPeer = new Peer(myVoiceId, PEER_CONFIG);
+
+                myPeer.on("open", (id) => {
+                    console.log("PeerJS voice ready. My ID:", id);
+
+                    // Register in Firebase presence for audio
+                    const myPeerRef = db.ref(`academy/liveVoice/peers/${myVoiceId}`);
+                    myPeerRef.onDisconnect().remove();
+                    myPeerRef.set({
+                        id: myVoiceId,
+                        name: getMyDisplayName(),
+                        role: currentUserRole || "guest",
+                        joinedAt: Date.now()
                     });
-                }
-            };
 
-            pc.ontrack = (event) => {
-                console.log("WebRTC audio stream received from peer:", remotePeerId);
-                const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
-                setupRemoteAudio(remotePeerId, stream);
-            };
-
-            pc.oniceconnectionstatechange = () => {
-                console.log(`ICE Connection state with ${remotePeerId}:`, pc.iceConnectionState);
-                if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
-                    playAllRemoteAudios();
-                } else if (pc.iceConnectionState === "failed") {
-                    try { pc.restartIce(); } catch(e) {}
-                }
-            };
-
-            pc.onconnectionstatechange = () => {
-                console.log(`Connection state with ${remotePeerId}:`, pc.connectionState);
-                if (pc.connectionState === "connected") {
-                    playAllRemoteAudios();
-                } else if (pc.connectionState === "disconnected" || pc.connectionState === "failed" || pc.connectionState === "closed") {
-                    cleanupVoicePeer(remotePeerId);
-                }
-            };
-
-            return pc;
-        }
-
-        async function addIceCandidateSafely(peerId, pc, candidateData) {
-            if (!peerCandidateQueues[peerId]) peerCandidateQueues[peerId] = [];
-            if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) {
-                peerCandidateQueues[peerId].push(candidateData);
-                return;
-            }
-            try {
-                const cand = typeof candidateData === "string" ? JSON.parse(candidateData) : candidateData;
-                await pc.addIceCandidate(new RTCIceCandidate(cand));
-            } catch(e) {
-                console.warn("ICE candidate add notice:", e);
-            }
-        }
-
-        async function flushCandidateQueue(peerId, pc) {
-            const queue = peerCandidateQueues[peerId] || [];
-            peerCandidateQueues[peerId] = [];
-            for (const candData of queue) {
-                try {
-                    const cand = typeof candData === "string" ? JSON.parse(candData) : candData;
-                    await pc.addIceCandidate(new RTCIceCandidate(cand));
-                } catch(e) {
-                    console.warn("ICE candidate flush notice:", e);
-                }
-            }
-        }
-
-        async function initiateVoiceCall(remotePeerId) {
-            const pc = createPeerConnection(remotePeerId);
-            try {
-                if (pc.signalingState !== "stable") return;
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                if (isFirebaseConnected) {
-                    db.ref(`academy/liveVoice/signals/${remotePeerId}`).push({
-                        from: myVoiceId,
-                        type: "offer",
-                        sdp: JSON.stringify(pc.localDescription)
+                    // Listen to all peers currently in the room
+                    db.ref("academy/liveVoice/peers").on("value", (snap) => {
+                        const peers = snap.val() || {};
+                        syncPeerJSPeers(peers);
                     });
-                }
+                });
+
+                // When another peer calls us, answer with our stream
+                myPeer.on("call", (call) => {
+                    console.log("Incoming call from peer:", call.peer);
+                    const streamToSend = localVoiceStream || getOrCreateLocalMediaStream();
+                    call.answer(streamToSend);
+                    handleIncomingOrOutgoingCall(call);
+                });
+
+                myPeer.on("error", (err) => {
+                    console.warn("PeerJS client notice:", err);
+                });
+
+                // Clean up on disconnect / page close
+                window.addEventListener("beforeunload", () => {
+                    try {
+                        db.ref(`academy/liveVoice/peers/${myVoiceId}`).remove();
+                        db.ref(`academy/liveVoice/speakers/${myVoiceId}`).remove();
+                        if (myPeer) myPeer.destroy();
+                    } catch(e) {}
+                });
+
             } catch(e) {
-                console.warn("Error initiating voice call to " + remotePeerId, e);
+                console.error("PeerJS initialization failed:", e);
+                isVoiceInitialized = false;
             }
         }
 
-        async function handleIncomingVoiceSignal(fromPeerId, data) {
-            let pc = voicePeerConnections[fromPeerId];
-            if (!pc) {
-                pc = createPeerConnection(fromPeerId);
-            }
+        function syncPeerJSPeers(peers) {
+            if (!myPeer || myPeer.destroyed) return;
 
-            try {
-                if (data.type === "offer" && data.sdp) {
-                    const desc = new RTCSessionDescription(JSON.parse(data.sdp));
-                    await pc.setRemoteDescription(desc);
-                    await flushCandidateQueue(fromPeerId, pc);
-
-                    // Ensure local track is attached before generating answer
-                    const myTrack = (localVoiceStream && localVoiceStream.getAudioTracks()[0]) || getSilentAudioTrack();
-                    if (myTrack) {
-                        const senders = pc.getSenders();
-                        const s = senders.find(x => x.track && x.track.kind === "audio");
-                        if (s) {
-                            await s.replaceTrack(myTrack);
-                        } else {
-                            pc.addTrack(myTrack, new MediaStream([myTrack]));
+            Object.keys(peers).forEach(peerId => {
+                if (peerId !== myVoiceId && !activeCalls[peerId]) {
+                    // Consistent caller election: peer with smaller alphabetical ID initiates the call
+                    const isInitiator = myVoiceId < peerId;
+                    if (isInitiator) {
+                        console.log("Initiating call to peer:", peerId);
+                        const streamToSend = localVoiceStream || getOrCreateLocalMediaStream();
+                        const call = myPeer.call(peerId, streamToSend);
+                        if (call) {
+                            handleIncomingOrOutgoingCall(call);
                         }
                     }
-
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-
-                    if (isFirebaseConnected) {
-                        db.ref(`academy/liveVoice/signals/${fromPeerId}`).push({
-                            from: myVoiceId,
-                            type: "answer",
-                            sdp: JSON.stringify(pc.localDescription)
-                        });
-                    }
-                } else if (data.type === "answer" && data.sdp) {
-                    if (pc.signalingState === "have-local-offer") {
-                        const desc = new RTCSessionDescription(JSON.parse(data.sdp));
-                        await pc.setRemoteDescription(desc);
-                        await flushCandidateQueue(fromPeerId, pc);
-                    }
-                } else if (data.type === "candidate" && data.candidate) {
-                    await addIceCandidateSafely(fromPeerId, pc, data.candidate);
                 }
-            } catch(e) {
-                console.warn("Error handling voice signal from " + fromPeerId, e);
-            }
-        }
+            });
 
-        function cleanupVoicePeer(peerId) {
-            const pc = voicePeerConnections[peerId];
-            if (pc) {
-                try { pc.close(); } catch(e) {}
-                delete voicePeerConnections[peerId];
-            }
-            delete peerCandidateQueues[peerId];
-            const audioEl = document.getElementById(`audio_peer_${peerId}`);
-            if (audioEl) audioEl.remove();
+            // Cleanup peers that left the room
+            Object.keys(activeCalls).forEach(peerId => {
+                if (!peers[peerId]) {
+                    removePeerAudio(peerId);
+                }
+            });
         }
 
         async function toggleVoiceMute() {
@@ -6344,16 +6247,16 @@
                     const audioTrack = localVoiceStream.getAudioTracks()[0];
                     audioTrack.enabled = true;
 
-                    // Instantly replace track on existing bidirectional sendrecv peer connections
-                    Object.keys(voicePeerConnections).forEach(async (peerId) => {
-                        const pc = voicePeerConnections[peerId];
-                        if (pc) {
-                            const senders = pc.getSenders();
+                    // Update all active PeerJS connections with the real microphone track
+                    Object.keys(activeCalls).forEach(async (peerId) => {
+                        const call = activeCalls[peerId];
+                        if (call && call.peerConnection) {
+                            const senders = call.peerConnection.getSenders();
                             const s = senders.find(x => x.track && x.track.kind === "audio");
                             if (s) {
                                 await s.replaceTrack(audioTrack);
                             } else {
-                                pc.addTrack(audioTrack, localVoiceStream);
+                                call.peerConnection.addTrack(audioTrack, localVoiceStream);
                             }
                         }
                     });
