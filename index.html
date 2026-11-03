@@ -1145,6 +1145,12 @@
             align-items: start;
         }
 
+        /* Centered 2-column layout when right column is hidden for students */
+        body:not(.is-coach) .classroom-grid {
+            grid-template-columns: minmax(300px, 380px) minmax(360px, 600px);
+            justify-content: center;
+        }
+
         .chat-card,
         #cardNotationTree {
             height: 580px;
@@ -2135,7 +2141,7 @@
                     </div>
 
                     <div class="board-controls">
-                        <div class="nav-btn-group">
+                        <div class="nav-btn-group coach-only" id="navBtnGroup">
                             <button id="btnNavStart" class="btn btn-secondary btn-sm" onclick="stepMove('start')" title="Start">|&lt;</button>
                             <button id="btnNavPrev" class="btn btn-secondary btn-sm" onclick="stepMove('prev')" title="Prev">&lt;</button>
                             <button id="btnNavNext" class="btn btn-secondary btn-sm" onclick="stepMove('next')" title="Next">&gt;</button>
@@ -2173,8 +2179,8 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: NOTATION & VARIATIONS -->
-                <div class="card" id="cardNotationTree" style="margin-bottom: 0;">
+                <!-- RIGHT COLUMN: NOTATION & VARIATIONS (Coach Only - Hidden from Students) -->
+                <div class="card coach-only" id="cardNotationTree" style="margin-bottom: 0;">
                     <div class="card-header" style="margin-bottom: 0.5rem; padding-bottom: 0.35rem;">
                         <h3>Notation &amp; Variations</h3>
                         <span id="stepCounter" class="text-muted" style="font-size: 0.82rem;">Game Tree</span>
@@ -3760,6 +3766,7 @@
             const btnHeaderAuth = document.getElementById("btnHeaderAuth");
 
             if (currentUserRole === "coach") {
+                document.body.classList.add("is-coach");
                 nameLabel.textContent = coaches[0]?.name || "Coach";
                 roleBadge.textContent = "Coach";
                 roleBadge.className = "badge-role coach";
@@ -3774,6 +3781,7 @@
                 guestBanner.style.display = "none";
                 navBtns.forEach(btn => { if (btn) btn.disabled = false; });
             } else if (currentUserRole === "student") {
+                document.body.classList.remove("is-coach");
                 const s = getActiveStudent();
                 nameLabel.textContent = s ? s.name : "Student";
                 roleBadge.textContent = "Student";
@@ -3791,6 +3799,7 @@
                 document.getElementById("editorPaletteBar").style.display = "none";
                 document.getElementById("coachEngineBox").style.display = "none";
             } else {
+                document.body.classList.remove("is-coach");
                 nameLabel.textContent = "Visitor";
                 roleBadge.textContent = "Guest";
                 roleBadge.className = "badge-role guest";
